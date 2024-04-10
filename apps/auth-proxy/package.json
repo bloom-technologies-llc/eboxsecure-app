@@ -1,5 +1,5 @@
 {
-  "name": "@acme/auth-proxy",
+  "name": "@ebox/auth-proxy",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,10 +14,10 @@
     "@auth/core": "0.28.1"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@ebox/eslint-config": "workspace:*",
+    "@ebox/prettier-config": "workspace:*",
+    "@ebox/tailwind-config": "workspace:*",
+    "@ebox/tsconfig": "workspace:*",
     "@types/node": "^20.12.5",
     "eslint": "^9.0.0",
     "h3": "^1.11.1",
@@ -25,5 +25,5 @@
     "prettier": "^3.2.5",
     "typescript": "^5.4.4"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@ebox/prettier-config"
 }

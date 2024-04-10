@@ -1,7 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-import { env as authEnv } from "@acme/auth/env";
+import { env as authEnv } from "@ebox/auth/env";
 
 export const env = createEnv({
   extends: [authEnv],
