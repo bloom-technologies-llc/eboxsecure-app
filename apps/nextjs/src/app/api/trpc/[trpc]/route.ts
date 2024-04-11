@@ -3,8 +3,6 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, createTRPCContext } from "@ebox/api";
 import { auth } from "@ebox/auth";
 
-export const runtime = "edge";
-
 /**
  * Configure basic CORS headers
  * You should extend this to match your needs
