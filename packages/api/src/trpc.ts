@@ -6,11 +6,11 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import type { AuthObject } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Session } from "@ebox/auth";
 import { db } from "@ebox/db";
 
 /**
@@ -27,7 +27,7 @@ import { db } from "@ebox/db";
  */
 export const createTRPCContext = (opts: {
   headers: Headers;
-  session: Session | null;
+  session: AuthObject;
 }) => {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";

@@ -29,6 +29,7 @@ const getBaseUrl = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(":")[0];
 
+  // TODO: configure this
   if (!localhost) {
     // return "https://turbo.t3.gg";
     throw new Error(
