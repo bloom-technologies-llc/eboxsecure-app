@@ -37,7 +37,6 @@ const handler = async (req: NextRequest) => {
       console.error(`>>> tRPC Error on '${path}'`, error);
     },
   });
-
   setCorsHeaders(response);
   return response;
 };
