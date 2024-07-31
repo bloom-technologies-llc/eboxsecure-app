@@ -1,4 +1,4 @@
-import { Slot } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 import { TRPCProvider } from "~/utils/api";
@@ -44,11 +44,15 @@ export default function RootLayout() {
   return (
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig?.extra.CLERK_PUBLISHABLE_KEY}
+      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
     >
       <TRPCProvider>
         <ClerkLoaded>
-          <Slot />
+          <>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </>
         </ClerkLoaded>
       </TRPCProvider>
     </ClerkProvider>
