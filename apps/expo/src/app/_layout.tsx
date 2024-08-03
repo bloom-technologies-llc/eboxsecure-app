@@ -35,6 +35,11 @@ const tokenCache = {
   },
 };
 
+export const unstable_settings = {
+  // Ensure any route can link back to `/`
+  initialRouteName: "(tabs)/(orders)/index",
+};
+
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
