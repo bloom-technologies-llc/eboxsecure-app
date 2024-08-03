@@ -5,8 +5,10 @@ import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Constants from "expo-constants";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -48,11 +50,13 @@ export default function RootLayout() {
     >
       <TRPCProvider>
         <ClerkLoaded>
-          <>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-            </Stack>
-          </>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </ClerkLoaded>
       </TRPCProvider>
     </ClerkProvider>
