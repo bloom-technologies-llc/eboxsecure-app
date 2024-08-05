@@ -5,9 +5,9 @@ import { Image } from "expo-image";
 export default function Page() {
   return (
     <ScrollView style={{ flex: 1 }} className="bg-white">
-      <View className="my-10 flex gap-y-4 bg-white">
+      <View className="my-12 flex gap-y-4 bg-white">
         {/* timeseries status */}
-        <View className=" flex-row">
+        <View className="flex-row">
           <View className="flex-1">
             <View className="items-center">
               <View className="flex-row items-center">
@@ -85,9 +85,21 @@ export default function Page() {
           </View>
         </View>
 
+        <View className="my-4 border border-[#e4e4e7] p-4">
+          <View className="flex flex-row items-center gap-x-3">
+            <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+            <View className="flex gap-y-3">
+              <View className="flex gap-y-2">
+                <Text className="">Apple Watch Ultra 2</Text>
+                <Text className="text-sm">$248.00</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* order information */}
-        <View className="border border-x-0 border-y-8 border-[#e4e4e7]">
-          <Text className="mx-4 mb-4 text-xl font-medium text-[#333333]">
+        <View className="flex border border-x-0 border-y-8 border-[#e4e4e7]">
+          <Text className="mx-6 py-4 text-xl font-medium text-[#333333]">
             At a glance
           </Text>
 
