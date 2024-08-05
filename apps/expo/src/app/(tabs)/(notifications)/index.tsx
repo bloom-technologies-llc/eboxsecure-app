@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <View>
-        <Text className="mx-4 mb-4 text-2xl font-medium">Notifications</Text>
+        <Text className="mx-4 my-4 text-2xl font-medium">Notifications</Text>
 
         <View className="border border-[#e4e4e7] px-4 py-3">
           <Text className="text-sm text-[#333333]">Mark all as read</Text>

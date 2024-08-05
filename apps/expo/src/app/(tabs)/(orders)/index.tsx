@@ -13,84 +13,92 @@ export default function Page() {
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <View>
         <SignedIn>
-          <Text className="mx-4 mb-4 text-2xl font-medium">Order History</Text>
+          <Text className="mx-4 my-4 text-2xl font-medium">Order History</Text>
 
-          <Link href={"/(tabs)/(orders)/order-detail"}>Here</Link>
-
-          <View className="border border-[#e4e4e7] p-4">
-            <View className="flex flex-row items-center gap-x-2">
-              <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
-              <View className="flex gap-y-3">
-                <View className="flex">
-                  <Text className="">Ready for pickup</Text>
-                  <Text className="text-sm">
-                    Delivered to My EBOX location 3
-                  </Text>
+          <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+            <Pressable className=" w-full border border-[#e4e4e7] p-4">
+              <View className="flex flex-row items-center gap-x-2">
+                <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+                <View className="flex gap-y-3">
+                  <View className="flex">
+                    <Text className="">Ready for pickup</Text>
+                    <Text className="text-sm">
+                      Delivered to My EBOX location 3
+                    </Text>
+                  </View>
+                  <QRModal />
                 </View>
-                <QRModal />
               </View>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
-          <View className="border border-t-0 border-[#e4e4e7] p-4">
-            <View className="flex flex-row items-center gap-x-2">
-              <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
-              <View className="flex gap-y-3">
-                <View className="flex">
-                  <Text className="">Ready for pickup</Text>
-                  <Text className="text-sm">
-                    Delivered to My EBOX location 3
-                  </Text>
+          <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+            <Pressable className=" w-full border border-t-0 border-[#e4e4e7] p-4">
+              <View className="flex flex-row items-center gap-x-2">
+                <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+                <View className="flex gap-y-3">
+                  <View className="flex">
+                    <Text className="">Ready for pickup</Text>
+                    <Text className="text-sm">
+                      Delivered to My EBOX location 3
+                    </Text>
+                  </View>
+                  <QRModal />
                 </View>
-                <QRModal />
               </View>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
-          <View className="border border-t-0 border-[#e4e4e7] p-4">
-            <View className="flex flex-row items-center gap-x-2">
-              <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
-              <View className="flex gap-y-3">
-                <View className="flex">
-                  <Text className="">Ready for pickup</Text>
-                  <Text className="text-sm">
-                    Delivered to My EBOX location 3
-                  </Text>
+          <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+            <Pressable className=" w-full border border-t-0 border-[#e4e4e7] p-4">
+              <View className="flex flex-row items-center gap-x-2">
+                <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+                <View className="flex gap-y-3">
+                  <View className="flex">
+                    <Text className="">Ready for pickup</Text>
+                    <Text className="text-sm">
+                      Delivered to My EBOX location 3
+                    </Text>
+                  </View>
+                  <QRModal />
                 </View>
-                <QRModal />
               </View>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
-          <View className="border border-t-0 border-[#e4e4e7] p-4">
-            <View className="flex flex-row items-center gap-x-2">
-              <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
-              <View className="flex gap-y-3">
-                <View className="flex">
-                  <Text className="">Ready for pickup</Text>
-                  <Text className="text-sm">
-                    Delivered to My EBOX location 3
-                  </Text>
+          <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+            <Pressable className=" w-full border border-t-0 border-[#e4e4e7] p-4">
+              <View className="flex flex-row items-center gap-x-2">
+                <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+                <View className="flex gap-y-3">
+                  <View className="flex">
+                    <Text className="">Ready for pickup</Text>
+                    <Text className="text-sm">
+                      Delivered to My EBOX location 3
+                    </Text>
+                  </View>
+                  <QRModal />
                 </View>
-                <QRModal />
               </View>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
-          <View className="border border-t-0 border-[#e4e4e7] p-4">
-            <View className="flex flex-row items-center gap-x-2">
-              <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
-              <View className="flex gap-y-3">
-                <View className="flex">
-                  <Text className="">Ready for pickup</Text>
-                  <Text className="text-sm">
-                    Delivered to My EBOX location 3
-                  </Text>
+          <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+            <Pressable className=" w-full border border-t-0 border-[#e4e4e7] p-4">
+              <View className="flex flex-row items-center gap-x-2">
+                <View className="h-24 w-24 rounded-lg bg-slate-300"></View>
+                <View className="flex gap-y-3">
+                  <View className="flex">
+                    <Text className="">Ready for pickup</Text>
+                    <Text className="text-sm">
+                      Delivered to My EBOX location 3
+                    </Text>
+                  </View>
+                  <QRModal />
                 </View>
-                <QRModal />
               </View>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
         </SignedIn>
         <SignedOut>
           <Link href="/sign-in">

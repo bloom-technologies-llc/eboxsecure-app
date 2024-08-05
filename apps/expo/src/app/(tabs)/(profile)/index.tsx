@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Page() {
   return (
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
-      <Text className="mx-4 mb-4 text-2xl font-medium">Profile</Text>
+      <Text className="mx-4 my-4 text-2xl font-medium">Profile</Text>
 
       <View>
         <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
