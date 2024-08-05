@@ -22,7 +22,7 @@ export default function Page() {
                 <View className="flex gap-y-3">
                   <View className="flex">
                     <Text className="">Ready for pickup</Text>
-                    <Text className="text-sm">
+                    <Text className="text-sm text-[#575959]">
                       Delivered to My EBOX location 3
                     </Text>
                   </View>
@@ -39,7 +39,7 @@ export default function Page() {
                 <View className="flex gap-y-3">
                   <View className="flex">
                     <Text className="">Ready for pickup</Text>
-                    <Text className="text-sm">
+                    <Text className="text-sm text-[#575959]">
                       Delivered to My EBOX location 3
                     </Text>
                   </View>
@@ -56,7 +56,7 @@ export default function Page() {
                 <View className="flex gap-y-3">
                   <View className="flex">
                     <Text className="">Ready for pickup</Text>
-                    <Text className="text-sm">
+                    <Text className="text-sm text-[#575959]">
                       Delivered to My EBOX location 3
                     </Text>
                   </View>
@@ -73,7 +73,7 @@ export default function Page() {
                 <View className="flex gap-y-3">
                   <View className="flex">
                     <Text className="">Ready for pickup</Text>
-                    <Text className="text-sm">
+                    <Text className="text-sm text-[#575959]">
                       Delivered to My EBOX location 3
                     </Text>
                   </View>
@@ -90,7 +90,7 @@ export default function Page() {
                 <View className="flex gap-y-3">
                   <View className="flex">
                     <Text className="">Ready for pickup</Text>
-                    <Text className="text-sm">
+                    <Text className="text-sm text-[#575959]">
                       Delivered to My EBOX location 3
                     </Text>
                   </View>
