@@ -1,6 +1,8 @@
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import QRModal from "../(orders)/qr-modal";
+
 export default function Page() {
   return (
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
@@ -29,14 +31,7 @@ export default function Page() {
               <View className=" gap-y-1">
                 <Text className="text-sm">Delivered to My EBOX location 3</Text>
 
-                <Pressable
-                  style={{ alignSelf: "flex-start" }}
-                  className="w-fit rounded-md border border-[#333333] p-2"
-                >
-                  <Text style={{ alignSelf: "flex-start" }} className="w-fit">
-                    View QR code
-                  </Text>
-                </Pressable>
+                <QRModal />
               </View>
             </View>
           </View>
@@ -56,14 +51,7 @@ export default function Page() {
               <View className=" gap-y-1">
                 <Text className="text-sm">Delivered to My EBOX location 3</Text>
 
-                <Pressable
-                  style={{ alignSelf: "flex-start" }}
-                  className="w-fit rounded-md border border-[#333333] p-2"
-                >
-                  <Text style={{ alignSelf: "flex-start" }} className="w-fit">
-                    View QR code
-                  </Text>
-                </Pressable>
+                <QRModal />
               </View>
             </View>
           </View>
@@ -87,14 +75,7 @@ export default function Page() {
               <View className=" gap-y-1">
                 <Text className="text-sm">Delivered to My EBOX location 3</Text>
 
-                <Pressable
-                  style={{ alignSelf: "flex-start" }}
-                  className="w-fit rounded-md border border-[#333333] p-2"
-                >
-                  <Text style={{ alignSelf: "flex-start" }} className="w-fit">
-                    View QR code
-                  </Text>
-                </Pressable>
+                <QRModal />
               </View>
             </View>
           </View>

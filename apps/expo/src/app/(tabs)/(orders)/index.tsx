@@ -15,6 +15,8 @@ export default function Page() {
         <SignedIn>
           <Text className="mx-4 mb-4 text-2xl font-medium">Order History</Text>
 
+          <Link href={"/(tabs)/(orders)/order-detail"}>Here</Link>
+
           <View className="border border-[#e4e4e7] p-4">
             <View className="flex flex-row items-center gap-x-2">
               <View className="h-24 w-24 rounded-lg bg-slate-300"></View>

@@ -19,6 +19,10 @@ const QRModal = () => {
     bottomSheetModalRef.current?.present();
   }, []);
 
+  const handleCloseModal = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+
   // renders
   return (
     <View
@@ -54,7 +58,10 @@ const QRModal = () => {
                 to pickup your package
               </Text>
             </View>
-            <Pressable className="rounded-md bg-[#333] p-3">
+            <Pressable
+              onPress={handleCloseModal}
+              className="rounded-md bg-[#333] p-3"
+            >
               <Text className="text-center text-white">Close</Text>
             </Pressable>
           </View>

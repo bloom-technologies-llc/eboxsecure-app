@@ -13,6 +13,14 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      {/* were able to change the header name dynamically in the future, see here: https://docs.expo.dev/router/advanced/stack/#configure-header-bar */}
+      <Stack.Screen
+        name="order-detail"
+        options={{
+          title: "Order details",
+          headerShown: true,
+        }}
+      />
       <Stack.Screen
         name="qr-modal"
         options={{
