@@ -88,8 +88,6 @@ export default function Page() {
                   <Text className="text-sm text-[#575959]">
                     Delivered to My EBOX location 3
                   </Text>
-
-                  <QRModal />
                 </View>
               </View>
             </View>
