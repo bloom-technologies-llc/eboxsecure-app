@@ -17,6 +17,8 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
+import Navbar from "./_components/navbar";
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.VERCEL_ENV === "production"
@@ -59,18 +61,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TRPCReactProvider>
               <header>
-                <SignedOut>
-                  <SignInButton />
-                </SignedOut>
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
+                <Navbar />
               </header>
               {props.children}
             </TRPCReactProvider>
-            {/* <div className="absolute bottom-4 right-4">
-              <ThemeToggle />
-            </div> */}
             <Toaster />
           </ThemeProvider>
         </body>
