@@ -78,7 +78,7 @@ export default function OrderCard({
               </div>
             </div>
           </div>
-          <div className="flex w-1/5 flex-col gap-y-3">
+          <div className="my-auto flex w-1/5 flex-col gap-y-3">
             <Button className="bg-[#333333] text-white">Track package</Button>
             <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">
               View order
