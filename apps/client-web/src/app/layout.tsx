@@ -58,15 +58,15 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             GeistMono.variable,
           )}
         >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TRPCReactProvider>
-              <header>
-                <Navbar />
-              </header>
-              {props.children}
-            </TRPCReactProvider>
-            <Toaster />
-          </ThemeProvider>
+          {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
+          <TRPCReactProvider>
+            <header>
+              <Navbar />
+            </header>
+            {props.children}
+          </TRPCReactProvider>
+          <Toaster />
+          {/* </ThemeProvider> */}
         </body>
       </html>
     </ClerkProvider>

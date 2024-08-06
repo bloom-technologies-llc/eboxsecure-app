@@ -18,16 +18,24 @@ const orders = [
     ship_to: "1600 Pennsylvania Avenue NW, Washington, DC 20500",
     order_number: "#08703425-24628",
   },
+
+  {
+    date_ordered: "Aug. 5, 2024",
+    total: 67.45,
+    ship_to: "1600 Pennsylvania Avenue NW, Washington, DC 20500",
+    order_number: "#08703425-24628",
+  },
 ];
 export default function HomePage() {
   // You can await this here if you don't want to show Suspense fallback below
   const posts = api.order.getAllOrders();
 
   return (
-    <main className="container h-screen py-16">
-      <div className="flex flex-col items-center justify-center gap-4">
+    <main className="container h-screen w-full py-16 md:w-9/12">
+      <div className="flex flex-col items-center justify-center">
         <div className="w-full">
-          <h2 className="text-left text-2xl">Your orders</h2>
+          <div></div>
+          <h2 className="mb-3 text-left text-2xl">Your orders</h2>
           <Tabs defaultValue="active" className="w-full">
             <TabsList>
               <TabsTrigger value="active">Active orders</TabsTrigger>
