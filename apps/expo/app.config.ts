@@ -22,7 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "your.bundle.identifier",
+    bundleIdentifier: "com.eboxsecure.eboxsecureapp",
     supportsTablet: true,
   },
   android: {
@@ -33,9 +33,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   extra: {
-    // eas: {
-    //   projectId: "your-eas-project-id",
-    // },
+    eas: {
+      projectId: "c6403cc1-01d8-46cb-9e4d-6f4b23a8879b",
+    },
     CLERK_PUBLISHABLE_KEY,
   },
   experiments: {

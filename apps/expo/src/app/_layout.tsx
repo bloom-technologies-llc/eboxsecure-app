@@ -1,12 +1,14 @@
-import { Slot } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Constants from "expo-constants";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -33,6 +35,11 @@ const tokenCache = {
   },
 };
 
+export const unstable_settings = {
+  // Ensure any route can link back to `/`
+  initialRouteName: "(tabs)/(orders)/index",
+};
+
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
@@ -44,11 +51,17 @@ export default function RootLayout() {
   return (
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig?.extra.CLERK_PUBLISHABLE_KEY}
+      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
     >
       <TRPCProvider>
         <ClerkLoaded>
-          <Slot />
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </ClerkLoaded>
       </TRPCProvider>
     </ClerkProvider>
