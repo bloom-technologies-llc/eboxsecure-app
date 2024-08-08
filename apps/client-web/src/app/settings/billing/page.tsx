@@ -123,36 +123,44 @@ export default function SettingsPage() {
     getCoreRowModel: getCoreRowModel(),
   });
   return (
-    <div className="h-screen bg-[#F3F3F3] py-20">
+    <div className="h-screen bg-[#F3F3F3] pb-28 pt-14">
       {/* <p className="text-2xl">Settings</p> */}
       <div className="mx-auto flex h-full w-full rounded-md border border-[#E4E4E7] bg-white md:w-8/12">
         <div className=" w-2.5/12 border-r border-[#E4E4E7] px-2 py-3">
           <div className="flex flex-col gap-y-3">
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings">General</Link>
-            </Button>
+            <Link href="/settings">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
+                General
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings/notifications">Notifications</Link>
-            </Button>
+            <Link href="/settings/notifications">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
+                Notifications
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings/authorized-pickups">
+            <Link href="/settings/authorized-pickups">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
                 Authorized pickups
-              </Link>
-            </Button>
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
-              <Link href="/settings/billing">Billing</Link>
-            </Button>
+            <Link href="/settings/billing">
+              <Button className="w-full justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
+                Billing
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/">Subscription</Link>
-            </Button>
+            <Link href="/">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
+                Subscription
+              </Button>
+            </Link>
 
             <DropdownMenuSeparator />
 
-            <Button className="justify-start bg-white text-start  shadow-none">
+            <Button className="w-full justify-start bg-white text-start  shadow-none">
               <Link className="text-[#8F0000]" href="/">
                 Delete my account
               </Link>

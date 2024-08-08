@@ -9,32 +9,39 @@ import { Label } from "@ebox/ui/label";
 
 export default function SettingsPage() {
   return (
-    <div className="h-screen bg-[#F3F3F3] py-20">
-      {/* <p className="text-2xl">Settings</p> */}
+    <div className="h-screen bg-[#F3F3F3] pb-28 pt-14 ">
       <div className="mx-auto flex h-full w-full rounded-md border border-[#E4E4E7] bg-white md:w-8/12">
         <div className=" w-2.5/12 border-r border-[#E4E4E7] px-2 py-3">
           <div className="flex flex-col gap-y-3">
-            <Button className="justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
-              <Link href="/settings">General</Link>
-            </Button>
+            <Link href="/settings">
+              <Button className="w-full justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
+                General
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings/notifications">Notifications</Link>
-            </Button>
+            <Link href="/settings/notifications">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
+                Notifications
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings/authorized-pickups">
+            <Link href="/settings/authorized-pickups">
+              <Button className="w-full justify-start bg-white text-start  shadow-none">
                 Authorized pickups
-              </Link>
-            </Button>
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/settings/billing">Billing</Link>
-            </Button>
+            <Link href="/settings/billing">
+              <Button className="justify-start bg-white text-start  shadow-none">
+                Billing
+              </Button>
+            </Link>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/">Subscription</Link>
-            </Button>
+            <Link href="/">
+              <Button className="justify-start bg-white text-start  shadow-none">
+                Subscription
+              </Button>
+            </Link>
 
             <DropdownMenuSeparator />
 
@@ -60,14 +67,14 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex gap-x-2 ">
-              <div className="grid w-full max-w-sm items-center gap-1.5">
+              <div className="grid w-full items-center gap-1.5">
                 <Label className="font-normal" htmlFor="text">
                   Name
                 </Label>
                 <Input type="text" id="text" placeholder="John doe" />
               </div>
 
-              <div className="grid w-full max-w-sm items-center gap-1.5">
+              <div className="grid w-full items-center gap-1.5">
                 <Label className="font-normal" htmlFor="tel">
                   Phone number
                 </Label>
