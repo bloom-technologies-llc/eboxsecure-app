@@ -80,19 +80,35 @@ const NotificationDropdown = () => {
         <div className="flex flex-col gap-y-3 px-2 py-4">
           <div className="flex justify-between">
             <span className="text-sm">Package has been shipped</span>
-            <span className="text-sm text-[#575959]">Today, 11:25 am</span>
+            <span className="text-sm text-[#575959]">May 15</span>
           </div>
 
           <div className="flex gap-x-3">
             <div className="h-14 w-14 rounded-md bg-slate-300"></div>
-            <div className="flex flex-col gap-y-2">
+            <div className="flex flex-col">
+              <p className="text-sm text-[#575959]">Shipping to</p>
               <p className="text-sm text-[#575959]">
-                Delivered to My Ebox Location 3
+                3949 New York 31, Liverpool, NY 13090 US
               </p>
+            </div>
+          </div>
+        </div>
 
-              <div className="w-fit rounded-md border border-[#333333] px-3 py-1">
-                <p className="text-sm text-[#333333]">QR code</p>
-              </div>
+        <DropdownMenuSeparator />
+
+        <div className="flex flex-col gap-y-3 px-2 py-4">
+          <div className="flex justify-between">
+            <span className="text-sm">Package has been shipped</span>
+            <span className="text-sm text-[#575959]">May 15</span>
+          </div>
+
+          <div className="flex gap-x-3">
+            <div className="h-14 w-14 rounded-md bg-slate-300"></div>
+            <div className="flex flex-col">
+              <p className="text-sm text-[#575959]">Shipping to</p>
+              <p className="text-sm text-[#575959]">
+                3949 New York 31, Liverpool, NY 13090 US
+              </p>
             </div>
           </div>
         </div>
