@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "70c990f3-30ad-4792-a472-d4eebaf0cf82"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.eboxsecure.eboxsecureapp"
+    }
+  }
+}
