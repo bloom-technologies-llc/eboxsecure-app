@@ -11,19 +11,21 @@ export default function SettingsPage() {
   return (
     <div className="h-screen bg-[#F3F3F3] py-20">
       {/* <p className="text-2xl">Settings</p> */}
-      <div className="mx-auto flex w-full rounded-md border border-[#E4E4E7] bg-white md:w-8/12">
+      <div className="mx-auto flex h-full w-full rounded-md border border-[#E4E4E7] bg-white md:w-8/12">
         <div className=" w-2.5/12 border-r border-[#E4E4E7] px-2 py-3">
           <div className="flex flex-col gap-y-3">
             <Button className="justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
-              <Link href="/">General</Link>
+              <Link href="/settings">General</Link>
             </Button>
 
             <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="./../notifications">Notifications</Link>
+              <Link href="/settings/notifications">Notifications</Link>
             </Button>
 
             <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/">Authorized pickups</Link>
+              <Link href="/settings/authorized-pickups">
+                Authorized pickups
+              </Link>
             </Button>
 
             <Button className="justify-start bg-white text-start  shadow-none">
