@@ -33,16 +33,34 @@ import { EllipsisIcon } from "~/app/icons";
 
 export const columns = [
   {
+    accessorKey: "date",
+    header: "Date",
+  },
+  {
+    accessorKey: "sub_tier",
+    header: "Subscription Tier",
+  },
+  {
     accessorKey: "status",
     header: "Status",
+    cell: ({ row }) => (
+      <div className="w-fit rounded-sm bg-[#f3f3f3] px-4 py-1">
+        <p className="text-[#414242]">{row.getValue("status")}</p>
+      </div>
+    ),
   },
   {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "date",
-    header: "Date added",
+    accessorKey: "total",
+    header: () => <div className="text-right">Total</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("total"));
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(amount);
+
+      return <div className="text-right font-medium">{formatted}</div>;
+    },
   },
 
   {
@@ -59,7 +77,7 @@ export const columns = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Delete user</DropdownMenuItem>
+            <DropdownMenuItem>View invoice</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -71,40 +89,30 @@ export const data = [
   {
     id: "728ed52f",
     date: "11/24/2024",
-    status: "pending",
-    email: "michael.jordan@nba.com",
+    sub_tier: "Diamond",
+    status: "Open",
+    total: 22.0,
   },
   {
     id: "728ed52f",
     date: "11/24/2024",
-
-    status: "pending",
-    email: "jony.ive@apple.com",
+    sub_tier: "Gold",
+    status: "Open",
+    total: 22.0,
   },
   {
     id: "728ed52f",
     date: "11/24/2024",
-
-    status: "pending",
-    email: "steve.jobs@apple.com",
+    sub_tier: "Silver",
+    status: "Open",
+    total: 22.0,
   },
   {
     id: "728ed52f",
     date: "11/24/2024",
-    status: "pending",
-    email: "king.kong@example.com",
-  },
-  {
-    id: "728ed52f",
-    date: "11/24/2024",
-    status: "Authorized",
-    email: "stacy.zhang@example.com",
-  },
-  {
-    id: "489e1d42",
-    date: "11/24/2024",
-    status: "Authorized",
-    email: "melbay@gmail.com",
+    sub_tier: "Bronze",
+    status: "Open",
+    total: 22.0,
   },
 ];
 
@@ -175,9 +183,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex gap-x-2">
-                  <div className="h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
+                  <Button className="h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
                     <p>Default</p>
-                  </div>
+                  </Button>
                 </div>
               </div>
 
@@ -197,7 +205,14 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          <Button className="mx-4 mb-4 h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
+            <p>Add payment method</p>
+          </Button>
+
+          <DropdownMenuSeparator />
+
           <div className="m-4 flex flex-col gap-y-2">
+            <p className="mb-2">Transaction History</p>
             <div className=" rounded-md border">
               <Table>
                 <TableHeader>
