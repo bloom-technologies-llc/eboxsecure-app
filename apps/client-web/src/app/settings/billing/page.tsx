@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ColumnDef,
@@ -7,6 +8,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import logo from "public/visa_logo.png";
 
 import { Button } from "@ebox/ui/button";
 import {
@@ -126,13 +128,13 @@ export default function SettingsPage() {
               <Link href="/settings/notifications">Notifications</Link>
             </Button>
 
-            <Button className="justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
+            <Button className="justify-start bg-white text-start  shadow-none">
               <Link href="/settings/authorized-pickups">
                 Authorized pickups
               </Link>
             </Button>
 
-            <Button className="justify-start bg-white text-start  shadow-none">
+            <Button className="justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
               <Link href="/settings/billing">Billing</Link>
             </Button>
 
@@ -151,18 +153,51 @@ export default function SettingsPage() {
         </div>
         <div className="w-full flex-col">
           <div className="border-b border-[#E4E4E7] p-4">
-            <p>Authorized Pickups</p>
+            <p>Billing</p>
             <p className="text-sm text-[#575959]">
-              Choose the individuals who are able to pick up packages for you
+              Update your payment methods & subscription plans
             </p>
           </div>
 
-          <div className="m-4 flex flex-col gap-y-2">
-            <div className=" flex justify-between">
-              <Input placeholder="Filter users..." className="max-w-sm" />
-              <Button className="bg-[#00698F] text-white">Add user</Button>
-            </div>
+          <div className="flex flex-col gap-y-4 p-4">
+            <p>Payment information</p>
 
+            <div className="flex gap-x-2">
+              <div className="flex w-full gap-x-4 rounded-md border border-[#E4E4E7] p-2">
+                <div className="flex gap-x-1">
+                  <Image src={logo} width={60} height={20} alt="Visa logo" />
+
+                  <div className="flex flex-col">
+                    <p className="text-sm text-[#333333]">
+                      Visa ending in 7830
+                    </p>
+                    <p className="text-sm text-[#575959]">Exp. date 6/30</p>
+                  </div>
+                </div>
+                <div className="flex gap-x-2">
+                  <div className="h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
+                    <p>Default</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full gap-x-4 rounded-md border border-[#E4E4E7] p-2">
+                <div className="flex gap-x-1">
+                  <Image src={logo} width={60} height={20} alt="Visa logo" />
+
+                  <div className="flex flex-col">
+                    <p className="text-sm text-[#333333]">
+                      Visa ending in 7830
+                    </p>
+                    <p className="text-sm text-[#575959]">Exp. date 6/30</p>
+                  </div>
+                </div>
+                <p className="text-sm text-[#00698F]">Set default</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="m-4 flex flex-col gap-y-2">
             <div className=" rounded-md border">
               <Table>
                 <TableHeader>

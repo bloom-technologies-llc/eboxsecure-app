@@ -29,7 +29,7 @@ export default function SettingsPage() {
             </Button>
 
             <Button className="justify-start bg-white text-start  shadow-none">
-              <Link href="/">Billing</Link>
+              <Link href="/settings/billing">Billing</Link>
             </Button>
 
             <Button className="justify-start bg-white text-start  shadow-none">
