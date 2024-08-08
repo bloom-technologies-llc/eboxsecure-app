@@ -2,7 +2,7 @@ import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import logo from "public/logo.png";
 
-import NotificationBell from "@ebox/ui/icons/notification-bell";
+import NotificationDropdown from "./notification-dropdown";
 
 export default function Navbar() {
   return (
@@ -18,9 +18,7 @@ export default function Navbar() {
         <div className="">
           <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
             <li className="flex items-center">
-              <a href="#">
-                <NotificationBell />
-              </a>
+              <NotificationDropdown />
             </li>
             <li>
               <a href="#">
