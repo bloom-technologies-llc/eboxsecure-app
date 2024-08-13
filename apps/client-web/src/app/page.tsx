@@ -9,23 +9,30 @@ export default function HomePage() {
   const posts = api.order.getAllOrders();
 
   return (
-    <main className="container h-screen py-16">
-      <div className="flex flex-col items-center justify-center gap-4">
-        <div className="w-1/2">
-          <h2 className="text-left text-2xl">Your orders</h2>
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList>
-              <TabsTrigger value="active">Active orders</TabsTrigger>
-              <TabsTrigger value="delivered">Delivered orders</TabsTrigger>
-            </TabsList>
-            <TabsContent value="active">Active</TabsContent>
-            <TabsContent value="delivered">Delivered</TabsContent>
-          </Tabs>
-          <Suspense fallback={<>hello</>}>
-            {/* {posts.map((post) => <p>{post}</p>)} */}
-          </Suspense>
-        </div>
-      </div>
-    </main>
+    <div>
+      <p className="text-xl">500 Server Error</p>
+      <p className="text-sm">
+        If you see this, that means the application failed load testing. See
+        logs for more details.
+      </p>
+    </div>
+    // <main className="container h-screen py-16">
+    //   <div className="flex flex-col items-center justify-center gap-4">
+    //     <div className="w-1/2">
+    //       <h2 className="text-left text-2xl">Your orders</h2>
+    //       <Tabs defaultValue="active" className="w-full">
+    //         <TabsList>
+    //           <TabsTrigger value="active">Active orders</TabsTrigger>
+    //           <TabsTrigger value="delivered">Delivered orders</TabsTrigger>
+    //         </TabsList>
+    //         <TabsContent value="active">Active</TabsContent>
+    //         <TabsContent value="delivered">Delivered</TabsContent>
+    //       </Tabs>
+    //       <Suspense fallback={<>hello</>}>
+    //         {/* {posts.map((post) => <p>{post}</p>)} */}
+    //       </Suspense>
+    //     </div>
+    //   </div>
+    // </main>
   );
 }
