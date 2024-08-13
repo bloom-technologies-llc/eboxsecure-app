@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
+import { EllipsisIcon } from "@ebox/ui/icons/ellipsis";
 import { Input } from "@ebox/ui/input";
 import {
   Table,
@@ -26,8 +27,6 @@ import {
   TableHeader,
   TableRow,
 } from "@ebox/ui/table";
-
-import { EllipsisIcon } from "~/app/icons";
 
 export const columns = [
   {
