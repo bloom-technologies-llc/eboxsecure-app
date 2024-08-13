@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -13,7 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
@@ -28,7 +27,13 @@ import {
   TableRow,
 } from "@ebox/ui/table";
 
-export const columns = [
+interface AuthorizedPickup {
+  id: string;
+  status: string;
+  email: string;
+  date: string;
+}
+const columns: ColumnDef<AuthorizedPickup>[] = [
   {
     accessorKey: "status",
     header: "Status",
@@ -49,9 +54,7 @@ export const columns = [
 
   {
     id: "actions",
-    cell: ({ row }) => {
-      const payment = row.original;
-
+    cell: () => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -69,7 +72,7 @@ export const columns = [
   },
 ];
 
-export const data = [
+const data: AuthorizedPickup[] = [
   {
     id: "728ed52f",
     date: "11/24/2024",
@@ -86,7 +89,6 @@ export const data = [
   {
     id: "728ed52f",
     date: "11/24/2024",
-
     status: "pending",
     email: "steve.jobs@apple.com",
   },

@@ -1,9 +1,9 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -15,12 +15,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
-import { EllipsisIcon } from "@ebox/ui/icons/ellipses";
-import { Input } from "@ebox/ui/input";
+import { EllipsisIcon } from "@ebox/ui/icons/ellipsis";
 import {
   Table,
   TableBody,
@@ -30,7 +28,14 @@ import {
   TableRow,
 } from "@ebox/ui/table";
 
-export const columns = [
+interface Billing {
+  id: string;
+  date: string;
+  sub_tier: string;
+  status: string;
+  total: number;
+}
+const columns: ColumnDef<Billing>[] = [
   {
     accessorKey: "date",
     header: "Date",
@@ -64,9 +69,7 @@ export const columns = [
 
   {
     id: "actions",
-    cell: ({ row }) => {
-      const payment = row.original;
-
+    cell: () => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -84,7 +87,7 @@ export const columns = [
   },
 ];
 
-export const data = [
+const data: Billing[] = [
   {
     id: "728ed52f",
     date: "11/24/2024",
