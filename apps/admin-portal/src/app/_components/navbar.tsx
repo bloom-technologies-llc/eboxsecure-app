@@ -2,8 +2,6 @@ import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import logo from "public/logo.png";
 
-import NotificationDropdown from "./notification-dropdown";
-
 export default function Navbar() {
   return (
     <nav>
@@ -17,9 +15,6 @@ export default function Navbar() {
 
         <div className="">
           <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
-            <li className="flex items-center">
-              <NotificationDropdown />
-            </li>
             <li>
               <a href="#">
                 <UserButton />
