@@ -22,11 +22,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "your.bundle.identifier",
+    bundleIdentifier: "com.eboxsecure.eboxsecureclient",
     supportsTablet: true,
   },
   android: {
-    package: "your.bundle.identifier",
+    package: "com.eboxsecure.eboxsecureclient",
     adaptiveIcon: {
       foregroundImage: "./assets/icon.png",
       backgroundColor: "#1F104A",

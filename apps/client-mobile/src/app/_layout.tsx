@@ -7,6 +7,7 @@ import "../styles.css";
 
 import Constants from "expo-constants";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -44,12 +45,14 @@ export default function RootLayout() {
   return (
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig?.extra.CLERK_PUBLISHABLE_KEY}
+      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
     >
       <TRPCProvider>
-        <ClerkLoaded>
-          <Slot />
-        </ClerkLoaded>
+        <BottomSheetModalProvider>
+          <ClerkLoaded>
+            <Slot />
+          </ClerkLoaded>
+        </BottomSheetModalProvider>
       </TRPCProvider>
     </ClerkProvider>
   );
