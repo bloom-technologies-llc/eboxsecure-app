@@ -32,7 +32,7 @@ export const createTRPCContext = (opts: {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
 
-  console.log(">>> tRPC Request from", source, "by", session?.userId);
+  console.log(">>> tRPC Request from", source, "by", session.userId);
 
   return {
     session,
@@ -94,7 +94,7 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.session?.userId) {
+  if (!ctx.session.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({

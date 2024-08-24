@@ -1,13 +1,10 @@
-import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
-import logo from "public/logo.png";
 
 export default function Navbar() {
   return (
     <nav>
       <div className="flex justify-between px-32 py-4">
         <a href="/" className="flex items-center space-x-3">
-          <Image src={logo} height={50} alt="EBoxSecure logo" />
           <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
             EBoxSecure
           </span>

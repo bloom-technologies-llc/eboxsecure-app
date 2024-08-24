@@ -1,8 +1,5 @@
-import { Suspense } from "react";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ebox/ui/tabs";
 
-import { api } from "~/trpc/server";
 import OrderCard from "./order-card";
 
 const orders = [
@@ -27,9 +24,6 @@ const orders = [
   },
 ];
 export default function HomePage() {
-  // You can await this here if you don't want to show Suspense fallback below
-  const posts = api.order.getAllOrders();
-
   return (
     <main className="container h-screen w-full py-16 md:w-9/12">
       <div className="flex flex-col items-center justify-center">
@@ -48,9 +42,6 @@ export default function HomePage() {
             </TabsContent>
             <TabsContent value="delivered">Delivered</TabsContent>
           </Tabs>
-          <Suspense fallback={<>hello</>}>
-            {/* {posts.map((post) => <p>{post}</p>)} */}
-          </Suspense>
         </div>
       </div>
     </main>

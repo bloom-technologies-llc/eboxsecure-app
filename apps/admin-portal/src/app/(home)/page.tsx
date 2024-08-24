@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-
 import { api } from "~/trpc/server";
 
 export default async function HomePage() {

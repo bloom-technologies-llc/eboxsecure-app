@@ -5,8 +5,8 @@ const CLERK_PUBLISHABLE_KEY =
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo",
-  slug: "expo",
+  name: "ebox-client-mobile",
+  slug: "ebox-client-mobile",
   scheme: "expo",
   version: "0.1.0",
   orientation: "portrait",
@@ -22,20 +22,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "your.bundle.identifier",
+    bundleIdentifier: "com.eboxsecure.eboxsecureclient",
     supportsTablet: true,
   },
   android: {
-    package: "your.bundle.identifier",
+    package: "com.eboxsecure.eboxsecureclient",
     adaptiveIcon: {
       foregroundImage: "./assets/icon.png",
       backgroundColor: "#1F104A",
     },
   },
   extra: {
-    // eas: {
-    //   projectId: "your-eas-project-id",
-    // },
+    eas: {
+      projectId: "35ebb21b-a7a1-4995-9edd-b68490f1646f",
+    },
     CLERK_PUBLISHABLE_KEY,
   },
   experiments: {
