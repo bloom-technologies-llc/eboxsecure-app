@@ -1,16 +1,9 @@
-import type { Metadata, Viewport } from "next";
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-} from "@clerk/nextjs";
+import type { Viewport } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@ebox/ui";
-import { ThemeProvider, ThemeToggle } from "@ebox/ui/theme";
 import { Toaster } from "@ebox/ui/toast";
 
 import { TRPCReactProvider } from "~/trpc/react";

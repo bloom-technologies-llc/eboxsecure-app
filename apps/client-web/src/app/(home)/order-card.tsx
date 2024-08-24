@@ -2,14 +2,7 @@ import Image from "next/image";
 import image1 from "public/image1.jpg";
 
 import { Button } from "@ebox/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@ebox/ui/card";
+import { Card, CardContent, CardHeader } from "@ebox/ui/card";
 import { Separator } from "@ebox/ui/separator";
 
 interface Order {
