@@ -27,6 +27,22 @@ export default function TabLayout() {
           tabBarIcon: () => <UserIcon />,
         }}
       />
+      <Tabs.Screen
+        name="(auth)/sign-in"
+        options={{
+          title: "Sign In",
+          tabBarIcon: () => <UserIcon />,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="(auth)/sign-up"
+        options={{
+          title: "Sign Up",
+          tabBarIcon: () => <UserIcon />,
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

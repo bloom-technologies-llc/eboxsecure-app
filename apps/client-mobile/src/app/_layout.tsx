@@ -1,8 +1,8 @@
 import type { ErrorBoundaryProps } from "expo-router";
-import { Slot, useNavigationContainerRef } from "expo-router";
+import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
-import { TRPCProvider } from "~/utils/api";
+// import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
@@ -84,18 +84,20 @@ function RootLayout() {
   }, [ref]);
 
   return (
-    // <ClerkProvider
-    //   tokenCache={tokenCache}
-    //   publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
-    // >
-    <TRPCProvider>
+    <ClerkProvider
+      tokenCache={tokenCache}
+      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
+    >
+      {/* <TRPCProvider> */}
       <BottomSheetModalProvider>
-        {/* <ClerkLoaded> */}
-        <Slot />
-        {/* </ClerkLoaded> */}
+        <ClerkLoaded>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+        </ClerkLoaded>
       </BottomSheetModalProvider>
-    </TRPCProvider>
-    // </ClerkProvider>
+      {/* </TRPCProvider> */}
+    </ClerkProvider>
   );
 }
 
