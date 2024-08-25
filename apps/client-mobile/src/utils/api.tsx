@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Constants from "expo-constants";
-import { useAuth } from "@clerk/clerk-expo";
+// import { useAuth } from "@clerk/clerk-expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
@@ -42,7 +42,7 @@ const getBaseUrl = () => {
  * Use only in _app.tsx
  */
 export function TRPCProvider(props: { children: React.ReactNode }) {
-  const { getToken } = useAuth();
+  //   const { getToken } = useAuth();
 
   const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
@@ -57,14 +57,15 @@ export function TRPCProvider(props: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
-          async headers() {
+          //   async headers() {
+          headers() {
             const headers = new Map<string, string>();
             headers.set("x-trpc-source", "expo-react");
             // Include the Clerk token for cross-origin request
-            const token = await getToken();
-            if (token) {
-              headers.set("Authorization", `Bearer ${token}`);
-            }
+            // const token = await getToken();
+            // if (token) {
+            //   headers.set("Authorization", `Bearer ${token}`);
+            // }
 
             return Object.fromEntries(headers);
           },
