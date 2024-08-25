@@ -72,6 +72,7 @@ function RootLayout() {
   // Capture the NavigationContainer ref and register it with the instrumentation.
   const ref = useNavigationContainerRef();
   if (!Constants.expoConfig || !Constants.expoConfig.extra) {
+    Sentry.captureMessage("missing publishable key");
     throw new Error(
       "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in app.config.ts.",
     );
@@ -83,18 +84,18 @@ function RootLayout() {
   }, [ref]);
 
   return (
-    <ClerkProvider
-      tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
-    >
-      <TRPCProvider>
-        <BottomSheetModalProvider>
-          <ClerkLoaded>
-            <Slot />
-          </ClerkLoaded>
-        </BottomSheetModalProvider>
-      </TRPCProvider>
-    </ClerkProvider>
+    // <ClerkProvider
+    //   tokenCache={tokenCache}
+    //   publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
+    // >
+    <TRPCProvider>
+      <BottomSheetModalProvider>
+        {/* <ClerkLoaded> */}
+        <Slot />
+        {/* </ClerkLoaded> */}
+      </BottomSheetModalProvider>
+    </TRPCProvider>
+    // </ClerkProvider>
   );
 }
 
