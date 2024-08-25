@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Button, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
@@ -20,7 +20,12 @@ export default function Page() {
             Order History. Orders:{" "}
             {data?.map((order) => <Text>{order.vendorOrderId}</Text>)}
           </Text>
-
+          <Button // TODO: remove
+            title="Press me to test sentry"
+            onPress={() => {
+              throw new Error("Hello, again, Sentry!");
+            }}
+          />
           <Link href={"../(orders)/order-detail"} asChild>
             <Pressable className=" w-full border border-[#e4e4e7] p-4">
               <View className="flex flex-row items-center gap-x-2">
