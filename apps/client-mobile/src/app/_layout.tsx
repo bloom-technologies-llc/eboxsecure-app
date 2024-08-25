@@ -1,18 +1,10 @@
-import type { ErrorBoundaryProps } from "expo-router";
 import { Stack, useNavigationContainerRef } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-
-import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
 import { useEffect } from "react";
-import { Text, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
-import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import * as Sentry from "@sentry/react-native";
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
@@ -31,42 +23,6 @@ Sentry.init({
     }),
   ],
 });
-
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      const item = await SecureStore.getItemAsync(key);
-      if (item) {
-        console.log(`${key} was used 🔐 \n`);
-      } else {
-        console.log("No values stored under key: " + key);
-      }
-      return item;
-    } catch (error) {
-      console.error("SecureStore get item error: ", error);
-      await SecureStore.deleteItemAsync(key);
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
-  },
-};
-
-export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  Sentry.captureException(error.message);
-  return (
-    <View style={{ flex: 1, backgroundColor: "red" }}>
-      <Text>{error.message}</Text>
-      <Text onPress={retry}>Try Again?</Text>
-    </View>
-  );
-}
-
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 function RootLayout() {
@@ -85,22 +41,9 @@ function RootLayout() {
   }, [ref]);
 
   return (
-    <ClerkProvider
-      tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
-    >
-      <TRPCProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <ClerkLoaded>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-            </ClerkLoaded>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </TRPCProvider>
-    </ClerkProvider>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }
 
