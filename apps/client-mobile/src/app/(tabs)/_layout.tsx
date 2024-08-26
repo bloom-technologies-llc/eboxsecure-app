@@ -35,14 +35,6 @@ export default function TabLayout() {
           href: null,
         }}
       />
-      <Tabs.Screen
-        name="(auth)/sign-up"
-        options={{
-          title: "Sign Up",
-          tabBarIcon: () => <UserIcon />,
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

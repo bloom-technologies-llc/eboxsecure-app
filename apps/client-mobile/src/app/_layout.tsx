@@ -5,6 +5,8 @@ import "../styles.css";
 import { useEffect } from "react";
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
+import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
@@ -23,6 +25,32 @@ Sentry.init({
     }),
   ],
 });
+
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      const item = await SecureStore.getItemAsync(key);
+      if (item) {
+        console.log(`${key} was used 🔐 \n`);
+      } else {
+        console.log("No values stored under key: " + key);
+      }
+      return item;
+    } catch (error) {
+      console.error("SecureStore get item error: ", error);
+      await SecureStore.deleteItemAsync(key);
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
+
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 function RootLayout() {
@@ -41,9 +69,16 @@ function RootLayout() {
   }, [ref]);
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <ClerkProvider
+      tokenCache={tokenCache}
+      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
+    >
+      <ClerkLoaded>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }
 
