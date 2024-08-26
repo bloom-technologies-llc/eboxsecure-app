@@ -3,6 +3,7 @@ import { Stack, useNavigationContainerRef } from "expo-router";
 import "../styles.css";
 
 import { useEffect } from "react";
+import { Text, View } from "react-native";
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
@@ -30,23 +31,22 @@ const tokenCache = {
   async getToken(key: string) {
     try {
       const item = await SecureStore.getItemAsync(key);
-      if (item) {
-        console.log(`${key} was used 🔐 \n`);
-      } else {
-        console.log("No values stored under key: " + key);
-      }
+      console.log(`Retrieved token for key: ${key}`);
       return item;
     } catch (error) {
-      console.error("SecureStore get item error: ", error);
+      console.error("SecureStore getToken error:", error);
+      Sentry.captureException(error);
       await SecureStore.deleteItemAsync(key);
       return null;
     }
   },
   async saveToken(key: string, value: string) {
     try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
+      await SecureStore.setItemAsync(key, value);
+      console.log(`Saved token for key: ${key}`);
+    } catch (error) {
+      console.error("SecureStore saveToken error:", error);
+      Sentry.captureException(error);
     }
   },
 };
@@ -54,31 +54,50 @@ const tokenCache = {
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 function RootLayout() {
-  // Capture the NavigationContainer ref and register it with the instrumentation.
-  const ref = useNavigationContainerRef();
-  if (!Constants.expoConfig || !Constants.expoConfig.extra) {
-    Sentry.captureMessage("missing publishable key");
-    throw new Error(
-      "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in app.config.ts.",
-    );
-  }
-  useEffect(() => {
-    if (ref) {
-      routingInstrumentation.registerNavigationContainer(ref);
+  try {
+    // Capture the NavigationContainer ref and register it with the instrumentation.
+    const ref = useNavigationContainerRef();
+    if (!Constants.expoConfig || !Constants.expoConfig.extra) {
+      Sentry.captureMessage("missing expo configuration key");
+      throw new Error("Missing Expo configuration.");
     }
-  }, [ref]);
+    if (!Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY) {
+      Sentry.captureMessage("missing publishable key");
+      throw new Error(
+        "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in app.config.ts.",
+      );
+    }
+    useEffect(() => {
+      if (ref) {
+        routingInstrumentation.registerNavigationContainer(ref);
+      }
+    }, [ref]);
 
+    return (
+      <ClerkProvider
+        tokenCache={tokenCache}
+        publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
+      >
+        <ClerkLoaded>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+        </ClerkLoaded>
+      </ClerkProvider>
+    );
+  } catch (error) {
+    Sentry.captureException(error);
+    console.error("RootLayout Error:", error);
+    return <ErrorFallback error={error} />;
+  }
+}
+
+function ErrorFallback({ error }: { error: any }) {
   return (
-    <ClerkProvider
-      tokenCache={tokenCache}
-      publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
-    >
-      <ClerkLoaded>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Something went wrong:</Text>
+      <Text>{error.toString()}</Text>
+    </View>
   );
 }
 
