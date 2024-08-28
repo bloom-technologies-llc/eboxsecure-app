@@ -44,18 +44,18 @@ function RootLayout() {
 
     return (
       <ClerkProvider publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk">
-        <TRPCProvider>
-          <ClerkLoaded>
+        <ClerkLoaded>
+          <TRPCProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             </Stack>
-          </ClerkLoaded>
-          <ClerkLoading>
-            <SafeAreaView>
-              <Text>Loading...</Text>
-            </SafeAreaView>
-          </ClerkLoading>
-        </TRPCProvider>
+          </TRPCProvider>
+        </ClerkLoaded>
+        <ClerkLoading>
+          <SafeAreaView>
+            <Text>Loading...</Text>
+          </SafeAreaView>
+        </ClerkLoading>
       </ClerkProvider>
     );
   } catch (error) {
