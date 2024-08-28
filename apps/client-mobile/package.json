@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/clerk-expo": "^0.20.16",
+    "@clerk/clerk-expo": "^2.2.4",
     "@expo/metro-config": "^0.18.11",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@sentry/react-native": "~5.22.0",
