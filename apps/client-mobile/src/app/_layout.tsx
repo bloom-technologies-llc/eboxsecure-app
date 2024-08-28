@@ -3,10 +3,10 @@ import { Stack, useNavigationContainerRef } from "expo-router";
 import "../styles.css";
 
 import { useEffect } from "react";
-import { Text, View } from "react-native";
+import { SafeAreaView, Text, View } from "react-native";
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
-import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkLoading, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 
 import { TRPCProvider } from "~/utils/api";
@@ -43,11 +43,18 @@ function RootLayout() {
     }, [ref]);
 
     return (
-      <ClerkProvider publishableKey="pk_live_Y2xlcmsuYXBwLmVib3hzZWN1cmUuY29tJA">
+      <ClerkProvider publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk">
         <TRPCProvider>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
+          <ClerkLoaded>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+          </ClerkLoaded>
+          <ClerkLoading>
+            <SafeAreaView>
+              <Text>Loading...</Text>
+            </SafeAreaView>
+          </ClerkLoading>
         </TRPCProvider>
       </ClerkProvider>
     );
