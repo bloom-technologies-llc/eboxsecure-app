@@ -43,9 +43,11 @@ function RootLayout() {
     }, [ref]);
 
     return (
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <TRPCProvider>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </TRPCProvider>
     );
   } catch (error) {
     Sentry.captureException(error);
@@ -56,12 +58,10 @@ function RootLayout() {
 
 function ErrorFallback({ error }: { error: any }) {
   return (
-    <TRPCProvider>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Something went wrong:</Text>
-        <Text>{error.toString()}</Text>
-      </View>
-    </TRPCProvider>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Something went wrong:</Text>
+      <Text>{error.toString()}</Text>
+    </View>
   );
 }
 
