@@ -9,6 +9,8 @@ import Constants from "expo-constants";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 
+import { TRPCProvider } from "~/utils/api";
+
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 Sentry.init({
@@ -25,6 +27,8 @@ Sentry.init({
     }),
   ],
 });
+
+Sentry.captureMessage("Started application up!");
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -50,7 +54,6 @@ function RootLayout() {
 
     return (
       <Stack>
-        publishable key: {Constants?.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     );
@@ -63,10 +66,12 @@ function RootLayout() {
 
 function ErrorFallback({ error }: { error: any }) {
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Something went wrong:</Text>
-      <Text>{error.toString()}</Text>
-    </View>
+    <TRPCProvider>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Something went wrong:</Text>
+        <Text>{error.toString()}</Text>
+      </View>
+    </TRPCProvider>
   );
 }
 
