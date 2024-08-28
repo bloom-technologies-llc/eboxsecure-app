@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Slot, Stack } from "expo-router";
 
 import "../styles.css";
 
@@ -12,7 +12,7 @@ function RootLayout() {
     <ClerkProvider publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk">
       <ClerkLoaded>
         <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Slot />
         </Stack>
       </ClerkLoaded>
       <ClerkLoading>
