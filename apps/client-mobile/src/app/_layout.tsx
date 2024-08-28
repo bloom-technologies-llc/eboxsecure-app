@@ -43,7 +43,7 @@ function RootLayout() {
     }, [ref]);
 
     return (
-      <ClerkProvider publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk">
+      <ClerkProvider publishableKey="pk_live_Y2xlcmsuYXBwLmVib3hzZWN1cmUuY29tJA">
         <TRPCProvider>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
