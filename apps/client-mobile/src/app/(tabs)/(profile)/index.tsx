@@ -10,8 +10,12 @@ export default function Page() {
       <Text>
         publishable key: {Constants.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
       </Text>
-      <SignedIn>You are signed in</SignedIn>
-      <SignedOut>You are signed out</SignedOut>
+      <SignedIn>
+        <Text>You are signed in</Text>
+      </SignedIn>
+      <SignedOut>
+        <Text>You are signed out</Text>
+      </SignedOut>
 
       <View>
         <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
