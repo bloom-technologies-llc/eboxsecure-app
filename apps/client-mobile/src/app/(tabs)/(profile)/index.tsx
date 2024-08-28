@@ -1,10 +1,14 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 
 export default function Page() {
   return (
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <Text className="mx-4 my-4 text-2xl font-medium">Profile</Text>
+      <Text>
+        publishable key: {Constants.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
+      </Text>
 
       <View>
         <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
