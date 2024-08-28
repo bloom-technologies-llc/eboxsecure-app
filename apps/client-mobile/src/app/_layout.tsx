@@ -27,29 +27,29 @@ Sentry.init({
   ],
 });
 
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      const item = await SecureStore.getItemAsync(key);
-      console.log(`Retrieved token for key: ${key}`);
-      return item;
-    } catch (error) {
-      console.error("SecureStore getToken error:", error);
-      Sentry.captureException(error);
-      await SecureStore.deleteItemAsync(key);
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      await SecureStore.setItemAsync(key, value);
-      console.log(`Saved token for key: ${key}`);
-    } catch (error) {
-      console.error("SecureStore saveToken error:", error);
-      Sentry.captureException(error);
-    }
-  },
-};
+// const tokenCache = {
+//   async getToken(key: string) {
+//     try {
+//       const item = await SecureStore.getItemAsync(key);
+//       console.log(`Retrieved token for key: ${key}`);
+//       return item;
+//     } catch (error) {
+//       console.error("SecureStore getToken error:", error);
+//       Sentry.captureException(error);
+//       await SecureStore.deleteItemAsync(key);
+//       return null;
+//     }
+//   },
+//   async saveToken(key: string, value: string) {
+//     try {
+//       await SecureStore.setItemAsync(key, value);
+//       console.log(`Saved token for key: ${key}`);
+//     } catch (error) {
+//       console.error("SecureStore saveToken error:", error);
+//       Sentry.captureException(error);
+//     }
+//   },
+// };
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -75,7 +75,7 @@ function RootLayout() {
 
     return (
       <ClerkProvider
-        tokenCache={tokenCache}
+        // tokenCache={tokenCache}
         publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
       >
         <ClerkLoaded>
