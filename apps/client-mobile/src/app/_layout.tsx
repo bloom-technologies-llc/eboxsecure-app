@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { Text, View } from "react-native";
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
-import * as SecureStore from "expo-secure-store";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 
@@ -27,30 +26,6 @@ Sentry.init({
   ],
 });
 
-// const tokenCache = {
-//   async getToken(key: string) {
-//     try {
-//       const item = await SecureStore.getItemAsync(key);
-//       console.log(`Retrieved token for key: ${key}`);
-//       return item;
-//     } catch (error) {
-//       console.error("SecureStore getToken error:", error);
-//       Sentry.captureException(error);
-//       await SecureStore.deleteItemAsync(key);
-//       return null;
-//     }
-//   },
-//   async saveToken(key: string, value: string) {
-//     try {
-//       await SecureStore.setItemAsync(key, value);
-//       console.log(`Saved token for key: ${key}`);
-//     } catch (error) {
-//       console.error("SecureStore saveToken error:", error);
-//       Sentry.captureException(error);
-//     }
-//   },
-// };
-
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 function RootLayout() {
@@ -59,13 +34,13 @@ function RootLayout() {
     const ref = useNavigationContainerRef();
     if (!Constants.expoConfig || !Constants.expoConfig.extra) {
       Sentry.captureMessage("missing expo configuration key");
-      throw new Error("Missing Expo configuration.");
+      // throw new Error("Missing Expo configuration.");
     }
-    if (!Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY) {
+    if (!Constants?.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY) {
       Sentry.captureMessage("missing publishable key");
-      throw new Error(
-        "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in app.config.ts.",
-      );
+      // throw new Error(
+      //   "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in app.config.ts.",
+      // );
     }
     useEffect(() => {
       if (ref) {
@@ -74,16 +49,10 @@ function RootLayout() {
     }, [ref]);
 
     return (
-      <ClerkProvider
-        // tokenCache={tokenCache}
-        publishableKey={Constants.expoConfig.extra.CLERK_PUBLISHABLE_KEY}
-      >
-        <ClerkLoaded>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-        </ClerkLoaded>
-      </ClerkProvider>
+      <Stack>
+        publishable key: {Constants?.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
     );
   } catch (error) {
     Sentry.captureException(error);
