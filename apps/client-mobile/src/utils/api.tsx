@@ -27,14 +27,14 @@ const getBaseUrl = () => {
    * **NOTE**: This is only for development. In production, you'll want to set the
    * baseUrl to your production API URL.
    */
-  const debuggerHost = Constants.expoConfig?.hostUri;
-  const localhost = debuggerHost?.split(":")[0];
+  // const debuggerHost = Constants.expoConfig?.hostUri;
+  // const localhost = debuggerHost?.split(":")[0];
 
   // TODO: configure this for production
-  if (!localhost) {
-    return "https://app-qa.eboxsecure.com";
-  }
-  return `http://${localhost}:3000`;
+  // if (!localhost) {
+  return "https://app-qa.eboxsecure.com";
+  // }
+  // return `http://${localhost}:3000`;
 };
 
 /**

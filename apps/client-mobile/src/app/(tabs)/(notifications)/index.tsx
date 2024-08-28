@@ -7,7 +7,6 @@ export default function Page() {
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <View>
         <Text className="mx-4 my-4 text-2xl font-medium">Notifications</Text>
-        publishable key: {Constants.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
       </View>
     </SafeAreaView>
   );
