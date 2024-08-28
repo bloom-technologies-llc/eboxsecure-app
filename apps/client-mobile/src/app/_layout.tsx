@@ -43,11 +43,13 @@ function RootLayout() {
     }, [ref]);
 
     return (
-      <TRPCProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </TRPCProvider>
+      <ClerkProvider publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk">
+        <TRPCProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+        </TRPCProvider>
+      </ClerkProvider>
     );
   } catch (error) {
     Sentry.captureException(error);

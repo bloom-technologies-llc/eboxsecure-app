@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
+import { SignedIn, SignedOut } from "@clerk/clerk-expo";
 
 export default function Page() {
   return (
@@ -9,6 +10,8 @@ export default function Page() {
       <Text>
         publishable key: {Constants.expoConfig?.extra?.CLERK_PUBLISHABLE_KEY}
       </Text>
+      <SignedIn>You are signed in</SignedIn>
+      <SignedOut>You are signed out</SignedOut>
 
       <View>
         <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
