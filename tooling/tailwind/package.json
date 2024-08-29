@@ -20,10 +20,10 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@ebox/eslint-config": "workspace:*",
-    "@ebox/prettier-config": "workspace:*",
-    "@ebox/tsconfig": "workspace:*",
-    "eslint": "^9.0.0",
+    "@ebox/eslint-config": "*",
+    "@ebox/prettier-config": "*",
+    "@ebox/tsconfig": "*",
+    "eslint": "^8.0.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.4"
   },
