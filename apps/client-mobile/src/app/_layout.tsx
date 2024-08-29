@@ -39,9 +39,7 @@ const publishableKey =
 export default function RootLayoutNav() {
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <ClerkLoaded>
-        <Slot />
-      </ClerkLoaded>
+      <Slot />
     </ClerkProvider>
   );
 }
