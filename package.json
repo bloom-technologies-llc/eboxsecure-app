@@ -1,28 +1,33 @@
 {
   "name": "eboxsecure-app",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling/*"
+  ],
   "private": true,
   "engines": {
     "node": ">=20.12.0"
   },
-  "packageManager": "pnpm@8.15.5",
+  "packageManager": "npm@10.5.0",
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
-    "db:push": "pnpm -F db push",
-    "db:studio": "pnpm -F db studio",
+    "db:push": "npm run --workspace=@ebox/db push",
+    "db:studio": "npm run --workspace=@ebox/db  studio",
     "dev": "turbo dev --parallel",
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
-    "lint:ws": "pnpm dlx sherif@latest",
-    "postinstall": "pnpm lint:ws",
+    "lint:ws": "npx sherif@latest",
+    "postinstall": "npm run lint:ws",
     "typecheck": "turbo typecheck",
-    "ui-add": "pnpm -F ui ui-add"
+    "ui-add": "npm run --workspace=@ebox/ui ui-add"
   },
   "devDependencies": {
-    "@ebox/prettier-config": "workspace:*",
+    "@ebox/prettier-config": "*",
     "@turbo/gen": "^1.13.2",
     "prettier": "^3.2.5",
     "turbo": "^1.13.2",
