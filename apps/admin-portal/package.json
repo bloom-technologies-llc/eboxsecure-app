@@ -30,6 +30,7 @@
     "react-dom": "18.2.0",
     "sharp": "^0.33.4",
     "superjson": "2.2.1",
+    "svix": "^1.31.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
