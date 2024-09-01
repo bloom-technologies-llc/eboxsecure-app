@@ -5,13 +5,15 @@
   "types": "./index.ts",
   "license": "MIT",
   "scripts": {
-    "dev": "prisma studio",
+    "studio": "dotenv -e ../../.env prisma studio",
+    "push": "dotenv -e ../../.env prisma db push",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^4.2.1"
   },
   "devDependencies": {
+    "dotenv-cli": "^7.4.1",
     "prisma": "^4.2.1",
     "typescript": "^5.4.4"
   }

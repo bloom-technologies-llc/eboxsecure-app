@@ -6,7 +6,7 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
-import type { AuthObject } from "@clerk/nextjs/server";
+import type { AuthObject } from "@clerk/backend";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -32,7 +32,7 @@ export const createTRPCContext = (opts: {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
 
-  console.log(">>> tRPC Request from", source, "by", session?.user);
+  console.log(">>> tRPC Request from", source, "by", session.userId);
 
   return {
     session,
@@ -94,13 +94,82 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.session?.user) {
+  if (!ctx.session.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
       // infers the `session` as non-nullable
-      session: { ...ctx.session, user: ctx.session.user },
+      session: { ...ctx.session },
     },
   });
 });
+
+export const protectedCustomerProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    const userId = ctx.session.userId;
+    const userType = await ctx.db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        userType: true,
+      },
+    });
+    if (!userType || userType.userType !== "CUSTOMER") {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return next({
+      ctx: {
+        // infers the `session` as non-nullable
+        session: { ...ctx.session },
+      },
+    });
+  },
+);
+
+export const protectedEmployeeProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    const userId = ctx.session.userId;
+    const userType = await ctx.db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        userType: true,
+      },
+    });
+    if (!userType || userType.userType !== "EMPLOYEE") {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return next({
+      ctx: {
+        // infers the `session` as non-nullable
+        session: { ...ctx.session },
+      },
+    });
+  },
+);
+
+export const protectedCorporateProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    const userId = ctx.session.userId;
+    const userType = await ctx.db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        userType: true,
+      },
+    });
+    if (!userType || userType.userType !== "CORPORATE") {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return next({
+      ctx: {
+        // infers the `session` as non-nullable
+        session: { ...ctx.session },
+      },
+    });
+  },
+);
