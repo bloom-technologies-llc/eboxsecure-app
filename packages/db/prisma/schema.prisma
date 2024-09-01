@@ -11,6 +11,42 @@ datasource db {
     directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+enum UserType {
+    CUSTOMER
+    EMPLOYEE
+    CORPORATE
+}
+model User {
+    id String @id
+    userType UserType
+    customerAccount CustomerAccount?
+    employeeAccount EmployeeAccount?
+    corporateAccount CorporateAccount?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model CustomerAccount {
+    id String @id
+    orders Order[]
+    user User @relation(fields: [id], references: [id])
+}
+model EmployeeAccount {
+    id String @id
+    user User @relation(fields: [id], references: [id])
+}
+model CorporateAccount {
+    id String @id
+    user User @relation(fields: [id], references: [id])
+}
+model PendingAccount {
+    id Int @id @default(autoincrement())
+    email String @unique
+    accountType UserType
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+} 
+
 model Location {
     id Int @id @default(autoincrement())
     name String
@@ -23,9 +59,11 @@ model Location {
 
 model Order {
     id Int @id @default(autoincrement())
+    customerId String
     vendorOrderId String
     total Float
     shippedLocationid Int
+    customer CustomerAccount @relation(fields: [customerId], references: [id])
     shippedLocation Location @relation(fields: [shippedLocationid], references: [id])
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
