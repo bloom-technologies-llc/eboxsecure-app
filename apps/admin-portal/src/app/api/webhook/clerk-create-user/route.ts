@@ -5,6 +5,7 @@ import { Webhook } from "svix";
 import { db } from "@ebox/db";
 
 import { env } from "~/env";
+import log from "~/logger";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
@@ -23,7 +24,8 @@ export async function POST(req: Request) {
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
+    log.error("Error occurred on clerk create user webhook -- no svix headers");
+    return new Response("Error occurred -- no svix headers", {
       status: 400,
     });
   }
@@ -45,20 +47,24 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error("Error verifying webhook:", err);
-    return new Response("Error occurred", {
+    log.error(`Error verifying webhook in clerk-create-user webhook: ${err}`);
+    return new Response("Error verifying webhook", {
       status: 400,
     });
   }
 
   const eventType = evt.type;
   if (eventType !== "user.created") {
+    log.error(
+      `Received unexpected event type in clerk-create-user webhook: ${eventType}`,
+    );
     return new Response(`Received unexpected event type: ${eventType}`, {
       status: 400,
     });
   }
   const { id: userId } = evt.data;
   if (!userId) {
+    log.error("Unexpectedly missing user ID in clerk-create-user webhook");
     return new Response("Unexpectedly missing user ID", { status: 400 });
   }
   const pendingAccount = await db.pendingAccount.findUnique({
