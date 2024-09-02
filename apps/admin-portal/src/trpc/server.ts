@@ -11,7 +11,7 @@ import { createCaller, createTRPCContext } from "@ebox/api";
 const createContext = cache(() => {
   const heads = new Headers(headers());
   heads.set("x-trpc-source", "rsc");
-
+  heads.set("application-source", "eboxsecure-admin-portal");
   return createTRPCContext({
     session: auth(),
     headers: heads,
