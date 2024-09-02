@@ -79,26 +79,25 @@ export const authRouter = {
             },
           });
           if (!order) {
-            console.error("Order ID not found in database.");
+            ctx.log.error(`Order ID ${payload.orderId} not found in database.`);
             return false;
           }
           // ensure order belongs to given session's user ID
           if (order.customerId !== payloadSession.userId) {
-            console.error(
-              "Given session's user ID does not match order's customer ID.",
+            ctx.log.error(
+              `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
             );
             return false;
           }
           return true;
         } catch (error) {
-          console.error(
-            "Unable to find session of given ID in pickupToken",
-            error,
+          ctx.log.error(
+            `Unable to find session of given ID in pickupToken: ${error}`,
           );
           return false;
         }
       } catch (error) {
-        console.error("Unable to decrypt pickupToken", error);
+        ctx.log.error(`Unable to decrypt pickupToken: ${error}`);
         return false;
       }
     }),

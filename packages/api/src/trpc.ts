@@ -8,6 +8,7 @@
  */
 import type { AuthObject } from "@clerk/backend";
 import { initTRPC, TRPCError } from "@trpc/server";
+import { Logger } from "next-axiom";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -31,12 +32,14 @@ export const createTRPCContext = (opts: {
 }) => {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
-
+  const applicationSource = opts.headers.get("application-source");
+  const log = new Logger({ source: applicationSource ?? undefined });
   console.log(">>> tRPC Request from", source, "by", session.userId);
 
   return {
     session,
     db,
+    log,
   };
 };
 
