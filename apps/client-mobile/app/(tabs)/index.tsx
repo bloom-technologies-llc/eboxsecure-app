@@ -1,14 +1,13 @@
 import { SafeAreaView, Text, View } from "react-native";
 import { Link } from "expo-router";
-
-// import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 
 export default function Page() {
-  // const { user } = useUser();
+  const { user } = useUser();
 
   return (
     <SafeAreaView>
-      {/* <SignedIn>
+      <SignedIn>
         <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
       </SignedIn>
       <SignedOut>
@@ -18,7 +17,7 @@ export default function Page() {
         <Link href="/explore">
           <Text className="text-xl italic text-red-600">Sign Up</Text>
         </Link>
-      </SignedOut> */}
+      </SignedOut>
       <Text className="text-xl text-red-600">Hello</Text>
     </SafeAreaView>
   );
