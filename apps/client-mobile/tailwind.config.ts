@@ -1,10 +1,10 @@
-import type { Config } from "tailwindcss";
-// @ts-expect-error - no types
-import nativewind from "nativewind/preset";
-
-import baseConfig from "@ebox/tailwind-config/native";
-
-export default {
-  content: ["./src/**/*.{ts,tsx}"],
-  presets: [baseConfig, nativewind],
-} satisfies Config;
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  // NOTE: Update this to include the paths to all of your component files.
+  content: ["./app/**/*.{ts,tsx}"],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};

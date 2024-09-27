@@ -1,3 +1,4 @@
+// metro.config.js
 // Learn more: https://docs.expo.dev/guides/monorepos/
 // const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 const { getDefaultConfig } = require("expo/metro-config");
@@ -9,7 +10,7 @@ const path = require("path");
 module.exports = withTurborepoManagedCache(
   withMonorepoPaths(
     withNativeWind(getDefaultConfig(__dirname), {
-      input: "./src/styles.css",
+      input: "./app/global.css",
       configPath: "./tailwind.config.ts",
     }),
   ),
@@ -24,18 +25,20 @@ module.exports = withTurborepoManagedCache(
  * @returns {import('expo/metro-config').MetroConfig}
  */
 function withMonorepoPaths(config) {
+  console.info("Running withMonorepoPaths");
   const projectRoot = __dirname;
+  console.log("projectRoot", projectRoot);
   const workspaceRoot = path.resolve(projectRoot, "../..");
-
+  console.log("workspaceRoot", workspaceRoot);
   // #1 - Watch all files in the monorepo
   config.watchFolders = [workspaceRoot];
-
+  console.log("finished watching folders config");
   // #2 - Resolve modules within the project's `node_modules` first, then all monorepo modules
   config.resolver.nodeModulesPaths = [
     path.resolve(projectRoot, "node_modules"),
     path.resolve(workspaceRoot, "node_modules"),
   ];
-
+  console.log("finished node modules paths config");
   return config;
 }
 
@@ -49,8 +52,10 @@ function withMonorepoPaths(config) {
  * @returns {import('expo/metro-config').MetroConfig}
  */
 function withTurborepoManagedCache(config) {
+  console.info("Running withTurborepoManagedCache");
   config.cacheStores = [
     new FileStore({ root: path.join(__dirname, "node_modules/.cache/metro") }),
   ];
+  console.log("finished withTurborepoManagedCache");
   return config;
 }

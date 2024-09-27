@@ -8,12 +8,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "ebox-client-mobile",
   slug: "ebox-client-mobile",
   scheme: "expo",
-  version: "0.1.44",
+  version: "0.1.56",
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: "./assets/images/icon.png",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/icon.png",
+    image: "./assets/images/icon.png",
     resizeMode: "contain",
     backgroundColor: "#1F104A",
   },
@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: "com.eboxsecure.eboxsecureclient",
     adaptiveIcon: {
-      foregroundImage: "./assets/icon.png",
+      foregroundImage: "./assets/images/icon.png",
       backgroundColor: "#1F104A",
     },
   },
