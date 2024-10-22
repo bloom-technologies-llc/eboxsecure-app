@@ -6,7 +6,7 @@ export default function Navbar() {
       <div className="flex justify-between px-32 py-4">
         <a href="/" className="flex items-center space-x-3">
           <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-            EBoxSecure
+            EboxSecure
           </span>
         </a>
 

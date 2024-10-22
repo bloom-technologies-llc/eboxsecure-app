@@ -10,8 +10,6 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
-import Navbar from "./_components/navbar";
-
 // TODO: update
 // export const metadata: Metadata = {
 //   metadataBase: new URL(
@@ -53,12 +51,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           )}
         >
           {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
-          <TRPCReactProvider>
-            <header>
-              <Navbar />
-            </header>
-            {props.children}
-          </TRPCReactProvider>
+          <TRPCReactProvider>{props.children}</TRPCReactProvider>
           <Toaster />
           {/* </ThemeProvider> */}
         </body>
