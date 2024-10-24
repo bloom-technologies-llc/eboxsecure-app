@@ -14,6 +14,7 @@ type Payload = {
   orderId: number;
 };
 
+// TODO: write unit tests for this
 export const authRouter = {
   getAuthorizedPickupToken: protectedProcedure
     .input(

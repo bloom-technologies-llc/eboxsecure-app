@@ -6,19 +6,21 @@ import { Card, CardContent, CardHeader } from "@ebox/ui/card";
 import { Separator } from "@ebox/ui/separator";
 
 interface Order {
+  key: string;
   date_ordered: string;
   total: number;
   ship_to: string;
   order_number: string;
 }
 export default function OrderCard({
+  key,
   date_ordered,
   total,
   ship_to,
   order_number,
 }: Order) {
   return (
-    <Card className="my-4">
+    <Card className="my-4" key={key}>
       <CardHeader className="px-6 py-4">
         <div className="flex justify-between text-sm">
           <div className="flex w-1/4 flex-col">

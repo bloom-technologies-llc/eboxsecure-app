@@ -11,7 +11,7 @@ export const env = createEnv({
     DATABASE_URL_UNPOOLED: z.string(),
     CLERK_SECRET_KEY: z.string(),
     VERCEL_URL: z.string(),
-    JWT_SECRET_KEY: z.string()
+    JWT_SECRET_KEY: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.
