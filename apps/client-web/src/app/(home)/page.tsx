@@ -37,7 +37,7 @@ export default function HomePage() {
             </TabsList>
             <TabsContent value="active">
               {orders.map((order) => (
-                <OrderCard {...order} />
+                <OrderCard {...order} key={order.order_number} />
               ))}
             </TabsContent>
             <TabsContent value="delivered">Delivered</TabsContent>
