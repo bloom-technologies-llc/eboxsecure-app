@@ -29,9 +29,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^5.3.0
         version: 5.3.0(next@14.1.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@ebox/api':
+      '@ebox/admin-api':
         specifier: workspace:*
-        version: link:../../packages/api
+        version: link:../../packages/admin-api
       '@ebox/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -129,9 +129,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^5.3.0
         version: 5.3.0(next@14.1.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@ebox/api':
+      '@ebox/client-api':
         specifier: workspace:*
-        version: link:../../packages/api
+        version: link:../../packages/client-api
       '@ebox/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -221,7 +221,53 @@ importers:
         specifier: ^5.4.4
         version: 5.4.4
 
-  packages/api:
+  packages/admin-api:
+    dependencies:
+      '@clerk/clerk-sdk-node':
+        specifier: ^5.0.33
+        version: 5.0.33(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@ebox/db':
+        specifier: workspace:*
+        version: link:../db
+      '@trpc/server':
+        specifier: 11.0.0-next.320
+        version: 11.0.0-next.320
+      jose:
+        specifier: ^5.8.0
+        version: 5.8.0
+      next-axiom:
+        specifier: ^1.4.1
+        version: 1.4.1(next@14.1.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+      superjson:
+        specifier: 2.2.1
+        version: 2.2.1
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
+      '@ebox/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@ebox/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@ebox/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@types/jsonwebtoken':
+        specifier: ^9.0.6
+        version: 9.0.6
+      eslint:
+        specifier: ^9.0.0
+        version: 9.0.0
+      prettier:
+        specifier: ^3.2.5
+        version: 3.2.5
+      typescript:
+        specifier: ^5.4.4
+        version: 5.4.4
+
+  packages/client-api:
     dependencies:
       '@clerk/clerk-sdk-node':
         specifier: ^5.0.33

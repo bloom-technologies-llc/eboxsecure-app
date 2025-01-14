@@ -6,7 +6,7 @@ import { loggerLink, unstable_httpBatchStreamLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import SuperJSON from "superjson";
 
-import type { AppRouter } from "@ebox/api";
+import type { AppRouter } from "@ebox/client-api";
 
 const createQueryClient = () =>
   new QueryClient({

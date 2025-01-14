@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createTRPCContext } from "@ebox/api";
+import { appRouter, createTRPCContext } from "@ebox/client-api";
 
 /**
  * Configure basic CORS headers

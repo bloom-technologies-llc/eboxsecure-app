@@ -10,7 +10,7 @@ const config = withAxiom({
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: ["@ebox/api", "@ebox/db", "@ebox/ui"],
+  transpilePackages: ["@ebox/client-api", "@ebox/db", "@ebox/ui"],
 
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
