@@ -4,7 +4,6 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@ebox/ui";
-import { Toaster } from "@ebox/ui/toast";
 
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -52,7 +51,6 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         >
           {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
           <TRPCReactProvider>{props.children}</TRPCReactProvider>
-          <Toaster />
           {/* </ThemeProvider> */}
         </body>
       </html>

@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "~/trpc/react";
+import { api } from "@/trpc/react";
 
 export function OrdersList() {
   const data = api.order.getAllOrders.useQuery();
