@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
 
 import { Button } from "@ebox/ui/button";
 import {
@@ -11,14 +13,20 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
-import PhoneUpload from "./PhoneUpload";
 import WebcamCapture from "./WebcamCapture";
 
 export default function OnboardingPage() {
-  const [uploadMethod, setUploadMethod] = useState<"webcam" | "phone" | null>(
-    null,
-  );
+  const [useWebcam, setUseWebcam] = useState(false);
   const [photoUploaded, setPhotoUploaded] = useState(false);
+
+  const router = useRouter();
+
+  const { mutate: createPhoneUploadLinkKey, isPending } =
+    api.onboarding.createPhoneUploadLinkKey.useMutation({
+      onSuccess: () => {
+        router.push("/onboarding/wait-phone-upload");
+      },
+    });
 
   const handlePhotoUploaded = () => {
     setPhotoUploaded(true);
@@ -35,11 +43,8 @@ export default function OnboardingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              className="w-full"
-              onClick={() => console.log("Continue onboarding")}
-            >
-              Continue Onboarding
+            <Button className="w-full" onClick={() => router.push("/")}>
+              Finish onboarding
             </Button>
           </CardContent>
         </Card>
@@ -58,30 +63,23 @@ export default function OnboardingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!uploadMethod ? (
+          {!useWebcam ? (
             <div className="space-y-4">
-              <Button
-                className="w-full"
-                onClick={() => setUploadMethod("webcam")}
-              >
+              <Button className="w-full" onClick={() => setUseWebcam(true)}>
                 Use Webcam
               </Button>
               <Button
                 className="w-full"
-                onClick={() => setUploadMethod("phone")}
+                onClick={() => createPhoneUploadLinkKey()}
+                disabled={isPending}
               >
-                Send Link to Phone
+                {isPending ? "Sending..." : "Send Link to Phone"}
               </Button>
             </div>
-          ) : uploadMethod === "webcam" ? (
+          ) : (
             <WebcamCapture
               onPhotoUploaded={handlePhotoUploaded}
-              onBack={() => setUploadMethod(null)}
-            />
-          ) : (
-            <PhoneUpload
-              onPhotoUploaded={handlePhotoUploaded}
-              onBack={() => setUploadMethod(null)}
+              onBack={() => setUseWebcam(false)}
             />
           )}
         </CardContent>

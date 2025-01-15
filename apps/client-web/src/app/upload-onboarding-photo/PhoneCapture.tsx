@@ -1,30 +1,42 @@
 "use client";
 
+/**
+ * NOTE: this is a nearly exact copy of the WebcamCapture component
+ */
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import Webcam from "react-webcam";
 
 import { Button } from "@ebox/ui/button";
 
 // TODO: test with phone
-interface WebcamCaptureProps {
-  onPhotoUploaded: () => void;
-  onBack: () => void;
-}
 
-export default function WebcamCapture({
-  onPhotoUploaded,
-  onBack,
-}: WebcamCaptureProps) {
+export default function PhoneCapture() {
+  const searchparams = useSearchParams();
+  const router = useRouter();
+  const uploadKey = searchparams.get("uploadKey");
+  let isValid = false;
+  if (!uploadKey) {
+    router.push("/404");
+    return null;
+  }
+
+  const { data: isValidUploadKey } = api.onboarding.isUploadKeyValid.useQuery({
+    uploadKey,
+  });
+
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [uploadComplete, setUploadComplete] = useState(false);
   const webcamRef = useRef<Webcam>(null);
+
   const { mutate: uploadPortrait } =
-    api.onboarding.uploadPortraitFromAuthedClient.useMutation({
+    api.onboarding.uploadPortraitFromUnauthedClient.useMutation({
       onSuccess: () => {
-        onPhotoUploaded();
+        setUploadComplete(true);
       },
     });
 
@@ -53,15 +65,37 @@ export default function WebcamCapture({
 
   const uploadPhoto = useCallback(() => {
     if (capturedImage) {
-      uploadPortrait({ file: capturedImage });
+      uploadPortrait({ file: capturedImage, uploadKey: uploadKey ?? "" });
     }
-  }, [capturedImage, onPhotoUploaded]);
+  }, [capturedImage]);
 
   if (error) {
     return (
       <div className="space-y-4">
         <p className="text-red-500">{error}</p>
-        <Button onClick={onBack}>Go Back</Button>
+        <p>Please refresh this page and try again.</p>
+      </div>
+    );
+  }
+
+  if (uploadComplete) {
+    return (
+      <h1>
+        Upload complete! You may exit this page and resume onboarding on your
+        original device.
+      </h1>
+    );
+  }
+
+  if (!isValid) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <h1>Uh oh! </h1>
+        <p>
+          This page is not valid. If you are seeing this message after clicking
+          a link from an EboxSecure text, please contact support after trying
+          again.
+        </p>
       </div>
     );
   }
@@ -105,9 +139,6 @@ export default function WebcamCapture({
           )}
         </>
       )}
-      <Button variant="outline" className="w-full" onClick={onBack}>
-        Go Back
-      </Button>
     </div>
   );
 }
