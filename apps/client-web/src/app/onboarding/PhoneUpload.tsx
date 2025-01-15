@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api } from "@/trpc/react";
 
 import { Button } from "@ebox/ui/button";
 import { Input } from "@ebox/ui/input";
@@ -17,7 +18,16 @@ export default function PhoneUpload({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkUploadStatus, setCheckUploadStatus] = useState(false);
 
+  const { data } = api.onboarding.checkUploadStatus.useQuery({
+    enabled: checkUploadStatus,
+    refetchInterval: 2500,
+  });
+  const { mutate: createPhoneUploadLinkKey } =
+    api.onboarding.createPhoneUploadLinkKey.useMutation({
+      onSuccess: () => {},
+    });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);

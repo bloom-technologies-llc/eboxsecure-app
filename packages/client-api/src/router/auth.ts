@@ -1,8 +1,7 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import { EncryptJWT } from "jose";
 import { z } from "zod";
 
-import { protectedCustomerProcedure } from "../trpc";
+import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 const SUBJECT = "eboxsecure-authorized-pickup";
 const AUDIENCE = "ebox-client";
@@ -14,7 +13,7 @@ interface Payload {
 }
 
 // TODO: write unit tests for this
-export const authRouter = {
+export const authRouter = createTRPCRouter({
   getAuthorizedPickupToken: protectedCustomerProcedure
     .input(
       z.object({
@@ -43,4 +42,4 @@ export const authRouter = {
 
       return encryptedToken;
     }),
-} satisfies TRPCRouterRecord;
+});

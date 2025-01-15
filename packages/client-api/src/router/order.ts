@@ -1,8 +1,10 @@
-import type { TRPCRouterRecord } from "@trpc/server";
+import {
+  createTRPCRouter,
+  protectedCustomerProcedure,
+  publicProcedure,
+} from "../trpc";
 
-import { protectedCustomerProcedure, publicProcedure } from "../trpc";
-
-export const orderRouter = {
+export const orderRouter = createTRPCRouter({
   getAllOrders: protectedCustomerProcedure.query(({ ctx }) => {
     return ctx.db.order.findMany();
   }),
@@ -10,4 +12,4 @@ export const orderRouter = {
     // TODO: REMOVE
     return ctx.db.order.findMany();
   }),
-} satisfies TRPCRouterRecord;
+});
