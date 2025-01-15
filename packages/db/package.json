@@ -10,11 +10,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^4.2.1"
+    "@prisma/client": "^6.2.1"
   },
   "devDependencies": {
     "dotenv-cli": "^7.4.1",
-    "prisma": "^4.2.1",
+    "prisma": "^6.2.1",
     "typescript": "^5.4.4"
   }
 }
