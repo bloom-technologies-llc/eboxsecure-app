@@ -6,8 +6,10 @@ const isPublicRoute = createRouteMatcher([
   "/upload-onboarding-photo(.*)",
 ]);
 
-export default clerkMiddleware((auth, req) => {
-  if (!isPublicRoute(req)) auth().protect();
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
 });
 
 export const config = {

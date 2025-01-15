@@ -8,7 +8,6 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string(),
-    DATABASE_URL_UNPOOLED: z.string(),
     CLERK_SECRET_KEY: z.string(),
     VERCEL_URL: z.string(),
     JWT_SECRET_KEY: z.string(),
