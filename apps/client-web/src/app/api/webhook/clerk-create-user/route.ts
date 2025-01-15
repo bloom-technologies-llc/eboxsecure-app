@@ -1,11 +1,10 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
+import { env } from "@/env";
+import log from "@/logger";
 import { Webhook } from "svix";
 
 import { db } from "@ebox/db";
-
-import { env } from "~/env";
-import log from "~/logger";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
@@ -67,41 +66,16 @@ export async function POST(req: Request) {
     log.error("Unexpectedly missing user ID in clerk-create-user webhook");
     return new Response("Unexpectedly missing user ID", { status: 400 });
   }
-  const pendingAccount = await db.pendingAccount.findUnique({
-    where: {
-      email: userId,
+
+  await db.user.create({
+    data: {
+      id: userId,
+      userType: "CUSTOMER",
+      customerAccount: {
+        create: {},
+      },
     },
   });
 
-  if (pendingAccount) {
-    if (pendingAccount.accountType === "EMPLOYEE") {
-      // TODO: add employee location connection
-      await db.user.create({
-        data: {
-          id: userId,
-          userType: "EMPLOYEE",
-          employeeAccount: {
-            create: {},
-          },
-        },
-      });
-    }
-    await db.user.create({
-      data: {
-        id: userId,
-        userType: "CORPORATE",
-        corporateAccount: {
-          create: {},
-        },
-      },
-    });
-    await db.pendingAccount.delete({
-      where: {
-        id: pendingAccount.id,
-      },
-    });
-    return new Response("", { status: 200 });
-  }
-
-  return new Response("No pending account found", { status: 500 });
+  return new Response("", { status: 200 });
 }
