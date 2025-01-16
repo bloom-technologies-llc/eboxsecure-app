@@ -19,7 +19,7 @@ const createCaller = createCallerFactory(appRouter);
  * type PostByIdInput = RouterInputs['post']['byId']
  *      ^? { id: number }
  **/
-type RouterInputs = inferRouterInputs<AppRouter>;
+type RouterInput = inferRouterInputs<AppRouter>;
 
 /**
  * Inference helpers for output types
@@ -27,7 +27,7 @@ type RouterInputs = inferRouterInputs<AppRouter>;
  * type AllPostsOutput = RouterOutputs['post']['all']
  *      ^? Post[]
  **/
-type RouterOutputs = inferRouterOutputs<AppRouter>;
+type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export { createTRPCContext, appRouter, createCaller };
-export type { AppRouter, RouterInputs, RouterOutputs };
+export type { AppRouter, RouterInput, RouterOutput };

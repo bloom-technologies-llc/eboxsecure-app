@@ -39,7 +39,7 @@ export const onboardingRouter = createTRPCRouter({
   }),
   createPhoneUploadLinkKey: protectedCustomerProcedure.mutation(
     async ({ ctx }) => {
-      let linkKey = await ctx.db.onboardingPhoneUploadLink.findFirst({
+      let linkKey = await ctx.db.onboardingPhoneUploadLink.findUnique({
         where: {
           customerId: ctx.session.userId,
         },
@@ -48,6 +48,15 @@ export const onboardingRouter = createTRPCRouter({
         linkKey = await ctx.db.onboardingPhoneUploadLink.create({
           data: {
             customerId: ctx.session.userId,
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+          },
+        });
+      } else if (linkKey.expiresAt < new Date()) {
+        await ctx.db.onboardingPhoneUploadLink.update({
+          where: {
+            id: linkKey.id,
+          },
+          data: {
             expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
           },
         });
@@ -158,7 +167,20 @@ export const onboardingRouter = createTRPCRouter({
           id: input.uploadKey,
         },
       });
-      return Boolean(link);
+      if (!link) {
+        console.error(`Upload key ${input.uploadKey} not found.`);
+        return false;
+      }
+      if (new Date() > link.expiresAt) {
+        await ctx.db.onboardingPhoneUploadLink.delete({
+          where: {
+            id: input.uploadKey,
+          },
+        });
+        console.error(`Upload key ${input.uploadKey} expired.`);
+        return false;
+      }
+      return true;
     }),
 });
 

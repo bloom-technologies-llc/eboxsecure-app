@@ -1,29 +1,11 @@
+import { api } from "@/trpc/server";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ebox/ui/tabs";
 
-import OrderCard from "./order-card";
+import OrderCard from "./OrderCard";
 
-const orders = [
-  {
-    date_ordered: "March 30, 2024",
-    total: 430.0,
-    ship_to: "42 Wallaby Way, Sydney, Australia",
-    order_number: "#10346943-20789",
-  },
-  {
-    date_ordered: "Aug. 5, 2024",
-    total: 67.45,
-    ship_to: "1600 Pennsylvania Avenue NW, Washington, DC 20500",
-    order_number: "#08703425-24628",
-  },
-
-  {
-    date_ordered: "Aug. 5, 2024",
-    total: 67.45,
-    ship_to: "1600 Pennsylvania Avenue NW, Washington, DC 20500",
-    order_number: "#08703425-24628",
-  },
-];
-export default function HomePage() {
+export default async function HomePage() {
+  const orders = await api.order.getAllOrders();
   return (
     <main className="container h-screen w-full py-16 md:w-9/12">
       <div className="flex flex-col items-center justify-center">
@@ -37,7 +19,7 @@ export default function HomePage() {
             </TabsList>
             <TabsContent value="active">
               {orders.map((order) => (
-                <OrderCard {...order} key={order.order_number} />
+                <OrderCard {...order} key={order.id.toString()} />
               ))}
             </TabsContent>
             <TabsContent value="delivered">Delivered</TabsContent>

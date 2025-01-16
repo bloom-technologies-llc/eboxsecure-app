@@ -15,14 +15,33 @@ enum UserType {
     EMPLOYEE
     CORPORATE
 }
+
+enum SessionStatus {
+    ABANDONED
+    ACTIVE
+    ENDED
+    EXPIRED
+    REMOVED
+    REPLACED
+    REVOKED
+}
 model User {
     id String @id
     userType UserType
     customerAccount CustomerAccount?
     employeeAccount EmployeeAccount?
     corporateAccount CorporateAccount?
+    sessions Session[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+
+model Session {
+    id String @id
+    userId String
+    status SessionStatus
+    user User @relation(fields: [userId], references: [id])
 }
 
 model CustomerAccount {
@@ -63,6 +82,7 @@ model Order {
     vendorOrderId String
     total Float
     shippedLocationid Int
+    delivered DateTime?
     customer CustomerAccount @relation(fields: [customerId], references: [id])
     shippedLocation Location @relation(fields: [shippedLocationid], references: [id])
     createdAt DateTime @default(now())
