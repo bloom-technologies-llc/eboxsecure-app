@@ -14,12 +14,25 @@ import { Button } from "@ebox/ui/button";
 // TODO: test with phone
 
 export default function PhoneCapture() {
+  const router = useRouter();
   const searchparams = useSearchParams();
   const uploadKey = searchparams.get("uploadKey");
 
-  const { data: isValid } = api.onboarding.isUploadKeyValid.useQuery({
-    uploadKey: uploadKey ?? "",
-  });
+  const { data: isValid, isLoading: isUploadKeyValidLoading } =
+    api.onboarding.isUploadKeyValid.useQuery({
+      uploadKey: uploadKey ?? "",
+    });
+
+  const { data: isOnboarded, isLoading: isOnboardedLoading } =
+    api.onboarding.isOnboardedUnauthed.useQuery(
+      {
+        uploadKey,
+      },
+      { enabled: isValid !== undefined },
+    );
+  if (isOnboarded) {
+    router.push("/");
+  }
 
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +94,9 @@ export default function PhoneCapture() {
     );
   }
 
+  if (isUploadKeyValidLoading || isOnboardedLoading) {
+    return <div>Loading...</div>;
+  }
   if (!isValid) {
     return (
       <div className="flex flex-col items-center justify-center">

@@ -135,6 +135,21 @@ export const onboardingRouter = createTRPCRouter({
     const isOnboarded = await checkIfPortraitExists(ctx.session.userId);
     return isOnboarded;
   }),
+  isOnboardedUnauthed: publicProcedure
+    .input(z.object({ uploadKey: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const link = await ctx.db.onboardingPhoneUploadLink.findUnique({
+        where: {
+          id: input.uploadKey,
+        },
+        select: {
+          customerId: true,
+        },
+      });
+      if (!link) return false;
+      const isOnboarded = await checkIfPortraitExists(link.customerId);
+      return isOnboarded;
+    }),
   isUploadKeyValid: publicProcedure
     .input(z.object({ uploadKey: z.string() }))
     .query(async ({ input, ctx }) => {
