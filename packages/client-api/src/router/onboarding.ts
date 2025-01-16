@@ -158,7 +158,20 @@ export const onboardingRouter = createTRPCRouter({
           id: input.uploadKey,
         },
       });
-      return Boolean(link);
+      if (!link) {
+        console.error(`Upload key ${input.uploadKey} not found.`);
+        return false;
+      }
+      if (new Date() > link.expiresAt) {
+        await ctx.db.onboardingPhoneUploadLink.delete({
+          where: {
+            id: input.uploadKey,
+          },
+        });
+        console.error(`Upload key ${input.uploadKey} expired.`);
+        return false;
+      }
+      return true;
     }),
 });
 
