@@ -15,14 +15,33 @@ enum UserType {
     EMPLOYEE
     CORPORATE
 }
+
+enum SessionStatus {
+    ABANDONED
+    ACTIVE
+    ENDED
+    EXPIRED
+    REMOVED
+    REPLACED
+    REVOKED
+}
 model User {
     id String @id
     userType UserType
     customerAccount CustomerAccount?
     employeeAccount EmployeeAccount?
     corporateAccount CorporateAccount?
+    sessions Session[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+
+model Session {
+    id String @id
+    userId String
+    status SessionStatus
+    user User @relation(fields: [userId], references: [id])
 }
 
 model CustomerAccount {

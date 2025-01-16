@@ -41,10 +41,17 @@ export const authRouter = createTRPCRouter({
         );
         try {
           // ensure valid session ID
-          const client = await clerkClient();
-          const payloadSession = await client.sessions.getSession(
-            payload.sessionId,
-          );
+          const payloadSession = await ctx.db.session.findUnique({
+            where: {
+              id: payload.sessionId,
+            },
+          });
+          if (!payloadSession) {
+            ctx.log.error(
+              `Session ID ${payload.sessionId} not found in database as valid session.`,
+            );
+            return false;
+          }
           // ensure valid order ID
           const order = await ctx.db.order.findUnique({
             where: {
