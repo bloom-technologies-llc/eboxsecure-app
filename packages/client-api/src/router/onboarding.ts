@@ -1,5 +1,9 @@
 import { Readable } from "stream";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import twilio from "twilio";
@@ -128,15 +132,8 @@ export const onboardingRouter = createTRPCRouter({
     }),
   // logged in, but potentially no user created yet from webhook
   isOnboarded: protectedProcedure.query(async ({ ctx }) => {
-    const link = await ctx.db.onboardingPhoneUploadLink.findUnique({
-      where: {
-        customerId: ctx.session.userId,
-      },
-      select: {
-        completed: true,
-      },
-    });
-    return link?.completed ?? false;
+    const isOnboarded = await checkIfPortraitExists(ctx.session.userId);
+    return isOnboarded;
   }),
   isUploadKeyValid: publicProcedure
     .input(z.object({ uploadKey: z.string() }))
@@ -191,6 +188,47 @@ async function uploadPortraitToS3(file: string, userId: string) {
     });
     await client.send(uploadCommand);
   } catch (error) {
+    if (error instanceof Error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message,
+      });
+    }
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "An unknown error occurred.",
+    });
+  }
+}
+
+async function checkIfPortraitExists(userId: string) {
+  const region = process.env.AWS_REGION;
+  if (!region) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "AWS_REGION not found.",
+    });
+  }
+
+  const nodeEnv = process.env.VERCEL_ENV ?? process.env.NODE_ENV;
+  const bucketName =
+    nodeEnv === "production"
+      ? "prod-ebox-customer-data"
+      : "np-ebox-customer-data";
+  try {
+    const client = new S3Client({ region });
+    const key = `${userId}/portrait.jpg`;
+    const headCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    });
+
+    await client.send(headCommand);
+    return true; // File exists
+  } catch (error) {
+    if (error instanceof Error && error.name === "NotFound") {
+      return false; // File does not exist
+    }
     if (error instanceof Error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
