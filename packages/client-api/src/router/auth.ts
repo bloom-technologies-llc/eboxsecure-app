@@ -1,3 +1,4 @@
+import type { JWTPayload } from "jose";
 import { EncryptJWT } from "jose";
 import { z } from "zod";
 
@@ -7,7 +8,7 @@ const SUBJECT = "eboxsecure-authorized-pickup";
 const AUDIENCE = "ebox-client";
 const ISSUER = "eboxsecure-api";
 
-interface Payload {
+interface Payload extends JWTPayload {
   sessionId: string;
   orderId: number;
 }

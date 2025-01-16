@@ -1,4 +1,4 @@
-import { clerkClient } from "@clerk/clerk-sdk-node";
+import { clerkClient } from "@clerk/nextjs/server";
 import { jwtDecrypt } from "jose";
 import { z } from "zod";
 
@@ -41,7 +41,8 @@ export const authRouter = createTRPCRouter({
         );
         try {
           // ensure valid session ID
-          const payloadSession = await clerkClient.sessions.getSession(
+          const client = await clerkClient();
+          const payloadSession = await client.sessions.getSession(
             payload.sessionId,
           );
           // ensure valid order ID
