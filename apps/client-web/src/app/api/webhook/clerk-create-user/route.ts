@@ -2,12 +2,16 @@ import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { env } from "@/env";
 import log from "@/logger";
+import { Logger } from "next-axiom";
 import { Webhook } from "svix";
 
 import { db } from "@ebox/db";
 
+const logger = new Logger({ source: "eboxsecure-client-web-local" });
 export async function POST(req: Request) {
   console.log("starting webhook -- grabbing secret");
+  log.info("starting webhook -- grabbing secret");
+  logger.info("starting webhook -- grabbing secret local");
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
   console.log(`grabbed webhook secret}`);
   if (!WEBHOOK_SECRET) {
