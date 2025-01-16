@@ -15,15 +15,10 @@ import { Button } from "@ebox/ui/button";
 
 export default function PhoneCapture() {
   const searchparams = useSearchParams();
-  const router = useRouter();
   const uploadKey = searchparams.get("uploadKey");
-  let isValid = false;
-  if (!uploadKey) {
-    return null;
-  }
 
-  const { data: isValidUploadKey } = api.onboarding.isUploadKeyValid.useQuery({
-    uploadKey,
+  const { data: isValid } = api.onboarding.isUploadKeyValid.useQuery({
+    uploadKey: uploadKey ?? "",
   });
 
   const [isCameraReady, setIsCameraReady] = useState(false);
