@@ -15,7 +15,7 @@ export default function Page() {
   }
 
   return (
-    <div>
+    <div className="flex w-[400px] flex-col items-center justify-center">
       <h1>
         Once you have successfully uploaded your photo on your phone, this page
         will redirect you to the next step.
