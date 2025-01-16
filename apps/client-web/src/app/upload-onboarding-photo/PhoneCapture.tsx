@@ -26,7 +26,7 @@ export default function PhoneCapture() {
   const { data: isOnboarded, isLoading: isOnboardedLoading } =
     api.onboarding.isOnboardedUnauthed.useQuery(
       {
-        uploadKey,
+        uploadKey: uploadKey ?? "",
       },
       { enabled: isValid !== undefined },
     );
