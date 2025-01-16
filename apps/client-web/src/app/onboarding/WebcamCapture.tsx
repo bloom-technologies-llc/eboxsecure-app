@@ -7,7 +7,6 @@ import Webcam from "react-webcam";
 
 import { Button } from "@ebox/ui/button";
 
-// TODO: test with phone
 interface WebcamCaptureProps {
   onPhotoUploaded: () => void;
   onBack: () => void;
