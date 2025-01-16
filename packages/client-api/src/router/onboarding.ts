@@ -51,6 +51,15 @@ export const onboardingRouter = createTRPCRouter({
             expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
           },
         });
+      } else if (linkKey.expiresAt > new Date()) {
+        await ctx.db.onboardingPhoneUploadLink.update({
+          where: {
+            id: linkKey.id,
+          },
+          data: {
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+          },
+        });
       }
 
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
