@@ -12,6 +12,7 @@ export const env = createEnv({
     VERCEL_URL: z.string(),
     JWT_SECRET_KEY: z.string(),
     CLERK_CREATE_USER_WEBHOOK_SECRET: z.string(),
+    CLERK_MANAGE_SESSION_WEBHOOK_SECRET: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.
