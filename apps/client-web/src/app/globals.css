@@ -4,47 +4,47 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 327 66% 69%;
-    --primary-foreground: 337 65.5% 17.1%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 72.22% 50.59%;
+    --background: 196 15% 97%; /* Light greenish-blue white */
+    --foreground: 196 15% 20%; /* Dark greenish-blue gray */
+    --card: 196 15% 97%; /* Match background */
+    --card-foreground: 196 15% 20%;
+    --popover: 196 15% 97%;
+    --popover-foreground: 196 15% 20%;
+    --primary: 196 100% 23.5%; /* Logo color */
+    --primary-foreground: 196 10% 95%; /* Light for contrast */
+    --secondary: 196 40% 85%; /* Soft complementary shade */
+    --secondary-foreground: 196 25% 20%; /* Darker text */
+    --muted: 196 30% 90%; /* Muted complementary light */
+    --muted-foreground: 196 20% 40%; /* Slightly stronger muted */
+    --accent: 196 100% 23.5%; /* Match primary/logo */
+    --accent-foreground: 196 10% 95%;
+    --destructive: 0 72.22% 50.59%; /* Red for destructive actions */
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5% 64.9%;
+    --border: 196 20% 85%; /* Subtle greenish-blue border */
+    --input: 196 20% 85%; /* Match border */
+    --ring: 196 90% 40%; /* Slightly brighter greenish-blue for focus */
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 327 66% 69%;
-    --primary-foreground: 337 65.5% 17.1%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 196 15% 10%; /* Dark greenish-blue navy */
+    --foreground: 196 15% 85%; /* Light greenish-blue gray */
+    --card: 196 15% 10%;
+    --card-foreground: 196 15% 85%;
+    --popover: 196 15% 10%;
+    --popover-foreground: 196 15% 85%;
+    --primary: 196 100% 23.5%; /* Logo color */
+    --primary-foreground: 196 10% 95%; /* Light for contrast */
+    --secondary: 196 20% 25%; /* Muted dark greenish-blue */
+    --secondary-foreground: 196 15% 85%;
+    --muted: 196 20% 25%; /* Match secondary */
+    --muted-foreground: 196 40% 65%; /* Muted brighter greenish-blue */
+    --accent: 196 100% 23.5%; /* Match primary/logo */
+    --accent-foreground: 196 10% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 196 20% 25%; /* Match muted dark */
+    --input: 196 20% 25%;
+    --ring: 196 90% 35%; /* Bright greenish-blue focus */
   }
 }

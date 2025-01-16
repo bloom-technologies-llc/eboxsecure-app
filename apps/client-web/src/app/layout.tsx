@@ -1,16 +1,14 @@
 import type { Viewport } from "next";
+import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@ebox/ui";
-import { Toaster } from "@ebox/ui/toast";
 
-import { TRPCReactProvider } from "~/trpc/react";
+import "@/app/globals.css";
 
-import "~/app/globals.css";
-
-import Navbar from "./_components/navbar";
+import Navbar from "@/components/navbar";
 
 // TODO: update
 // export const metadata: Metadata = {
@@ -57,7 +55,6 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             <Navbar />
             {props.children}
           </TRPCReactProvider>
-          <Toaster />
           {/* </ThemeProvider> */}
         </body>
       </html>

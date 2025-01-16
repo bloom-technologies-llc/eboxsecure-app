@@ -8,7 +8,6 @@ generator client {
 datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
-    directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 enum UserType {
@@ -30,6 +29,7 @@ model CustomerAccount {
     id String @id
     orders Order[]
     user User @relation(fields: [id], references: [id])
+    phoneUploadLink OnboardingPhoneUploadLink?
 }
 model EmployeeAccount {
     id String @id
@@ -65,6 +65,17 @@ model Order {
     shippedLocationid Int
     customer CustomerAccount @relation(fields: [customerId], references: [id])
     shippedLocation Location @relation(fields: [shippedLocationid], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model OnboardingPhoneUploadLink {
+    id String @id @default(cuid())
+    customerId String @unique
+    expiresAt DateTime
+    completed Boolean @default(false)
+
+    Customer CustomerAccount @relation(fields: [customerId], references: [id])
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
