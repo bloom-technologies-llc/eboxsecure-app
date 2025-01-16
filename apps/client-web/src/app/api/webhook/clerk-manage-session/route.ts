@@ -8,7 +8,7 @@ import { Webhook } from "svix";
 import { db } from "@ebox/db";
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
+  const WEBHOOK_SECRET = env.CLERK_MANAGE_SESSION_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
