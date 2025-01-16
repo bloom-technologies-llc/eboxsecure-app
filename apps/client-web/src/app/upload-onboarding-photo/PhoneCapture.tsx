@@ -19,7 +19,6 @@ export default function PhoneCapture() {
   const uploadKey = searchparams.get("uploadKey");
   let isValid = false;
   if (!uploadKey) {
-    router.push("/404");
     return null;
   }
 
