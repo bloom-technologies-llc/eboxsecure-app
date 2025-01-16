@@ -52,6 +52,10 @@ export const authRouter = createTRPCRouter({
             );
             return false;
           }
+          if (payloadSession.status !== "ACTIVE") {
+            ctx.log.error(`Session ID ${payload.sessionId} is not active.`);
+            return false;
+          }
           // ensure valid order ID
           const order = await ctx.db.order.findUnique({
             where: {
