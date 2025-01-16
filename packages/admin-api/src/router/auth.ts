@@ -56,13 +56,13 @@ export const authRouter = createTRPCRouter({
           },
         });
         if (!payloadSession) {
-          ctx.log.error(
+          console.error(
             `Session ID ${payload.sessionId} not found in database as valid session.`,
           );
           return { authorized: false };
         }
         if (payloadSession.status !== "ACTIVE") {
-          ctx.log.error(`Session ID ${payload.sessionId} is not active.`);
+          console.error(`Session ID ${payload.sessionId} is not active.`);
           return { authorized: false };
         }
         // ensure valid order ID
@@ -72,12 +72,12 @@ export const authRouter = createTRPCRouter({
           },
         });
         if (!order) {
-          ctx.log.error(`Order ID ${payload.orderId} not found in database.`);
+          console.error(`Order ID ${payload.orderId} not found in database.`);
           return { authorized: false };
         }
         // ensure order belongs to given session's user ID
         if (order.customerId !== payloadSession.userId) {
-          ctx.log.error(
+          console.error(
             `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
           );
           return { authorized: false };
@@ -87,7 +87,7 @@ export const authRouter = createTRPCRouter({
         const url = await getPortraitSignedUrl(payloadSession.userId);
         return { authorized: true, url };
       } catch (error) {
-        ctx.log.error(`Unable to decrypt pickupToken: ${error}`);
+        console.error(`Unable to decrypt pickupToken: ${error}`);
         return { authorized: false };
       }
     }),
