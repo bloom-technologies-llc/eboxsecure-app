@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedCustomerProcedure,
+  protectedProcedure,
   publicProcedure,
 } from "../trpc";
 
@@ -125,7 +126,8 @@ export const onboardingRouter = createTRPCRouter({
         },
       });
     }),
-  isOnboarded: protectedCustomerProcedure.query(async ({ ctx }) => {
+  // logged in, but potentially no user created yet from webhook
+  isOnboarded: protectedProcedure.query(async ({ ctx }) => {
     const link = await ctx.db.onboardingPhoneUploadLink.findUnique({
       where: {
         customerId: ctx.session.userId,
