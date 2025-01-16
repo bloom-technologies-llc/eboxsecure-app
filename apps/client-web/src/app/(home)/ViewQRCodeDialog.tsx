@@ -18,6 +18,7 @@ const ViewQRCodeDialog = ({
   onClose: () => void;
 }) => {
   const { Canvas } = useQRCode();
+  // TODO: fix x button not closing dialog
   return (
     <Dialog open>
       <DialogContent className="sm:max-w-[425px]" onInteractOutside={onClose}>
