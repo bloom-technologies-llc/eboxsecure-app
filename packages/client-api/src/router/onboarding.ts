@@ -39,7 +39,7 @@ export const onboardingRouter = createTRPCRouter({
   }),
   createPhoneUploadLinkKey: protectedCustomerProcedure.mutation(
     async ({ ctx }) => {
-      let linkKey = await ctx.db.onboardingPhoneUploadLink.findFirst({
+      let linkKey = await ctx.db.onboardingPhoneUploadLink.findUnique({
         where: {
           customerId: ctx.session.userId,
         },
@@ -51,7 +51,7 @@ export const onboardingRouter = createTRPCRouter({
             expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
           },
         });
-      } else if (linkKey.expiresAt > new Date()) {
+      } else if (linkKey.expiresAt < new Date()) {
         await ctx.db.onboardingPhoneUploadLink.update({
           where: {
             id: linkKey.id,
