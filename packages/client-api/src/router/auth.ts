@@ -9,10 +9,10 @@ const SUBJECT = "eboxsecure-authorized-pickup";
 const AUDIENCE = "ebox-client";
 const ISSUER = "eboxsecure-api";
 
+// NOTE: must match the same in admin-api/auth.ts
 interface AuthorizedPickupTokenPayload extends JWTPayload {
   sessionId: string;
   orderId: number;
-  expiresAt: string;
 }
 
 // TODO: write unit tests for this
@@ -32,11 +32,9 @@ export const authRouter = createTRPCRouter({
         });
       }
       const secret = Buffer.from(process.env.JWT_SECRET_KEY, "base64");
-      const expiresAtDt = new Date(Date.now() + 1000 * 60 * 5); // 1 hour
       const payload: AuthorizedPickupTokenPayload = {
         sessionId: ctx.session.sessionId,
         orderId: input.orderId,
-        expiresAt: expiresAtDt.toISOString(),
       };
       const encryptedToken = new EncryptJWT(payload)
         .setProtectedHeader({ alg: "dir", enc: "A128CBC-HS256" })

@@ -3,7 +3,7 @@
 import { api } from "~/trpc/react";
 
 export default function HomePage() {
-  const { mutate: decryptToken } =
+  const { mutate: decryptToken, data } =
     api.auth.authenticateAuthorizedPickupToken.useMutation();
   return (
     <main className="container h-screen w-full py-16 md:w-9/12">
@@ -17,6 +17,10 @@ export default function HomePage() {
             type="text"
             onChange={(e) => decryptToken({ pickupToken: e.target.value })}
           />
+          {data && !data.authorized && <p>Not authorized</p>}
+          {data && data.authorized && (
+            <img src={data.url} alt="Portrait" className="rounded-md" />
+          )}
           {/* <Mutation pickupToken={token} /> */}
         </div>
       </div>
