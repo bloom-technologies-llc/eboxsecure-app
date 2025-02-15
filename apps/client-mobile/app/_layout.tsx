@@ -13,11 +13,15 @@ import "react-native-reanimated";
 import "../global.css";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { RootSiblingParent } from "react-native-root-siblings";
 import { tokenCache } from "@/cache";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { defaultConfig } from "@tamagui/config/v4";
 import { createTamagui, TamaguiProvider, View } from "tamagui";
+
+import { SignInCredentialsProvider } from "./hooks/useSignInCredentials";
+import { SessionTimeoutWrapper } from "./SessionTimeoutWrapper";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -45,19 +49,28 @@ export default function RootLayout() {
       tokenCache={tokenCache}
       publishableKey="pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk"
     >
-      <TamaguiProvider config={config}>
-        <GestureHandlerRootView>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </GestureHandlerRootView>
-      </TamaguiProvider>
+      <SessionTimeoutWrapper>
+        <TamaguiProvider config={config}>
+          <SignInCredentialsProvider>
+            <RootSiblingParent>
+              <GestureHandlerRootView>
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                  <StatusBar style="auto" />
+                </ThemeProvider>
+              </GestureHandlerRootView>
+            </RootSiblingParent>
+          </SignInCredentialsProvider>
+        </TamaguiProvider>
+      </SessionTimeoutWrapper>
     </ClerkProvider>
   );
 }
