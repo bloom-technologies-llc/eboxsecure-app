@@ -1,5 +1,3 @@
-import "../global.css";
-
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -12,10 +10,11 @@ import {
 } from "@react-navigation/native";
 
 import "react-native-reanimated";
+import "../global.css";
 
-import { tokenCache } from "@/cache";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { ClerkProvider } from "@clerk/clerk-expo";
+import { defaultConfig } from "@tamagui/config/v4";
+import { createTamagui, TamaguiProvider, View } from "tamagui";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -26,7 +25,7 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+  const config = createTamagui(defaultConfig);
 
   useEffect(() => {
     if (loaded) {
@@ -39,7 +38,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+    <TamaguiProvider config={config}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -47,6 +46,6 @@ export default function RootLayout() {
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
-    </ClerkProvider>
+    </TamaguiProvider>
   );
 }

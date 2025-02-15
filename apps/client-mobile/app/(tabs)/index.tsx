@@ -1,13 +1,11 @@
-import { Image, Platform, StyleSheet, Text } from "react-native";
-import { Link } from "expo-router";
+import { Image, Platform, StyleSheet } from "react-native";
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { SliderDemo } from "@/components/slider";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 
 export default function HomeScreen() {
-  const { user } = useUser();
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -18,20 +16,9 @@ export default function HomeScreen() {
         />
       }
     >
-      <SignedIn>
-        <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
-      </SignedIn>
-      <SignedOut>
-        <Link href="../(auth)/sign-in">
-          <Text>Sign in</Text>
-        </Link>
-        <Link href="../(auth)/sign-up">
-          <Text>Sign up</Text>
-        </Link>
-      </SignedOut>
-
+      <SliderDemo />
       <ThemedView style={styles.titleContainer}>
-        <ThemedText className="pt-20 text-blue-300">Welcome!</ThemedText>
+        <ThemedText className="my-12">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
