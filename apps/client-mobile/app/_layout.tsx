@@ -17,6 +17,7 @@ import { RootSiblingParent } from "react-native-root-siblings";
 import { tokenCache } from "@/cache";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { defaultConfig } from "@tamagui/config/v4";
 import { createTamagui, TamaguiProvider, View } from "tamagui";
 
@@ -53,20 +54,24 @@ export default function RootLayout() {
         <TamaguiProvider config={config}>
           <SignInCredentialsProvider>
             <RootSiblingParent>
-              <GestureHandlerRootView>
-                <ThemeProvider
-                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-                >
-                  <Stack>
-                    <Stack.Screen
-                      name="(tabs)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen name="+not-found" />
-                  </Stack>
-                  <StatusBar style="auto" />
-                </ThemeProvider>
-              </GestureHandlerRootView>
+              <ClerkLoaded>
+                <GestureHandlerRootView>
+                  <BottomSheetModalProvider>
+                    <ThemeProvider
+                      value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                    >
+                      <Stack>
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                      </Stack>
+                      <StatusBar style="auto" />
+                    </ThemeProvider>
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+              </ClerkLoaded>
             </RootSiblingParent>
           </SignInCredentialsProvider>
         </TamaguiProvider>
