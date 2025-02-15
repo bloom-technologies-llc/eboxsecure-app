@@ -11,8 +11,6 @@ import Webcam from "react-webcam";
 
 import { Button } from "@ebox/ui/button";
 
-// TODO: test with phone
-
 export default function PhoneCapture() {
   const router = useRouter();
   const searchparams = useSearchParams();
@@ -26,7 +24,7 @@ export default function PhoneCapture() {
   const { data: isOnboarded, isLoading: isOnboardedLoading } =
     api.onboarding.isOnboardedUnauthed.useQuery(
       {
-        uploadKey,
+        uploadKey: uploadKey ?? "",
       },
       { enabled: isValid !== undefined },
     );
