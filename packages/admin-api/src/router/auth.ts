@@ -28,6 +28,7 @@ export const authRouter = createTRPCRouter({
       z.object({
         authorized: z.boolean(),
         url: z.string().optional(),
+        orderId: z.number().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -85,7 +86,7 @@ export const authRouter = createTRPCRouter({
 
         // fetch portrait
         const url = await getPortraitSignedUrl(payloadSession.userId);
-        return { authorized: true, url };
+        return { authorized: true, url, orderId: order.id };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
         return { authorized: false };
