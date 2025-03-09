@@ -1,25 +1,11 @@
-import { UserButton } from "@clerk/nextjs";
+import { SearchForm } from "./search-form";
 
-export default function Navbar() {
+const Navbar = () => {
   return (
-    <nav>
-      <div className="flex justify-between px-32 py-4">
-        <a href="/" className="flex items-center space-x-3">
-          <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-            EboxSecure
-          </span>
-        </a>
-
-        <div className="">
-          <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
-            <li>
-              <a href="#">
-                <UserButton />
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <header className="fixed top-0 z-50 flex h-[--header-height] w-full items-center bg-secondary px-6 py-4">
+      <SearchForm className="w-full sm:ml-auto sm:w-auto" />
+    </header>
   );
-}
+};
+
+export default Navbar;
