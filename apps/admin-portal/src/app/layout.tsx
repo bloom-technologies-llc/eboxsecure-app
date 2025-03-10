@@ -6,11 +6,11 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { ThemeProvider } from "next-themes";
 
 import { cn } from "@ebox/ui";
 
@@ -18,9 +18,10 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
+import { SidebarProvider, SidebarTrigger } from "@ebox/ui/sidebar";
+
 import Navbar from "./_components/navbar";
 import AppSidebar from "./_components/sidebar";
-import { SidebarProvider, SidebarTrigger } from "./_components/ui/sidebar";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -40,26 +41,24 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             GeistMono.variable,
           )}
         >
-          {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
-          {/* <SignedOut>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <SignedOut>
               <SignInButton />
-              <SignUpButton />
             </SignedOut>
             <SignedIn>
               <UserButton />
-            </SignedIn> */}
-          <div className="[--header-height:calc(theme(spacing.14))]">
-            <SidebarProvider className="flex flex-col">
-              <Navbar />
-              <div className="flex flex-1">
-                <AppSidebar />
-                {/* <SidebarTrigger /> */}
-                <TRPCReactProvider>{props.children}</TRPCReactProvider>
-              </div>
-            </SidebarProvider>
-          </div>
-
-          {/* </ThemeProvider> */}
+            </SignedIn>
+            <div className="[--header-height:calc(theme(spacing.14))]">
+              <SidebarProvider className="flex flex-col">
+                <Navbar />
+                <div className="flex flex-1">
+                  <AppSidebar />
+                  {/* <SidebarTrigger /> */}
+                  <TRPCReactProvider>{props.children}</TRPCReactProvider>
+                </div>
+              </SidebarProvider>
+            </div>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

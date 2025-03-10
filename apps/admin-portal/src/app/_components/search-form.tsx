@@ -1,8 +1,7 @@
 import { Search } from "lucide-react";
 
 import { Label } from "@ebox/ui/label";
-
-import { SidebarInput } from "./ui/sidebar";
+import { SidebarInput } from "@ebox/ui/sidebar";
 
 export function SearchForm({ ...props }: React.ComponentProps<"form">) {
   return (

@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "./ui/sidebar";
+} from "@ebox/ui/sidebar";
 
 const operations = [
   {
