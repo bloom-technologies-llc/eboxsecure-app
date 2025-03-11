@@ -32,35 +32,26 @@ export const viewport: Viewport = {
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={cn(
-            "min-h-screen bg-background font-sans text-foreground antialiased",
-            GeistSans.variable,
-            GeistMono.variable,
-          )}
-        >
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-            <div className="[--header-height:calc(theme(spacing.14))]">
-              <SidebarProvider className="flex flex-col">
-                <Navbar />
-                <div className="flex flex-1">
-                  <AppSidebar />
-                  {/* <SidebarTrigger /> */}
-                  <TRPCReactProvider>{props.children}</TRPCReactProvider>
-                </div>
-              </SidebarProvider>
-            </div>
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <TRPCReactProvider>
+      <ClerkProvider>
+        <html lang="en" suppressHydrationWarning>
+          <body
+            className={cn(
+              "min-h-screen bg-background font-sans text-foreground antialiased",
+              GeistSans.variable,
+              GeistMono.variable,
+            )}
+          >
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+              <div className="[--header-height:calc(theme(spacing.14))]">
+                <SidebarProvider className="flex flex-col">
+                  <div className="flex flex-1">{props.children}</div>
+                </SidebarProvider>
+              </div>
+            </ThemeProvider>
+          </body>
+        </html>
+      </ClerkProvider>
+    </TRPCReactProvider>
   );
 }

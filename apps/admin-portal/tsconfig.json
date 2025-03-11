@@ -11,13 +11,6 @@
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "module": "esnext"
   },
-  "include": [
-    ".",
-    ".next/types/**/*.ts",
-    "../../packages/ui/src/sheet.tsx",
-    "../../packages/ui/src/skeleton.tsx",
-    "../../packages/ui/src/tooltip.tsx",
-    "../../packages/ui/src/hooks"
-  ],
+  "include": [".", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

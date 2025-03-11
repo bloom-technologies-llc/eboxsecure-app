@@ -49,7 +49,7 @@ export default function OrderDetail() {
     setIsSubmitting(false);
   }
   return (
-    <main className="w-full bg-[#F3F3F3]">
+    <main className="bg-pageBackground w-full">
       <div className="container h-screen w-full py-16 md:w-11/12">
         <div
           className="my-6 flex cursor-pointer items-center gap-x-2"
@@ -65,7 +65,7 @@ export default function OrderDetail() {
               <div className="flex flex-col gap-y-2">
                 {/* comment section */}
 
-                <div className="flex flex-col rounded-md  border border-[#DBDBDB] bg-white">
+                <div className="flex flex-col rounded-md  border border-border bg-white">
                   <Form {...form}>
                     <form
                       onSubmit={form.handleSubmit(onSubmit)}
@@ -82,15 +82,13 @@ export default function OrderDetail() {
                                 className="rounded-none border border-none px-4 py-6"
                                 {...field}
                               >
-                                <p className="text-[#414242]">
-                                  Leave a comment...
-                                </p>
+                                <p className="text-gray">Leave a comment...</p>
                               </Textarea>
                             </FormControl>
                           </FormItem>
                         )}
                       ></FormField>
-                      <div className="flex rounded-md rounded-t-none border-t border-[#DBDBDB]  bg-[#edeff1] px-2 py-4">
+                      <div className="bg-secondary-background flex rounded-md rounded-t-none border-t border-border px-2 py-4">
                         <div className="flex w-full gap-x-2">
                           <AtSign className="h-4 w-4" />
                           <Paperclip className="h-4 w-4" />
@@ -101,17 +99,14 @@ export default function OrderDetail() {
                     </form>
                   </Form>
                 </div>
-                <p className="text-[#414242} text-right text-sm">
-                  only you and other staff can see comments
-                </p>
               </div>
 
               <div className="flex flex-col gap-y-4">
-                <p className="text-sm text-[#414242]">Today</p>
+                <p className="text-gray text-sm">Today</p>
                 <div className="flex flex-col gap-y-3">
                   <div className="flex items-center gap-x-2">
                     <MessageCircleWarning className="h-4 w-4" />
-                    <p className="text-sm text-[#414242]">
+                    <p className="text-gray text-sm">
                       Jane Eyre changed this customer’s email
                       hello.kitty@gmail.com
                     </p>
@@ -130,11 +125,11 @@ export default function OrderDetail() {
               </div>
 
               <div className="flex flex-col gap-y-4">
-                <p className="text-sm text-[#414242]">Jun 12</p>
+                <p className="text-gray text-sm">Jun 12</p>
                 <div className="flex flex-col gap-y-3">
                   <div className="flex items-center gap-x-2">
                     <MessageCircleWarning className="h-4 w-4" />
-                    <p className="text-sm text-[#414242]">
+                    <p className="text-gray text-sm">
                       Jane Eyre changed this customer’s email
                       hello.kitty@gmail.com
                     </p>
@@ -171,68 +166,62 @@ export default function OrderDetail() {
 
           {/* Details Section Container */}
           <div className="flex w-fit flex-col gap-y-6">
-            <div className="rounded-lg border border-[#DBDBDB] bg-white px-6 py-4">
+            <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-3">
                 <p className="font-medium">Shipping information</p>
                 <div className="flex items-center gap-x-2">
                   <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-sm text-[#414242]">
-                    Shipping label created
-                  </p>
+                  <p className="text-gray text-sm">Shipping label created</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#DBDBDB] bg-white px-6 py-4">
+            <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-6">
                 <div className="flex flex-col gap-y-3">
                   <div className="flex items-center">
                     <p className="w-full font-medium">Customer</p>
-                    <Pencil className="h-4 w-4 text-[#414242]" />
+                    <Pencil className="text-gray h-4 w-4" />
                   </div>
-                  <p className="text-sm text-[#00698f]">Jack Black</p>
+                  <p className="text-sm text-secondary">Jack Black</p>
                 </div>
 
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium ">Contact information</p>
-                  <p className="text-sm text-[#00698f]">Jack Black</p>
-                  <p className="text-sm text-[#414242]">+1 (123)-456-7890</p>
+                  <p className="text-sm text-secondary">Jack Black</p>
+                  <p className="text-gray text-sm">+1 (123)-456-7890</p>
                 </div>
 
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium">Shipping address</p>
-                  <p className="text-sm text-[#414242]">123 apple street</p>
-                  <p className="text-sm text-[#414242]">
-                    Edison New Jersey 08817
-                  </p>
-                  <p className="text-sm text-[#414242]">United States</p>
+                  <p className="text-gray text-sm">123 apple street</p>
+                  <p className="text-gray text-sm">Edison New Jersey 08817</p>
+                  <p className="text-gray text-sm">United States</p>
                 </div>
 
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium">Billing address</p>
-                  <p className="text-sm text-[#414242]">
-                    Same as shipping address
-                  </p>
+                  <p className="text-gray text-sm">Same as shipping address</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#DBDBDB] bg-white px-6 py-4">
+            <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-3">
                 <p className="font-medium">Notes</p>
                 <div className="flex items-center gap-x-2">
                   <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-sm text-[#414242]">Very friendly</p>
+                  <p className="text-gray text-sm">Very friendly</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#DBDBDB] bg-white px-6 py-4">
+            <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-3">
                 <p className="font-medium">Eligible recipients</p>
                 <div className="flex items-center gap-x-2">
                   <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-sm text-[#414242]">N/A</p>
+                  <p className="text-gray text-sm">N/A</p>
                 </div>
               </div>
             </div>
