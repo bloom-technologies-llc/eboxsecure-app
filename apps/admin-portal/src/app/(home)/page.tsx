@@ -23,12 +23,9 @@ export default function HomePage() {
             <img src={data.url} alt="Portrait" className="rounded-md" />
           )} */}
           <PackageTrackingTable />
-<!--             <>
-              <img src={data.url} alt="Portrait" className="rounded-md" />
-              <p>Order ID: {data.orderId}</p>
-            </> -->
-<!--           )} -->
-          
+          {/* <img src={data.url} alt="Portrait" className="rounded-md" />
+              <p>Order ID: {data.orderId}</p> */}
+
           {/* <Mutation pickupToken={token} /> */}
         </div>
       </div>
