@@ -50,10 +50,10 @@ export default function OrderDetail() {
   }
   return (
     <main className="bg-pageBackground w-full">
-      <div className="container h-screen w-full py-16 md:w-11/12">
+      <div className="container w-full py-16 md:w-11/12">
         <div
           className="my-6 flex cursor-pointer items-center gap-x-2"
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
         >
           <ArrowLeft className="h-4 w-4" />
           <p>#{orderId}</p>

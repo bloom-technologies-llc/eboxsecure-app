@@ -57,7 +57,7 @@ interface Package {
   selected?: boolean;
 }
 
-export default function PackageTrackingTable(): JSX.Element {
+export default function ClientTable(): JSX.Element {
   const [filter, setFilter] = useState<"All" | Status>("All");
   const [packages, setPackages] = useState<Package[]>([
     {
@@ -93,12 +93,20 @@ export default function PackageTrackingTable(): JSX.Element {
   const router = useRouter();
 
   const toggleSelectAll = (): void => {
-    setSelectAll((prev) => !prev);
-    setPackages((prev) =>
-      prev.map(
+    setSelectAll(!selectAll);
+    setPackages(
+      packages.map(
         (pkg): Package => ({
-          ...pkg,
-          selected: !prev,
+          id: pkg.id,
+          trackingNumber: pkg.trackingNumber,
+          date: pkg.date,
+          customer: pkg.customer,
+          customerVerified: pkg.customerVerified,
+          store: pkg.store,
+          storeVerified: pkg.storeVerified,
+          status: pkg.status,
+          total: pkg.total,
+          selected: !selectAll,
         }),
       ),
     );
@@ -412,7 +420,6 @@ export default function PackageTrackingTable(): JSX.Element {
                   <Checkbox
                     checked={pkg.selected}
                     onCheckedChange={() => toggleSelect(index)}
-                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Select package ${pkg.id}`}
                   />
                 </TableCell>
