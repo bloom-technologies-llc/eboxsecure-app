@@ -40,13 +40,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
               GeistMono.variable,
             )}
           >
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
               <div className="[--header-height:calc(theme(spacing.14))]">
                 <SidebarProvider className="flex flex-col">
                   <div className="flex flex-1">{props.children}</div>
                 </SidebarProvider>
               </div>
-            </ThemeProvider>
           </body>
         </html>
       </ClerkProvider>
