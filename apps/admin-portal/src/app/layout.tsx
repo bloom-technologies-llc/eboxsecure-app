@@ -1,5 +1,3 @@
-"use client";
-
 import type { Viewport } from "next";
 import {
   ClerkProvider,

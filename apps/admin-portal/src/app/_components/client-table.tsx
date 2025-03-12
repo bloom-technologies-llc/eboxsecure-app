@@ -93,20 +93,12 @@ export default function ClientTable(): JSX.Element {
   const router = useRouter();
 
   const toggleSelectAll = (): void => {
-    setSelectAll(!selectAll);
-    setPackages(
-      packages.map(
+    setSelectAll((prev) => !prev);
+    setPackages((prev) =>
+      prev.map(
         (pkg): Package => ({
-          id: pkg.id,
-          trackingNumber: pkg.trackingNumber,
-          date: pkg.date,
-          customer: pkg.customer,
-          customerVerified: pkg.customerVerified,
-          store: pkg.store,
-          storeVerified: pkg.storeVerified,
-          status: pkg.status,
-          total: pkg.total,
-          selected: !selectAll,
+          ...pkg,
+          selected: !prev,
         }),
       ),
     );
@@ -141,7 +133,7 @@ export default function ClientTable(): JSX.Element {
   };
 
   const handleRowClick = (orderId: string) => {
-    router.push(`/order-details/${orderId}`);
+    // router.push(`/order-details/${orderId}`); //TODO: redirect to client detail page
   };
 
   // Filter packages based on tab selection and status filters
@@ -420,6 +412,7 @@ export default function ClientTable(): JSX.Element {
                   <Checkbox
                     checked={pkg.selected}
                     onCheckedChange={() => toggleSelect(index)}
+                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Select package ${pkg.id}`}
                   />
                 </TableCell>

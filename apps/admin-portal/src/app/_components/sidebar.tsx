@@ -18,31 +18,31 @@ import {
 const operations = [
   {
     title: "Orders",
-    url: "#",
+    url: "/orders",
   },
   {
     title: "Stores",
-    url: "#",
+    url: "/stores",
   },
   {
     title: "Carriers",
-    url: "#",
+    url: "/carriers",
   },
   {
     title: "Agents",
-    url: "#",
+    url: "/agents",
   },
   {
     title: "Employees",
-    url: "#",
+    url: "/employees",
   },
   {
     title: "Locations",
-    url: "#",
+    url: "/locations",
   },
   {
     title: "Clients",
-    url: "#",
+    url: "/clients",
   },
 ];
 
@@ -65,7 +65,11 @@ const AppSidebar = () => {
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>Home</SidebarMenuButton>
+              <SidebarMenuButton asChild>
+                <a href="/">
+                  <span>Home</span>
+                </a>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>

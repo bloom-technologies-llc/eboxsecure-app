@@ -1,4 +1,4 @@
-import ClientTable from "../_components/client-table";
+import ClientTable from "../../_components/client-table";
 
 export default function Page() {
   return (
