@@ -35,197 +35,189 @@ import {
 } from "@ebox/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@ebox/ui/tabs";
 
-type Status = "Open" | "Completed" | "Cancelled";
-type SortField =
-  | "order_number"
-  | "date"
-  | "status"
-  | "total_price"
-  | "customer_name";
+type Subscription = "Platinum" | "Bronze";
+type SortField = "id" | "name" | "subscription" | "email" | "phone" | "orders";
 type SortDirection = "asc" | "desc";
 
-interface Package {
+interface Client {
   id: string;
-  trackingNumber: string;
-  date: string;
-  customer: string;
-  customerVerified?: boolean;
-  store: string;
-  storeVerified?: boolean;
-  status: Status;
-  total: string;
+  name: string;
+  subscription: Subscription;
+  email: string;
+  phone: string;
+  orders: string;
   selected?: boolean;
 }
 
 export default function ClientTable(): JSX.Element {
-  const [filter, setFilter] = useState<"All" | Status>("All");
-  const [packages, setPackages] = useState<Package[]>([
+  const [clients, setClients] = useState<Client[]>([
     {
       id: "1000000017",
-      trackingNumber: "113-6838917-0669818",
-      date: "11/03/2024",
-      customer: "David Smith",
-      customerVerified: true,
-      store: "Puppy shop",
-      storeVerified: true,
-      status: "Open",
-      total: "$22.00 USD",
+      name: "Steven Koh",
+      subscription: "Platinum",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (732)-668-6908",
+      orders: "100 orders",
     },
-    ...Array(7)
-      .fill(null)
-      .map(
-        (): Package => ({
-          id: "1000000018",
-          trackingNumber: "113-6838917-0669818",
-          date: "11/03/2024",
-          customer: "David Smith",
-          store: "Puppy shop",
-          status: "Open",
-          total: "$22.00 USD",
-        }),
-      ),
+    {
+      id: "1000000018",
+      name: "Selena pelez",
+      subscription: "Platinum",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (123)-456-6908",
+      orders: "223 orders",
+    },
+    {
+      id: "1000000019",
+      name: "Alan weng",
+      subscription: "Bronze",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (324)-542-2632",
+      orders: "433 orders",
+    },
+    {
+      id: "1000000020",
+      name: "Sigrid nunez",
+      subscription: "Bronze",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (631)-243-3264",
+      orders: "563 orders",
+    },
+    {
+      id: "1000000021",
+      name: "Ryan holiday",
+      subscription: "Platinum",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (345)-456-6443",
+      orders: "893 orders",
+    },
+    {
+      id: "1000000022",
+      name: "Charlotte bronte",
+      subscription: "Bronze",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (154)-643-5432",
+      orders: "900 orders",
+    },
+    {
+      id: "1000000023",
+      name: "Ryan S. Jhun",
+      subscription: "Platinum",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (153)-645-7855",
+      orders: "921 orders",
+    },
+    {
+      id: "1000000024",
+      name: "Heize dean",
+      subscription: "Bronze",
+      email: "steve.koh@gmail.com",
+      phone: "+1 (365)-263-3642",
+      orders: "952 orders",
+    },
   ]);
 
   const [selectAll, setSelectAll] = useState<boolean>(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
-  const [sortBy, setSortBy] = useState<SortField>("order_number");
+  const [selectedSubscriptions, setSelectedSubscriptions] = useState<
+    Subscription[]
+  >([]);
+  const [sortBy, setSortBy] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
 
   const toggleSelectAll = (): void => {
     setSelectAll((prev) => !prev);
-    setPackages((prev) =>
+    setClients((prev) =>
       prev.map(
-        (pkg): Package => ({
-          ...pkg,
-          selected: !prev,
+        (client): Client => ({
+          ...client,
+          selected: !selectAll,
         }),
       ),
     );
   };
 
   const toggleSelect = (index: number): void => {
-    const newPackages = [...packages];
-    newPackages[index] = {
-      ...newPackages[index],
-      selected: !newPackages[index]?.selected,
-    } as Package;
-    setPackages(newPackages);
+    const newClients = [...clients];
+    newClients[index] = {
+      ...newClients[index],
+      selected: !newClients[index]?.selected,
+    } as Client;
+    setClients(newClients);
 
-    // Update selectAll state based on if all packages are selected
-    setSelectAll(newPackages.every((pkg) => pkg.selected));
+    // Update selectAll state based on if all clients are selected
+    setSelectAll(newClients.every((client) => client.selected));
   };
 
-  const handleStatusFilterChange = (status: Status, checked: boolean): void => {
-    setSelectedStatuses(
+  const handleSubscriptionFilterChange = (
+    subscription: Subscription,
+    checked: boolean,
+  ): void => {
+    setSelectedSubscriptions(
       checked
-        ? [...selectedStatuses, status]
-        : selectedStatuses.filter((s) => s !== status),
+        ? [...selectedSubscriptions, subscription]
+        : selectedSubscriptions.filter((s) => s !== subscription),
     );
   };
 
   const clearFilters = (): void => {
-    setSelectedStatuses([]);
+    setSelectedSubscriptions([]);
   };
 
   const preventClose = (e: Event): void => {
     e.preventDefault();
   };
 
-  const handleRowClick = (orderId: string) => {
-    // router.push(`/order-details/${orderId}`); //TODO: redirect to client detail page
+  const handleRowClick = (
+    clientId: string,
+    clientName: string,
+    clientPhone: string,
+    clientEmail: string,
+    clientTier: Subscription,
+  ) => {
+    router.push(
+      `clients/client-details/${clientId}?name=${clientName}&phone=${clientPhone}&email=${clientEmail}&tier=${clientTier}`,
+    ); // will we actually be using the clients id for this param?
   };
 
-  // Filter packages based on tab selection and status filters
-  const filteredPackages =
-    filter === "All"
-      ? selectedStatuses.length > 0
-        ? packages.filter((pkg) => selectedStatuses.includes(pkg.status))
-        : packages
-      : selectedStatuses.length > 0
-        ? packages.filter(
-            (pkg) =>
-              pkg.status === filter && selectedStatuses.includes(pkg.status),
-          )
-        : packages.filter((pkg) => pkg.status === filter);
+  // Filter clients based on subscription filters
+  const filteredClients = clients.filter((client) => {
+    // Filter by selected subscriptions
+    if (
+      selectedSubscriptions.length > 0 &&
+      !selectedSubscriptions.includes(client.subscription)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
   // Apply sorting
-  const sortedPackages = [...filteredPackages].sort(
-    (a: Package, b: Package) => {
-      const direction = sortDirection === "asc" ? 1 : -1;
+  const sortedClients = [...filteredClients].sort((a: Client, b: Client) => {
+    const direction = sortDirection === "asc" ? 1 : -1;
 
-      switch (sortBy) {
-        case "order_number":
-          return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
-        case "date":
-          return (
-            direction *
-            (new Date(a.date).getTime() - new Date(b.date).getTime())
-          );
-        case "status":
-          return direction * a.status.localeCompare(b.status);
-        case "total_price":
-          return (
-            direction *
-            (Number.parseFloat(a.total.replace("$", "")) -
-              Number.parseFloat(b.total.replace("$", "")))
-          );
-        case "customer_name":
-          return direction * a.customer.localeCompare(b.customer);
-        default:
-          return 0;
-      }
-    },
-  );
+    switch (sortBy) {
+      case "id":
+        return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
+      case "name":
+        return direction * a.name.localeCompare(b.name);
+      case "subscription":
+        return direction * a.subscription.localeCompare(b.subscription);
+      case "email":
+        return direction * a.email.localeCompare(b.email);
+      case "phone":
+        return direction * a.phone.localeCompare(b.phone);
+      case "orders":
+        return direction * a.orders.localeCompare(b.orders);
+      default:
+        return 0;
+    }
+  });
 
   return (
     <div className="w-full overflow-hidden rounded-lg border bg-white">
       <div className="flex items-center justify-between border-b bg-white p-2">
-        <Tabs
-          defaultValue="All"
-          value={filter}
-          onValueChange={(value: string) => {
-            if (
-              value === "All" ||
-              value === "Open" ||
-              value === "Completed" ||
-              value === "Cancelled"
-            ) {
-              setFilter(value as "All" | Status);
-            }
-          }}
-        >
-          <TabsList className="bg-transparent">
-            <TabsTrigger
-              value="All"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              value="Open"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Open
-            </TabsTrigger>
-            <TabsTrigger
-              value="Completed"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Completed
-            </TabsTrigger>
-            <TabsTrigger
-              value="Cancelled"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Cancelled
-            </TabsTrigger>
-            <Button variant="ghost" size="icon" className="ml-1 h-8 w-8">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </TabsList>
-        </Tabs>
-
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
@@ -240,12 +232,12 @@ export default function ClientTable(): JSX.Element {
               <Button variant="outline" size="sm" className="h-8 gap-1">
                 <Filter className="h-4 w-4" />
                 Filter
-                {selectedStatuses.length > 0 && (
+                {selectedSubscriptions.length > 0 && (
                   <Badge
                     variant="secondary"
                     className="ml-1 rounded-full px-1 text-xs"
                   >
-                    {selectedStatuses.length}
+                    {selectedSubscriptions.length}
                   </Badge>
                 )}
               </Button>
@@ -255,36 +247,28 @@ export default function ClientTable(): JSX.Element {
               className="w-48"
               onCloseAutoFocus={preventClose}
             >
-              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuLabel>Filter by Subscription</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Open")}
+                checked={selectedSubscriptions.includes("Platinum")}
                 onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Open", checked)
+                  handleSubscriptionFilterChange("Platinum", checked)
                 }
                 onSelect={preventClose}
               >
-                Open
+                Platinum
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Completed")}
+                checked={selectedSubscriptions.includes("Bronze")}
                 onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Completed", checked)
+                  handleSubscriptionFilterChange("Bronze", checked)
                 }
                 onSelect={preventClose}
               >
-                Completed
+                Bronze
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Cancelled")}
-                onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Cancelled", checked)
-                }
-                onSelect={preventClose}
-              >
-                Cancelled
-              </DropdownMenuCheckboxItem>
-              {selectedStatuses.length > 0 && (
+
+              {selectedSubscriptions.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <Button
@@ -317,39 +301,37 @@ export default function ClientTable(): JSX.Element {
                 value={sortBy}
                 onValueChange={(value: string) => {
                   if (
-                    value === "order_number" ||
-                    value === "date" ||
-                    value === "status" ||
-                    value === "total_price" ||
-                    value === "customer_name"
+                    value === "id" ||
+                    value === "name" ||
+                    value === "subscription" ||
+                    value === "email" ||
+                    value === "phone" ||
+                    value === "orders"
                   ) {
                     setSortBy(value as SortField);
                   }
                 }}
               >
-                <DropdownMenuRadioItem
-                  value="order_number"
-                  onSelect={preventClose}
-                >
-                  Order number
+                <DropdownMenuRadioItem value="id" onSelect={preventClose}>
+                  ID
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="date" onSelect={preventClose}>
-                  Date
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="status" onSelect={preventClose}>
-                  Status
+                <DropdownMenuRadioItem value="name" onSelect={preventClose}>
+                  Client name
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
-                  value="total_price"
+                  value="subscription"
                   onSelect={preventClose}
                 >
-                  Total price
+                  Subscription
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="customer_name"
-                  onSelect={preventClose}
-                >
-                  Customer name
+                <DropdownMenuRadioItem value="email" onSelect={preventClose}>
+                  Email
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="phone" onSelect={preventClose}>
+                  Phone
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="orders" onSelect={preventClose}>
+                  Orders
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
@@ -389,56 +371,55 @@ export default function ClientTable(): JSX.Element {
                 <Checkbox
                   checked={selectAll}
                   onCheckedChange={toggleSelectAll}
-                  aria-label="Select all packages"
+                  aria-label="Select all clients"
                 />
               </TableHead>
-              <TableHead>Package ID</TableHead>
-              <TableHead>Tracking number</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Store</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Total</TableHead>
+              <TableHead>Client name</TableHead>
+              <TableHead>Subscription</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone #</TableHead>
+              <TableHead>Orders</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedPackages.map((pkg, index) => (
+            {sortedClients.map((client, index) => (
               <TableRow
                 className="cursor-pointer"
                 key={index}
-                onClick={() => handleRowClick(pkg.id)}
+                onClick={() =>
+                  handleRowClick(
+                    client.id,
+                    client.name,
+                    client.phone,
+                    client.email,
+                    client.subscription,
+                  )
+                }
               >
                 <TableCell>
                   <Checkbox
-                    checked={pkg.selected}
+                    checked={client.selected}
                     onCheckedChange={() => toggleSelect(index)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Select package ${pkg.id}`}
+                    aria-label={`Select client ${client.id}`}
                   />
                 </TableCell>
-                <TableCell>{pkg.id}</TableCell>
-                <TableCell>{pkg.trackingNumber}</TableCell>
-                <TableCell>{pkg.date}</TableCell>
+                <TableCell>{client.name}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    {pkg.customer}
-                    {pkg.customerVerified && (
-                      <Info className="h-4 w-4 text-blue-500" />
-                    )}
-                  </div>
+                  <Badge
+                    variant="secondary"
+                    className={
+                      client.subscription === "Platinum"
+                        ? "bg-blue-300"
+                        : "bg-yellow-300"
+                    }
+                  >
+                    {client.subscription}
+                  </Badge>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {pkg.store}
-                    {pkg.storeVerified && (
-                      <Info className="h-4 w-4 text-blue-500" />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{pkg.status}</Badge>
-                </TableCell>
-                <TableCell className="text-right">{pkg.total}</TableCell>
+                <TableCell>{client.email}</TableCell>
+                <TableCell>{client.phone}</TableCell>
+                <TableCell>{client.orders}</TableCell>
               </TableRow>
             ))}
           </TableBody>

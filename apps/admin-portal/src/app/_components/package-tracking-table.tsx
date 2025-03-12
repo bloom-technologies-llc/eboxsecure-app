@@ -133,7 +133,7 @@ export default function PackageTrackingTable(): JSX.Element {
   };
 
   const handleRowClick = (orderId: string) => {
-    router.push(`/order-details/${orderId}`);
+    router.push(`orders/order-details/${orderId}`);
   };
 
   // Filter packages based on tab selection and status filters

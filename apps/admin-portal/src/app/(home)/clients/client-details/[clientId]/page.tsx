@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -18,12 +18,17 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { Textarea } from "@ebox/ui/textarea";
 
-import CommentCard from "../../../_components/comment-card";
+import CommentCard from "../../../../_components/comment-card";
 
-export default function OrderDetail() {
-  const params = useParams();
+export default function ClientDetail() {
+  const params = useParams<{ clientId: string }>();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const orderId = params.orderId as string;
+  const clientId = params.clientId;
+  const clientName = searchParams.get("name");
+  const clientPhoneNumber = searchParams.get("phone");
+  const clientEmail = searchParams.get("email");
+  const clientSubscriptionTier = searchParams.get("tier");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formSchema = z.object({
@@ -53,10 +58,10 @@ export default function OrderDetail() {
       <div className="container w-full py-16 md:w-11/12">
         <div
           className="my-6 flex cursor-pointer items-center gap-x-2"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/clients")}
         >
           <ArrowLeft className="h-4 w-4" />
-          <p>#{orderId}</p>
+          <p>{clientName}</p>
         </div>
         <div className="grid grid-cols-3 gap-x-6">
           {/* comment section container */}
@@ -168,46 +173,6 @@ export default function OrderDetail() {
           <div className="flex w-fit flex-col gap-y-6">
             <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-3">
-                <p className="font-medium">Shipping information</p>
-                <div className="flex items-center gap-x-2">
-                  <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-gray text-sm">Shipping label created</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-white px-6 py-4">
-              <div className="flex flex-col gap-y-6">
-                <div className="flex flex-col gap-y-3">
-                  <div className="flex items-center">
-                    <p className="w-full font-medium">Customer</p>
-                    <Pencil className="text-gray h-4 w-4" />
-                  </div>
-                  <p className="text-sm text-secondary">Jack Black</p>
-                </div>
-
-                <div className="flex flex-col gap-y-3">
-                  <p className="font-medium ">Contact information</p>
-                  <p className="text-sm text-secondary">Jack Black</p>
-                  <p className="text-gray text-sm">+1 (123)-456-7890</p>
-                </div>
-
-                <div className="flex flex-col gap-y-3">
-                  <p className="font-medium">Shipping address</p>
-                  <p className="text-gray text-sm">123 apple street</p>
-                  <p className="text-gray text-sm">Edison New Jersey 08817</p>
-                  <p className="text-gray text-sm">United States</p>
-                </div>
-
-                <div className="flex flex-col gap-y-3">
-                  <p className="font-medium">Billing address</p>
-                  <p className="text-gray text-sm">Same as shipping address</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-white px-6 py-4">
-              <div className="flex flex-col gap-y-3">
                 <p className="font-medium">Notes</p>
                 <div className="flex items-center gap-x-2">
                   <CircleArrowUp className="h-4 w-4" />
@@ -217,11 +182,33 @@ export default function OrderDetail() {
             </div>
 
             <div className="rounded-lg border border-border bg-white px-6 py-4">
-              <div className="flex flex-col gap-y-3">
-                <p className="font-medium">Eligible recipients</p>
-                <div className="flex items-center gap-x-2">
-                  <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-gray text-sm">N/A</p>
+              <div className="flex flex-col gap-y-6">
+                <div className="flex flex-col gap-y-3">
+                  <div className="flex items-center">
+                    <p className="w-full font-medium">Client</p>
+                    <Pencil className="text-gray h-4 w-4" />
+                  </div>
+                  <p className="text-sm text-secondary">{clientName}</p>
+                </div>
+
+                <div className="flex flex-col gap-y-3">
+                  <p className="font-medium ">Contact information</p>
+                  <p className="text-sm text-secondary">{clientName}</p>
+                  <p className="text-gray text-sm">{clientPhoneNumber}</p>
+                </div>
+
+                <div className="flex flex-col gap-y-3">
+                  <p className="font-medium">Subscription tier</p>
+                  <p className="text-sm text-secondary">
+                    {clientSubscriptionTier}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-y-3">
+                  <p className="font-medium">Location information</p>
+                  <p className="text-sm text-secondary">Ebox Location #4</p>
+                  <p className="text-gray text-sm">1964 Rhettsbury Street</p>
+                  <p className="text-gray text-sm">United States</p>
                 </div>
               </div>
             </div>
