@@ -1,6 +1,7 @@
 import type { Viewport } from "next";
 
 import Navbar from "../_components/navbar";
+import AppSidebar from "../_components/sidebar";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -12,9 +13,8 @@ export const viewport: Viewport = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <>
-      <header>
-        <Navbar />
-      </header>
+      <AppSidebar />
+      <Navbar />
       {props.children}
     </>
   );

@@ -38,8 +38,8 @@ const columns: ColumnDef<AuthorizedPickup>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <div className="w-fit rounded-sm bg-[#f3f3f3] px-4 py-1">
-        <p className="text-[#414242]">{row.getValue("status")}</p>
+      <div className="bg-pageBackground w-fit rounded-sm px-4 py-1">
+        <p className="text-gray">{row.getValue("status")}</p>
       </div>
     ),
   },
