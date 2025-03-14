@@ -22,27 +22,27 @@ const operations = [
   },
   {
     title: "Stores",
-    url: "/stores",
+    url: "#",
   },
   {
     title: "Carriers",
-    url: "/carriers",
+    url: "#",
   },
   {
     title: "Agents",
-    url: "/agents",
+    url: "#",
   },
   {
     title: "Employees",
-    url: "/employees",
+    url: "#",
   },
   {
     title: "Locations",
-    url: "/locations",
+    url: "#",
   },
   {
-    title: "Clients",
-    url: "/clients",
+    title: "Customers",
+    url: "/customers",
   },
 ];
 
