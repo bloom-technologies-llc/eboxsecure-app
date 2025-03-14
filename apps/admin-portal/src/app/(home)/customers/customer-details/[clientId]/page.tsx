@@ -58,7 +58,7 @@ export default function ClientDetail() {
       <div className="container w-full py-16 md:w-11/12">
         <div
           className="my-6 flex cursor-pointer items-center gap-x-2"
-          onClick={() => router.push("/clients")}
+          onClick={() => router.push("/customers")}
         >
           <ArrowLeft className="h-4 w-4" />
           <p>{clientName}</p>
