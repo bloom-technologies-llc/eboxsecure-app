@@ -58,23 +58,19 @@ model Session {
 }
 
 model CustomerAccount {
-    id                  String                     @id
-    customerFirstName   String
-    customerLastName    String
-    customerPhoneNumber String
-    customerEmail       String
-    customerRole        Role
-    customerStoreType   StoreType
-    orders              Order[]
-    user                User                       @relation(fields: [id], references: [id])
-    phoneUploadLink     OnboardingPhoneUploadLink?
-    CustomerComment     CustomerComment[]
-    CustomerNote        CustomerNote[]
+    id              String                     @id
+    orders          Order[]
+    user            User                       @relation(fields: [id], references: [id])
+    phoneUploadLink OnboardingPhoneUploadLink?
+    CustomerComment CustomerComment[]
+    CustomerNote    CustomerNote[]
 }
 
 model EmployeeAccount {
-    id   String @id
-    user User   @relation(fields: [id], references: [id])
+    id                String    @id
+    user              User      @relation(fields: [id], references: [id])
+    employeeRole      Role
+    employeeStoreType StoreType
 }
 
 model CorporateAccount {
@@ -122,7 +118,8 @@ model LocationComment {
     references Reference[]
     images     String[]
 
-    locationId Int
+    locationId   Int
+    Notification Notification[]
 }
 
 model LocationNote {
@@ -159,7 +156,8 @@ model OrderComment {
     references Reference[]
     images     String[]
 
-    orderId Int
+    orderId      Int
+    Notification Notification[]
 }
 
 model OrderNote {
@@ -181,6 +179,7 @@ model CustomerComment {
     references        Reference[]
     images            String[]
     customerAccountId String
+    Notification      Notification[]
 }
 
 model CustomerNote {
@@ -202,19 +201,25 @@ model Reference {
     OrderComment      OrderComment?    @relation(fields: [orderCommentId], references: [id])
     orderCommentId    String?
     customerCommentId String?
-    locationCommentId String?
     CustomerComment   CustomerComment? @relation(fields: [customerCommentId], references: [id])
+    locationCommentId String?
     LocationComment   LocationComment? @relation(fields: [locationCommentId], references: [id])
 }
 
 model Notification {
     id        String   @id @default(cuid())
     userId    String
-    commentId String
     message   String
     read      Boolean  @default(false)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    OrderComment      OrderComment?    @relation(fields: [orderCommentId], references: [id])
+    orderCommentId    String?
+    customerCommentId String?
+    CustomerComment   CustomerComment? @relation(fields: [customerCommentId], references: [id])
+    locationCommentId String?
+    LocationComment   LocationComment? @relation(fields: [locationCommentId], references: [id])
 
     user User @relation(fields: [userId], references: [id])
 }
