@@ -16,6 +16,21 @@ enum UserType {
     CORPORATE
 }
 
+enum CommentType {
+    EMPLOYEE
+    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    LOCATION
+    CUSTOMER
+    ORDER
+}
+
+enum NoteType {
+    EMPLOYEE
+    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    LOCATION
+    CUSTOMER
+}
+
 enum SessionStatus {
     ABANDONED
     ACTIVE
@@ -26,10 +41,11 @@ enum SessionStatus {
     REVOKED
 }
 
-enum Role {
-    ADMIN
+enum AdminRole {
+    CORPORATE
     MANAGER
     DEVELOPER
+    ASSOCIATE
 }
 
 enum StoreType {
@@ -38,16 +54,16 @@ enum StoreType {
 }
 
 model User {
-    id               String                   @id
-    userType         UserType
-    customerAccount  CustomerAccount?
-    employeeAccount  EmployeeAccount?
-    corporateAccount CorporateAccount?
-    reference        CommentToUserReference[]
-    sessions         Session[]
-    createdAt        DateTime                 @default(now())
-    updatedAt        DateTime                 @updatedAt
-    notifications    Notification[]
+    id                String                   @id
+    userType          UserType
+    customerAccount   CustomerAccount?
+    employeeAccount   EmployeeAccount?
+    corporateAccount  CorporateAccount?
+    commentReferences CommentToUserReference[]
+    sessions          Session[]
+    createdAt         DateTime                 @default(now())
+    updatedAt         DateTime                 @updatedAt
+    notifications     Notification[]
 }
 
 model Session {
@@ -58,19 +74,21 @@ model Session {
 }
 
 model CustomerAccount {
-    id              String                     @id
-    orders          Order[]
-    user            User                       @relation(fields: [id], references: [id])
-    phoneUploadLink OnboardingPhoneUploadLink?
-    customerNotes   CustomerNote[]
+    id               String                     @id
+    orders           Order[]
+    user             User                       @relation(fields: [id], references: [id])
+    phoneUploadLink  OnboardingPhoneUploadLink?
+    customerNotes    CustomerNote[]
+    customerComments CustomerComment[]
 }
 
 model EmployeeAccount {
     id                String            @id
     user              User              @relation(fields: [id], references: [id])
-    employeeRole      Role
+    employeeRole      AdminRole
     employeeStoreType StoreType
     employeeComments  EmployeeComment[]
+    employeeNotes     EmployeeNote[]
 }
 
 model CorporateAccount {
@@ -89,46 +107,27 @@ model PendingAccount {
 model OnboardingPhoneUploadLink {
     id         String   @id @default(cuid())
     customerId String   @unique
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
     expiresAt  DateTime
     completed  Boolean  @default(false)
 
-    Customer  CustomerAccount @relation(fields: [customerId], references: [id])
-    createdAt DateTime        @default(now())
-    updatedAt DateTime        @updatedAt
+    customer CustomerAccount @relation(fields: [customerId], references: [id])
 }
 
-model Comment {
-    id               String                   @id @default(cuid())
-    text             String
-    createdAt        DateTime                 @default(now())
-    updatedAt        DateTime                 @updatedAt
-    references       CommentToUserReference[]
-    images           String[]
-    locationComments LocationComment[]
-    employeeComments EmployeeComment[]
-    OrderComments    OrderComment[]
-    Notifications    Notification[]
-}
+model Order {
+    id                Int       @id @default(autoincrement())
+    customerId        String
+    vendorOrderId     String
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    total             Float
+    shippedLocationId Int
+    delivered         DateTime?
 
-model LocationComment {
-    id         String   @unique
-    locationId Int
-    location   Location @relation(fields: [locationId], references: [id])
-    comment    Comment  @relation(fields: [id], references: [id])
-}
-
-model EmployeeComment {
-    id                String          @unique
-    employeeAccountId String
-    employee          EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
-    comment           Comment         @relation(fields: [id], references: [id])
-}
-
-model OrderComment {
-    id      String  @unique
-    orderId Int
-    order   Order   @relation(fields: [orderId], references: [id])
-    comment Comment @relation(fields: [id], references: [id])
+    customer        CustomerAccount @relation(fields: [customerId], references: [id])
+    shippedLocation Location        @relation(fields: [shippedLocationId], references: [id])
+    orderComments   OrderComment[]
 }
 
 model Location {
@@ -143,38 +142,87 @@ model Location {
     orders           Order[]
 }
 
-model LocationNote {
-    id         String   @id @default(cuid())
-    text       String
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    location   Location @relation(fields: [locationId], references: [id])
-    locationId Int
+model Note {
+    id           String        @id @default(cuid())
+    text         String
+    createdAt    DateTime
+    updatedAt    DateTime
+    noteType     NoteType
+    locationNote LocationNote?
+    employeeNote EmployeeNote?
+    // storeNotes TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    customerNote CustomerNote?
 }
 
-model Order {
-    id                Int             @id @default(autoincrement())
-    customerId        String
-    vendorOrderId     String
-    total             Float
-    shippedLocationId Int
-    delivered         DateTime?
-    customer          CustomerAccount @relation(fields: [customerId], references: [id])
-    shippedLocation   Location        @relation(fields: [shippedLocationId], references: [id])
-    createdAt         DateTime        @default(now())
-    updatedAt         DateTime        @updatedAt
+model LocationNote {
+    id         String @unique
+    locationId Int
 
-    OrderComment OrderComment[]
+    note     Note     @relation(fields: [id], references: [id])
+    location Location @relation(fields: [locationId], references: [id])
 }
 
 model CustomerNote {
-    id        String          @id @default(cuid())
-    text      String
-    createdAt DateTime        @default(now())
-    updatedAt DateTime        @updatedAt
-    customer  CustomerAccount @relation(fields: [customerAccountId], references: [id])
+    id         String @unique
+    customerId String
 
+    note     Note            @relation(fields: [id], references: [id])
+    customer CustomerAccount @relation(fields: [customerId], references: [id])
+}
+
+model EmployeeNote {
+    id         String @unique
+    employeeId String
+
+    note     Note            @relation(fields: [id], references: [id])
+    employee EmployeeAccount @relation(fields: [employeeId], references: [id])
+}
+
+model Comment {
+    id                String                   @id @default(cuid())
+    text              String
+    createdAt         DateTime                 @default(now())
+    updatedAt         DateTime                 @updatedAt
+    commentType       CommentType
+    commentReferences CommentToUserReference[]
+    images            String[]
+    locationComment   LocationComment?
+    employeeComment   EmployeeComment?
+    customerComment   CustomerComment?
+    orderComment      OrderComment?
+    notifications     Notification[]
+}
+
+model LocationComment {
+    id         String @unique
+    locationId Int
+
+    location Location @relation(fields: [locationId], references: [id])
+    comment  Comment  @relation(fields: [id], references: [id])
+}
+
+model EmployeeComment {
+    id                String @unique
+    employeeAccountId String
+
+    employee EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
+    comment  Comment         @relation(fields: [id], references: [id])
+}
+
+model CustomerComment {
+    id                String @unique
     customerAccountId String
+
+    customer CustomerAccount @relation(fields: [customerAccountId], references: [id])
+    comment  Comment         @relation(fields: [id], references: [id])
+}
+
+model OrderComment {
+    id      String @unique
+    orderId Int
+
+    order   Order   @relation(fields: [orderId], references: [id])
+    comment Comment @relation(fields: [id], references: [id])
 }
 
 model CommentToUserReference {
@@ -183,7 +231,7 @@ model CommentToUserReference {
     referencedUserId String
 
     referencedUser User    @relation(fields: [referencedUserId], references: [id])
-    Comment        Comment @relation(fields: [commentId], references: [id])
+    comment        Comment @relation(fields: [commentId], references: [id])
 }
 
 model Notification {
@@ -191,10 +239,10 @@ model Notification {
     userId    String
     message   String
     read      Boolean  @default(false)
+    commentId String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    user      User     @relation(fields: [userId], references: [id])
-    comment   Comment? @relation(fields: [commentId], references: [id])
-    commentId String?
+    user    User     @relation(fields: [userId], references: [id])
+    comment Comment? @relation(fields: [commentId], references: [id])
 }
