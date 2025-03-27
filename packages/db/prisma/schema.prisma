@@ -47,7 +47,7 @@ model User {
     sessions         Session[]
     createdAt        DateTime                 @default(now())
     updatedAt        DateTime                 @updatedAt
-    Notifications    Notification[]
+    notifications    Notification[]
 }
 
 model Session {
