@@ -41,10 +41,8 @@ enum SessionStatus {
     REVOKED
 }
 
-enum AdminRole {
-    CORPORATE
+enum EmployeeRole {
     MANAGER
-    DEVELOPER
     ASSOCIATE
 }
 
@@ -54,16 +52,16 @@ enum StoreType {
 }
 
 model User {
-    id                String                   @id
-    userType          UserType
-    customerAccount   CustomerAccount?
-    employeeAccount   EmployeeAccount?
-    corporateAccount  CorporateAccount?
-    commentReferences CommentToUserReference[]
-    sessions          Session[]
-    createdAt         DateTime                 @default(now())
-    updatedAt         DateTime                 @updatedAt
-    notifications     Notification[]
+    id                      String                   @id
+    userType                UserType
+    customerAccount         CustomerAccount?
+    employeeAccount         EmployeeAccount?
+    corporateAccount        CorporateAccount?
+    commentToUserReferences CommentToUserReference[]
+    sessions                Session[]
+    createdAt               DateTime                 @default(now())
+    updatedAt               DateTime                 @updatedAt
+    notifications           Notification[]
 }
 
 model Session {
@@ -83,12 +81,14 @@ model CustomerAccount {
 }
 
 model EmployeeAccount {
-    id                String            @id
-    user              User              @relation(fields: [id], references: [id])
-    employeeRole      AdminRole
-    employeeStoreType StoreType
-    employeeComments  EmployeeComment[]
-    employeeNotes     EmployeeNote[]
+    id               String            @id
+    employeeRole     EmployeeRole
+    employeeComments EmployeeComment[]
+    employeeNotes    EmployeeNote[]
+    locationId       Int
+
+    belongsTo Location @relation(fields: [locationId], references: [id])
+    user      User     @relation(fields: [id], references: [id])
 }
 
 model CorporateAccount {
@@ -96,7 +96,9 @@ model CorporateAccount {
     user User   @relation(fields: [id], references: [id])
 }
 
-model PendingAccount {
+// TODO: This holds pending account creation for Employees and Corporate. 
+// Add an optional field for Employee Role, if the Pending Account is an Employee UserType. Modify the webhook accordingly.
+model PendingAdminAccount {
     id          Int      @id @default(autoincrement())
     email       String   @unique
     accountType UserType
@@ -123,7 +125,7 @@ model Order {
     updatedAt         DateTime  @updatedAt
     total             Float
     shippedLocationId Int
-    delivered         DateTime?
+    deliveredDate     DateTime?
 
     customer        CustomerAccount @relation(fields: [customerId], references: [id])
     shippedLocation Location        @relation(fields: [shippedLocationId], references: [id])
@@ -131,15 +133,17 @@ model Order {
 }
 
 model Location {
-    id        Int      @id @default(autoincrement())
+    id        Int       @id @default(autoincrement())
     name      String
     address   String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    storeType StoreType
 
     locationComments LocationComment[]
     locationNotes    LocationNote[]
     orders           Order[]
+    employeeAccounts EmployeeAccount[]
 }
 
 model Note {
@@ -179,18 +183,18 @@ model EmployeeNote {
 }
 
 model Comment {
-    id                String                   @id @default(cuid())
-    text              String
-    createdAt         DateTime                 @default(now())
-    updatedAt         DateTime                 @updatedAt
-    commentType       CommentType
-    commentReferences CommentToUserReference[]
-    images            String[]
-    locationComment   LocationComment?
-    employeeComment   EmployeeComment?
-    customerComment   CustomerComment?
-    orderComment      OrderComment?
-    notifications     Notification[]
+    id                      String                   @id @default(cuid())
+    text                    String
+    createdAt               DateTime                 @default(now())
+    updatedAt               DateTime                 @updatedAt
+    commentType             CommentType
+    commentToUserReferences CommentToUserReference[]
+    imagePaths              String[]
+    locationComment         LocationComment?
+    employeeComment         EmployeeComment?
+    customerComment         CustomerComment?
+    orderComment            OrderComment?
+    notifications           Notification[]
 }
 
 model LocationComment {
