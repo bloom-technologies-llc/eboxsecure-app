@@ -52,16 +52,15 @@ enum StoreType {
 }
 
 model User {
-    id                      String                   @id
-    userType                UserType
-    customerAccount         CustomerAccount?
-    employeeAccount         EmployeeAccount?
-    corporateAccount        CorporateAccount?
-    commentToUserReferences CommentToUserReference[]
-    sessions                Session[]
-    createdAt               DateTime                 @default(now())
-    updatedAt               DateTime                 @updatedAt
-    notifications           Notification[]
+    id               String            @id
+    userType         UserType
+    customerAccount  CustomerAccount?
+    employeeAccount  EmployeeAccount?
+    corporateAccount CorporateAccount?
+    sessions         Session[]
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt
+    notifications    Notification[]
 }
 
 model Session {
@@ -87,8 +86,8 @@ model EmployeeAccount {
     employeeNotes    EmployeeNote[]
     locationId       Int
 
-    belongsTo Location @relation(fields: [locationId], references: [id])
-    user      User     @relation(fields: [id], references: [id])
+    location Location @relation(fields: [locationId], references: [id])
+    user     User     @relation(fields: [id], references: [id])
 }
 
 model CorporateAccount {
@@ -183,18 +182,18 @@ model EmployeeNote {
 }
 
 model Comment {
-    id                      String                   @id @default(cuid())
-    text                    String
-    createdAt               DateTime                 @default(now())
-    updatedAt               DateTime                 @updatedAt
-    commentType             CommentType
-    commentToUserReferences CommentToUserReference[]
-    imagePaths              String[]
-    locationComment         LocationComment?
-    employeeComment         EmployeeComment?
-    customerComment         CustomerComment?
-    orderComment            OrderComment?
-    notifications           Notification[]
+    id              String           @id @default(cuid())
+    text            String
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    commentType     CommentType
+    // storeComments TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    imagePaths      String[]
+    locationComment LocationComment?
+    employeeComment EmployeeComment?
+    customerComment CustomerComment?
+    orderComment    OrderComment?
+    notifications   Notification[]
 }
 
 model LocationComment {
@@ -227,15 +226,6 @@ model OrderComment {
 
     order   Order   @relation(fields: [orderId], references: [id])
     comment Comment @relation(fields: [id], references: [id])
-}
-
-model CommentToUserReference {
-    id               String @id @default(cuid())
-    commentId        String
-    referencedUserId String
-
-    referencedUser User    @relation(fields: [referencedUserId], references: [id])
-    comment        Comment @relation(fields: [commentId], references: [id])
 }
 
 model Notification {
