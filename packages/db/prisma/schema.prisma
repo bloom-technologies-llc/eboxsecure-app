@@ -46,7 +46,7 @@ enum EmployeeRole {
     ASSOCIATE
 }
 
-enum StoreType {
+enum LocationType {
     AGENT
     FRANCHISE
 }
@@ -132,12 +132,12 @@ model Order {
 }
 
 model Location {
-    id        Int       @id @default(autoincrement())
-    name      String
-    address   String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    storeType StoreType
+    id           Int          @id @default(autoincrement())
+    name         String
+    address      String
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
+    locationType LocationType
 
     locationComments LocationComment[]
     locationNotes    LocationNote[]
