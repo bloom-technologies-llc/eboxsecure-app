@@ -38,8 +38,6 @@ export const userRouter = createTRPCRouter({
             employeeAccount: true,
           },
         });
-
-        return user;
       } catch (error) {
         console.error("Error creating user:", error);
         throw new TRPCError({

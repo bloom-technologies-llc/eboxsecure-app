@@ -174,8 +174,6 @@ export default function EmployeeTable(): JSX.Element {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Add your submit logic here
-    const createUserMutation = api.
     const createUser = setIsModalOpen(false);
     form.reset();
   }
