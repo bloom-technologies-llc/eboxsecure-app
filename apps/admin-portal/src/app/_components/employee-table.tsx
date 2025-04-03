@@ -54,7 +54,8 @@ import {
   TableHeader,
   TableRow,
 } from "@ebox/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@ebox/ui/tabs";
+
+import { api } from "~/trpc/react";
 
 type Subscription = "Platinum" | "Bronze";
 type SortField = "id" | "name" | "subscription" | "email" | "phone" | "orders";
@@ -174,8 +175,8 @@ export default function EmployeeTable(): JSX.Element {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Add your submit logic here
-    console.log(values);
-    setIsModalOpen(false);
+    const createUserMutation = api.
+    const createUser = setIsModalOpen(false);
     form.reset();
   }
 
