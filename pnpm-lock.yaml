@@ -355,6 +355,15 @@ importers:
         specifier: ^6.2.1
         version: 6.4.1(prisma@6.4.1)(typescript@5.8.2)
     devDependencies:
+      '@ebox/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@ebox/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@ebox/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
       dotenv-cli:
         specifier: ^7.4.1
         version: 7.4.4
