@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { EmployeeRole } from "@prisma/client";
 import {
   ArrowDown,
   ArrowUp,
@@ -56,6 +57,7 @@ import {
 } from "@ebox/ui/table";
 
 import { api } from "~/trpc/react";
+import { useToast } from "../../../../../packages/ui/src/hooks/use-toast"; // why am I not able to do @ebox/ui/src/hooks/use-toast???
 
 type Subscription = "Platinum" | "Bronze";
 type SortField = "id" | "name" | "subscription" | "email" | "phone" | "orders";
@@ -78,7 +80,7 @@ const formSchema = z.object({
       message: "Please enter a password", //TODO: set reqs for valid password
     })
     .min(8),
-  employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
+  employeeRole: z.enum([EmployeeRole.MANAGER, EmployeeRole.ASSOCIATE]),
 });
 
 export default function EmployeeTable(): JSX.Element {
@@ -157,15 +159,29 @@ export default function EmployeeTable(): JSX.Element {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
   const createUserAndSyncWithDatabase =
-    api.user.createUserAndSyncWithDatabase.useMutation();
+    api.user.createUserAndSyncWithDatabase.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Employee successfully created",
+        });
+      },
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong!",
+          description: "Please try again later",
+        });
+      },
+    });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       emailAddress: "",
       password: "",
-      employeeRole: "ASSOCIATE",
+      employeeRole: EmployeeRole.ASSOCIATE,
     },
   });
 
@@ -176,7 +192,7 @@ export default function EmployeeTable(): JSX.Element {
       employeeRole: values.employeeRole,
     });
 
-    const createUser = setIsModalOpen(false);
+    setIsModalOpen(false);
     form.reset();
   }
 

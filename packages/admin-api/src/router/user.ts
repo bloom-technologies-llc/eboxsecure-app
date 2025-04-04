@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { EmployeeRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -13,7 +14,7 @@ export const userRouter = createTRPCRouter({
           .string()
           .min(8, { message: "Must have at least 8 characters" }),
         // locationId: z.number(),
-        employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
+        employeeRole: z.enum([EmployeeRole.MANAGER, EmployeeRole.ASSOCIATE]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
