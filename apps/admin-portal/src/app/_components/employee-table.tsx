@@ -73,9 +73,11 @@ interface Employee {
 
 const formSchema = z.object({
   emailAddress: z.string().email(),
-  password: z.string({
-    message: "Please enter a password", //TODO: set reqs for valid password
-  }),
+  password: z
+    .string({
+      message: "Please enter a password", //TODO: set reqs for valid password
+    })
+    .min(8),
   employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
 });
 

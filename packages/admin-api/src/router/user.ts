@@ -9,7 +9,9 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         emailAddress: z.string().email(),
-        password: z.string(),
+        password: z
+          .string()
+          .min(8, { message: "Must have at least 8 characters" }),
         // locationId: z.number(),
         employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
       }),
@@ -18,13 +20,15 @@ export const userRouter = createTRPCRouter({
       try {
         const client = await clerkClient();
 
-        // const clerkUser = await client.users.createUser({
-        //   emailAddress: input.emailAddress,
-        // });
+        const clerkUser = await client.users.createUser({
+          emailAddress: [input.emailAddress],
+          password: input.password,
+          skipPasswordChecks: true, // TODO: After user signs in, urge them to create stronger password.
+        });
 
         const employeeUser = await ctx.db.user.create({
           data: {
-            id: "1",
+            id: clerkUser.id,
             userType: "EMPLOYEE",
             employeeAccount: {
               create: {
