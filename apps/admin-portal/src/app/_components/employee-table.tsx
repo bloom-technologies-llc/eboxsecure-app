@@ -72,18 +72,11 @@ interface Employee {
 }
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+  emailAddress: z.string().email(),
+  password: z.string({
+    message: "Please enter a password", //TODO: set reqs for valid password
   }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  phone: z.string().min(10, {
-    message: "Please enter a valid phone number.",
-  }),
-  subscription: z.enum(["Platinum", "Bronze"], {
-    required_error: "Please select a subscription type.",
-  }),
+  employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
 });
 
 export default function EmployeeTable(): JSX.Element {
@@ -162,18 +155,25 @@ export default function EmployeeTable(): JSX.Element {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const createUserAndSyncWithDatabase =
+    api.user.createUserAndSyncWithDatabase.useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      subscription: "Bronze",
+      emailAddress: "",
+      password: "",
+      employeeRole: "ASSOCIATE",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    createUserAndSyncWithDatabase.mutate({
+      emailAddress: values.emailAddress,
+      password: values.password,
+      employeeRole: values.employeeRole,
+    });
+
     const createUser = setIsModalOpen(false);
     form.reset();
   }
@@ -303,20 +303,7 @@ export default function EmployeeTable(): JSX.Element {
                 >
                   <FormField
                     control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter employee name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
+                    name="emailAddress"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
@@ -333,12 +320,16 @@ export default function EmployeeTable(): JSX.Element {
                   />
                   <FormField
                     control={form.control}
-                    name="phone"
+                    name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter phone number" {...field} />
+                          <Input
+                            type="password"
+                            placeholder="Enter password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -346,17 +337,17 @@ export default function EmployeeTable(): JSX.Element {
                   />
                   <FormField
                     control={form.control}
-                    name="subscription"
+                    name="employeeRole"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Subscription</FormLabel>
+                        <FormLabel>Employee Role</FormLabel>
                         <FormControl>
                           <select
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             {...field}
                           >
-                            <option value="Bronze">Bronze</option>
-                            <option value="Platinum">Platinum</option>
+                            <option value="MANAGER">Manager</option>
+                            <option value="ASSOCIATE">Associate</option>
                           </select>
                         </FormControl>
                         <FormMessage />

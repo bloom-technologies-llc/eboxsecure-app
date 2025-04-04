@@ -8,10 +8,9 @@ export const userRouter = createTRPCRouter({
   createUserAndSyncWithDatabase: protectedEboxProcedure
     .input(
       z.object({
-        username: z.string(),
+        emailAddress: z.string().email(),
         password: z.string(),
-        emailAddress: z.array(z.string()),
-        locationId: z.number(),
+        // locationId: z.number(),
         employeeRole: z.enum(["MANAGER", "ASSOCIATE"]),
       }),
     )
@@ -19,17 +18,17 @@ export const userRouter = createTRPCRouter({
       try {
         const client = await clerkClient();
 
-        const clerkUser = await client.users.createUser({
-          emailAddress: input.emailAddress,
-        });
+        // const clerkUser = await client.users.createUser({
+        //   emailAddress: input.emailAddress,
+        // });
 
         const employeeUser = await ctx.db.user.create({
           data: {
-            id: input.username, // Using username as the ID
+            id: "1",
             userType: "EMPLOYEE",
             employeeAccount: {
               create: {
-                locationId: input.locationId,
+                locationId: 1,
                 employeeRole: input.employeeRole,
               },
             },
@@ -38,6 +37,8 @@ export const userRouter = createTRPCRouter({
             employeeAccount: true,
           },
         });
+
+        return employeeUser;
       } catch (error) {
         console.error("Error creating user:", error);
         throw new TRPCError({
