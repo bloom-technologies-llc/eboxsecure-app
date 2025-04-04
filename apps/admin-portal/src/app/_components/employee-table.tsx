@@ -160,11 +160,13 @@ export default function EmployeeTable(): JSX.Element {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
+
   const createUserAndSyncWithDatabase =
     api.user.createUserAndSyncWithDatabase.useMutation({
       onSuccess: () => {
         toast({
           title: "Employee successfully created",
+          description: "This user can now sign in immediately",
         });
       },
       onError: () => {

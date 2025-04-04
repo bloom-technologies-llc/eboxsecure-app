@@ -27,7 +27,7 @@ export const userRouter = createTRPCRouter({
           skipPasswordChecks: true, // TODO: After user signs in, urge them to create stronger password.
         });
 
-        const employeeUser = await ctx.db.user.create({
+        await ctx.db.user.create({
           data: {
             id: clerkUser.id,
             userType: "EMPLOYEE",
@@ -38,12 +38,7 @@ export const userRouter = createTRPCRouter({
               },
             },
           },
-          include: {
-            employeeAccount: true,
-          },
         });
-
-        return employeeUser;
       } catch (error) {
         console.error("Error creating user:", error);
         throw new TRPCError({
