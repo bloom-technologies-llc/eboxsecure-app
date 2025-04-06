@@ -59,17 +59,25 @@ import {
 
 import { api } from "~/trpc/react";
 
-type Subscription = "Platinum" | "Bronze";
-type SortField = "id" | "name" | "subscription" | "email" | "phone" | "orders";
+type Type = "Agent" | "Franchise";
+type SortField =
+  | "id"
+  | "name"
+  | "type"
+  | "role"
+  | "location"
+  | "email"
+  | "phone";
 type SortDirection = "asc" | "desc";
 
 interface Employee {
   id: string;
   name: string;
-  subscription: Subscription;
+  type: Type;
+  role: EmployeeRole;
+  location: string;
   email: string;
   phone: string;
-  orders: string;
   selected?: boolean;
 }
 
@@ -80,7 +88,7 @@ const formSchema = z.object({
       message: "Please enter a password", //TODO: set reqs for valid password
     })
     .min(8),
-  employeeRole: z.enum([EmployeeRole.MANAGER, EmployeeRole.ASSOCIATE]),
+  employeeRole: z.nativeEnum(EmployeeRole),
 });
 
 export default function EmployeeTable(): JSX.Element {
@@ -88,95 +96,100 @@ export default function EmployeeTable(): JSX.Element {
     {
       id: "1000000017",
       name: "Steven Koh",
-      subscription: "Platinum",
+      type: "Agent",
+      role: EmployeeRole.MANAGER,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (732)-668-6908",
-      orders: "100 orders",
     },
     {
       id: "1000000018",
       name: "Selena pelez",
-      subscription: "Platinum",
+      type: "Agent",
+      role: EmployeeRole.ASSOCIATE,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (123)-456-6908",
-      orders: "223 orders",
     },
     {
       id: "1000000019",
       name: "Alan weng",
-      subscription: "Bronze",
+      type: "Franchise",
+      role: EmployeeRole.MANAGER,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (324)-542-2632",
-      orders: "433 orders",
     },
     {
       id: "1000000020",
       name: "Sigrid nunez",
-      subscription: "Bronze",
+      type: "Franchise",
+      role: EmployeeRole.ASSOCIATE,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (631)-243-3264",
-      orders: "563 orders",
     },
     {
       id: "1000000021",
       name: "Ryan holiday",
-      subscription: "Platinum",
+      type: "Agent",
+      role: EmployeeRole.MANAGER,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (345)-456-6443",
-      orders: "893 orders",
     },
     {
       id: "1000000022",
       name: "Charlotte bronte",
-      subscription: "Bronze",
+      type: "Franchise",
+      role: EmployeeRole.ASSOCIATE,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (154)-643-5432",
-      orders: "900 orders",
     },
     {
       id: "1000000023",
       name: "Ryan S. Jhun",
-      subscription: "Platinum",
+      type: "Agent",
+      role: EmployeeRole.MANAGER,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (153)-645-7855",
-      orders: "921 orders",
     },
     {
       id: "1000000024",
       name: "Heize dean",
-      subscription: "Bronze",
+      type: "Franchise",
+      role: EmployeeRole.ASSOCIATE,
+      location: "Ebox Location #1",
       email: "steve.koh@gmail.com",
       phone: "+1 (365)-263-3642",
-      orders: "952 orders",
     },
   ]);
 
   const [selectAll, setSelectAll] = useState<boolean>(false);
-  const [selectedSubscriptions, setSelectedSubscriptions] = useState<
-    Subscription[]
-  >([]);
+  const [selectedTypes, setSelectedTypes] = useState<Type[]>([]);
   const [sortBy, setSortBy] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const createUserAndSyncWithDatabase =
-    api.user.createUserAndSyncWithDatabase.useMutation({
-      onSuccess: () => {
-        toast({
-          title: "Employee successfully created",
-          description: "This user can now sign in immediately",
-        });
-      },
-      onError: () => {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong!",
-          description: "Please try again later",
-        });
-      },
-    });
+  const createEmployee = api.user.createEmployee.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Employee successfully created",
+        description: "This user can now sign in immediately",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong!",
+        description: "Please try again later",
+      });
+    },
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -188,7 +201,7 @@ export default function EmployeeTable(): JSX.Element {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    createUserAndSyncWithDatabase.mutate({
+    createEmployee.mutate({
       emailAddress: values.emailAddress,
       password: values.password,
       employeeRole: values.employeeRole,
@@ -222,19 +235,16 @@ export default function EmployeeTable(): JSX.Element {
     setSelectAll(newEmployees.every((employee) => employee.selected));
   };
 
-  const handleSubscriptionFilterChange = (
-    subscription: Subscription,
-    checked: boolean,
-  ): void => {
-    setSelectedSubscriptions(
+  const handleTypeFilterChange = (type: Type, checked: boolean): void => {
+    setSelectedTypes(
       checked
-        ? [...selectedSubscriptions, subscription]
-        : selectedSubscriptions.filter((s) => s !== subscription),
+        ? [...selectedTypes, type]
+        : selectedTypes.filter((s) => s !== type),
     );
   };
 
   const clearFilters = (): void => {
-    setSelectedSubscriptions([]);
+    setSelectedTypes([]);
   };
 
   const preventClose = (e: Event): void => {
@@ -246,20 +256,17 @@ export default function EmployeeTable(): JSX.Element {
     employeeName: string,
     employeePhone: string,
     employeeEmail: string,
-    employeeTier: Subscription,
+    employeeType: Type,
   ) => {
     router.push(
-      `customers/customer-details/${employeeId}?name=${employeeName}&phone=${employeePhone}&email=${employeeEmail}&tier=${employeeTier}`,
+      `customers/customer-details/${employeeId}?name=${employeeName}&phone=${employeePhone}&email=${employeeEmail}&type=${employeeType}`,
     );
   };
 
-  // Filter employees based on subscription filters
+  // Filter employees based on type filters
   const filteredEmployees = employees.filter((employee) => {
-    // Filter by selected subscriptions
-    if (
-      selectedSubscriptions.length > 0 &&
-      !selectedSubscriptions.includes(employee.subscription)
-    ) {
+    // Filter by selected types
+    if (selectedTypes.length > 0 && !selectedTypes.includes(employee.type)) {
       return false;
     }
 
@@ -276,14 +283,16 @@ export default function EmployeeTable(): JSX.Element {
           return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
         case "name":
           return direction * a.name.localeCompare(b.name);
-        case "subscription":
-          return direction * a.subscription.localeCompare(b.subscription);
+        case "type":
+          return direction * a.type.localeCompare(b.type);
+        case "role":
+          return direction * a.role.localeCompare(b.role);
+        case "location":
+          return direction * a.location.localeCompare(b.location);
         case "email":
           return direction * a.email.localeCompare(b.email);
         case "phone":
           return direction * a.phone.localeCompare(b.phone);
-        case "orders":
-          return direction * a.orders.localeCompare(b.orders);
         default:
           return 0;
       }
@@ -396,12 +405,12 @@ export default function EmployeeTable(): JSX.Element {
               <Button variant="outline" size="sm" className="h-8 gap-1">
                 <Filter className="h-4 w-4" />
                 Filter
-                {selectedSubscriptions.length > 0 && (
+                {selectedTypes.length > 0 && (
                   <Badge
                     variant="secondary"
                     className="ml-1 rounded-full px-1 text-xs"
                   >
-                    {selectedSubscriptions.length}
+                    {selectedTypes.length}
                   </Badge>
                 )}
               </Button>
@@ -411,28 +420,28 @@ export default function EmployeeTable(): JSX.Element {
               className="w-48"
               onCloseAutoFocus={preventClose}
             >
-              <DropdownMenuLabel>Filter by Subscription</DropdownMenuLabel>
+              <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={selectedSubscriptions.includes("Platinum")}
+                checked={selectedTypes.includes("Agent")}
                 onCheckedChange={(checked: boolean) =>
-                  handleSubscriptionFilterChange("Platinum", checked)
+                  handleTypeFilterChange("Agent", checked)
                 }
                 onSelect={preventClose}
               >
-                Platinum
+                Agent
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={selectedSubscriptions.includes("Bronze")}
+                checked={selectedTypes.includes("Franchise")}
                 onCheckedChange={(checked: boolean) =>
-                  handleSubscriptionFilterChange("Bronze", checked)
+                  handleTypeFilterChange("Franchise", checked)
                 }
                 onSelect={preventClose}
               >
-                Bronze
+                Franchise
               </DropdownMenuCheckboxItem>
 
-              {selectedSubscriptions.length > 0 && (
+              {selectedTypes.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <Button
@@ -467,10 +476,11 @@ export default function EmployeeTable(): JSX.Element {
                   if (
                     value === "id" ||
                     value === "name" ||
-                    value === "subscription" ||
+                    value === "type" ||
+                    value === "role" ||
+                    value === "location" ||
                     value === "email" ||
-                    value === "phone" ||
-                    value === "orders"
+                    value === "phone"
                   ) {
                     setSortBy(value as SortField);
                   }
@@ -482,20 +492,20 @@ export default function EmployeeTable(): JSX.Element {
                 <DropdownMenuRadioItem value="name" onSelect={preventClose}>
                   Employee name
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="subscription"
-                  onSelect={preventClose}
-                >
-                  Subscription
+                <DropdownMenuRadioItem value="type" onSelect={preventClose}>
+                  Type
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="role" onSelect={preventClose}>
+                  Role
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="location" onSelect={preventClose}>
+                  Location
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="email" onSelect={preventClose}>
                   Email
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="phone" onSelect={preventClose}>
                   Phone
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="orders" onSelect={preventClose}>
-                  Orders
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
@@ -539,10 +549,11 @@ export default function EmployeeTable(): JSX.Element {
                 />
               </TableHead>
               <TableHead>Employee name</TableHead>
-              <TableHead>Subscription</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone #</TableHead>
-              <TableHead>Orders</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -556,7 +567,7 @@ export default function EmployeeTable(): JSX.Element {
                     employee.name,
                     employee.phone,
                     employee.email,
-                    employee.subscription,
+                    employee.type,
                   )
                 }
               >
@@ -573,17 +584,20 @@ export default function EmployeeTable(): JSX.Element {
                   <Badge
                     variant="secondary"
                     className={
-                      employee.subscription === "Platinum"
+                      employee.type === "Agent"
                         ? "bg-blue-300"
                         : "bg-yellow-300"
                     }
                   >
-                    {employee.subscription}
+                    {employee.type}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{employee.role}</Badge>
+                </TableCell>
+                <TableCell>{employee.location}</TableCell>
                 <TableCell>{employee.email}</TableCell>
                 <TableCell>{employee.phone}</TableCell>
-                <TableCell>{employee.orders}</TableCell>
               </TableRow>
             ))}
           </TableBody>
