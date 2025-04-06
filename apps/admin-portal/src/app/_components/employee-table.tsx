@@ -46,6 +46,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@ebox/ui/form";
+import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 import {
   Table,
@@ -57,7 +58,6 @@ import {
 } from "@ebox/ui/table";
 
 import { api } from "~/trpc/react";
-import { useToast } from "../../../../../packages/ui/src/hooks/use-toast"; // why am I not able to do @ebox/ui/src/hooks/use-toast???
 
 type Subscription = "Platinum" | "Bronze";
 type SortField = "id" | "name" | "subscription" | "email" | "phone" | "orders";
