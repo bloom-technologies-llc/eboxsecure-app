@@ -177,7 +177,7 @@ export default function ClientTable(): JSX.Element {
   ) => {
     router.push(
       `customers/customer-details/${clientId}?name=${clientName}&phone=${clientPhone}&email=${clientEmail}&tier=${clientTier}`,
-    ); // will we actually be using the clients id for this param?
+    );
   };
 
   // Filter clients based on subscription filters

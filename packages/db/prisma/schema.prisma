@@ -87,7 +87,7 @@ model EmployeeAccount {
     locationId       Int
 
     location Location @relation(fields: [locationId], references: [id])
-    user     User     @relation(fields: [id], references: [id])
+    user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model CorporateAccount {

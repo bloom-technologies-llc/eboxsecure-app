@@ -34,7 +34,7 @@ const operations = [
   },
   {
     title: "Employees",
-    url: "#",
+    url: "/employees",
   },
   {
     title: "Locations",
