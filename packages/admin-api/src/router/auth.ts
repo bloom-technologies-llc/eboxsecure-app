@@ -5,11 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { jwtDecrypt } from "jose";
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedCorporateProcedure,
-  protectedEboxProcedure,
-} from "../trpc";
+import { createTRPCRouter, protectedCorporateProcedure } from "../trpc";
 
 const SUBJECT = "eboxsecure-authorized-pickup";
 const AUDIENCE = "ebox-client";

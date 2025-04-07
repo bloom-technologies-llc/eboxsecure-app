@@ -6,15 +6,13 @@ import { z } from "zod";
 import { createTRPCRouter, protectedEmployeeProcedure } from "../trpc";
 
 export const userRouter = createTRPCRouter({
-  createUserAndSyncWithDatabase: protectedEmployeeProcedure // going with protectedEmployeeProcedure instead of Ebox for separation of concerns
+  createEmployee: protectedEmployeeProcedure
     .input(
       z.object({
         emailAddress: z.string().email(),
-        password: z
-          .string()
-          .min(8, { message: "Must have at least 8 characters" }),
+        password: z.string(),
         // locationId: z.number(), //TODO: REPLACE AFTER IMPLEMENTING LOCATIONS
-        employeeRole: z.enum([EmployeeRole.MANAGER, EmployeeRole.ASSOCIATE]),
+        employeeRole: z.nativeEnum(EmployeeRole),
       }),
     )
     .mutation(async ({ ctx, input }) => {
