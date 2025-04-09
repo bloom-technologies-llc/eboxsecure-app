@@ -38,7 +38,7 @@ const operations = [
   },
   {
     title: "Locations",
-    url: "#",
+    url: "/locations",
   },
   {
     title: "Customers",
