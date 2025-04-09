@@ -25,14 +25,6 @@ const operations = [
     url: "#",
   },
   {
-    title: "Carriers",
-    url: "#",
-  },
-  {
-    title: "Agents",
-    url: "#",
-  },
-  {
     title: "Employees",
     url: "/employees",
   },
