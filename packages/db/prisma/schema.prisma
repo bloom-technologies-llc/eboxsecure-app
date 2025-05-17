@@ -61,6 +61,7 @@ model User {
     createdAt        DateTime          @default(now())
     updatedAt        DateTime          @updatedAt
     notifications    Notification[]
+    Comment          Comment[]
 }
 
 model Session {
@@ -186,9 +187,11 @@ model Comment {
     text            String
     createdAt       DateTime         @default(now())
     updatedAt       DateTime         @updatedAt
+    authorId        String
     commentType     CommentType
     // storeComments TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
     imagePaths      String[]
+    author          User             @relation(fields: [authorId], references: [id])
     locationComment LocationComment?
     employeeComment EmployeeComment?
     customerComment CustomerComment?
@@ -225,7 +228,7 @@ model OrderComment {
     orderId Int
 
     order   Order   @relation(fields: [orderId], references: [id])
-    comment Comment @relation(fields: [id], references: [id])
+    comment Comment @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model Notification {

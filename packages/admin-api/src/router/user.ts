@@ -3,9 +3,43 @@ import { EmployeeRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedEmployeeProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedEmployeeProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export const userRouter = createTRPCRouter({
+  getUserType: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const user = await ctx.db.user.findUnique({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          userType: true,
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not found",
+        });
+      }
+
+      return user.userType;
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get user type",
+      });
+    }
+  }),
+
   createEmployee: protectedEmployeeProcedure
     .input(
       z.object({

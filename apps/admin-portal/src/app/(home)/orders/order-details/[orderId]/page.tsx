@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CommentType } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   AtSign,
@@ -15,16 +18,34 @@ import {
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { Button } from "@ebox/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { Textarea } from "@ebox/ui/textarea";
 
 import CommentCard from "../../../../_components/comment-card";
+// TODO: fix the import path to be able to use @ebox
+import { api } from "../../../../../trpc/react";
 
 export default function OrderDetail() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+
+  const { data: queryOrderComments } =
+    api.orderComments.queryOrderComments.useQuery({
+      orderId: parseInt(orderId),
+    });
+
+  const { mutate: createOrderComment } =
+    api.orderComments.createOrderComment.useMutation({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: [["orderComments", "queryOrderComments"]],
+        });
+      },
+    });
 
   const formSchema = z.object({
     comment: z.string().min(1, {
@@ -39,14 +60,19 @@ export default function OrderDetail() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    console.log(values);
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) return;
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    createOrderComment({
+      text: values.comment,
+      commentType: CommentType.ORDER,
+      orderId: parseInt(orderId),
+      authorId: user.id,
+      imagePaths: [],
+      notifications: [],
+    });
 
     form.reset();
-    setIsSubmitting(false);
   }
   return (
     <main className="bg-pageBackground w-full">
@@ -88,13 +114,14 @@ export default function OrderDetail() {
                           </FormItem>
                         )}
                       ></FormField>
-                      <div className="bg-secondary-background flex rounded-md rounded-t-none border-t border-border px-2 py-4">
+                      <div className="bg-secondary-background flex items-center rounded-md rounded-t-none border-t border-border px-2 py-2">
                         <div className="flex w-full gap-x-2">
                           <AtSign className="h-4 w-4" />
                           <Paperclip className="h-4 w-4" />
                         </div>
-
-                        <Send className="h-4 w-4" />
+                        <Button>
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </div>
                     </form>
                   </Form>
@@ -111,52 +138,17 @@ export default function OrderDetail() {
                       hello.kitty@gmail.com
                     </p>
                   </div>
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-y-4">
-                <p className="text-gray text-sm">Jun 12</p>
-                <div className="flex flex-col gap-y-3">
-                  <div className="flex items-center gap-x-2">
-                    <MessageCircleWarning className="h-4 w-4" />
-                    <p className="text-gray text-sm">
-                      Jane Eyre changed this customer’s email
-                      hello.kitty@gmail.com
-                    </p>
-                  </div>
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
-
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
-
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
-
-                  <CommentCard
-                    name={"John Smith"}
-                    time={"4:23PM"}
-                    comment={"Customer demanded to speak to corporate"}
-                  />
+                  {queryOrderComments?.map((comment) => {
+                    return (
+                      <CommentCard
+                        key={comment.comment.id}
+                        commentId={comment.comment.id}
+                        name={comment.comment.authorId}
+                        time={comment.comment.createdAt}
+                        comment={comment.comment.text}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </div>
