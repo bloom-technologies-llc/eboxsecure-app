@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CommentType } from "@prisma/client";
@@ -20,18 +21,34 @@ import * as z from "zod";
 
 import { Button } from "@ebox/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
+import { useToast } from "@ebox/ui/hooks/use-toast";
+import { Popover, PopoverAnchor, PopoverContent } from "@ebox/ui/popover";
 import { Textarea } from "@ebox/ui/textarea";
 
+import { useMentionTrigger } from "~/app/hooks/useMentionTrigger";
 import CommentCard from "../../../../_components/comment-card";
 // TODO: fix the import path to be able to use @ebox
 import { api } from "../../../../../trpc/react";
 
 export default function OrderDetail() {
+  const uploadFileRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const {
+    showMentions,
+    setShowMentions,
+    handleInputChange,
+    mentionPosition,
+    textareaRef,
+  } = useMentionTrigger();
+
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
   const { user } = useUser();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const locationId = searchParams.get("locationId");
 
   const { data: queryOrderComments } =
     api.orderComments.queryOrderComments.useQuery({
@@ -44,7 +61,15 @@ export default function OrderDetail() {
         queryClient.invalidateQueries({
           queryKey: [["orderComments", "queryOrderComments"]],
         });
+        toast({
+          description: "Your comment has been created",
+        });
       },
+    });
+
+  const { data: storeLocationEmployees } =
+    api.orderComments.getStoreLocationEmployees.useQuery({
+      locationId: parseInt(locationId!),
     });
 
   const formSchema = z.object({
@@ -60,7 +85,29 @@ export default function OrderDetail() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    console.log(storeLocationEmployees);
+  }, [storeLocationEmployees]);
+
+  //TODO: implement logic after file storage is implemented
+  const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const file = e.target.files?.[0];
+    if (file) {
+      // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Please select a file smaller than 5MB",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (!user) return;
 
     createOrderComment({
@@ -73,7 +120,8 @@ export default function OrderDetail() {
     });
 
     form.reset();
-  }
+  };
+
   return (
     <main className="bg-pageBackground w-full">
       <div className="container w-full py-16 md:w-11/12">
@@ -103,21 +151,77 @@ export default function OrderDetail() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Textarea
-                                placeholder="Leave a comment..."
-                                className="rounded-none border border-none px-4 py-6"
-                                {...field}
-                              >
-                                <p className="text-gray">Leave a comment...</p>
-                              </Textarea>
+                              <div className="flex flex-col gap-y-2">
+                                {selectedFile && (
+                                  <div className="flex items-center gap-x-2">
+                                    <Image
+                                      src={URL.createObjectURL(selectedFile)}
+                                      alt="selected file"
+                                      width={100}
+                                      height={100}
+                                      className="rounded-md"
+                                    />
+                                  </div>
+                                )}
+                                <Textarea
+                                  ref={textareaRef}
+                                  placeholder="Leave a comment..."
+                                  className="rounded-none border border-none px-4 py-6"
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    handleInputChange(
+                                      e.target.value,
+                                      e.target.selectionStart,
+                                    );
+                                  }}
+                                ></Textarea>
+                                <Popover
+                                  open={showMentions}
+                                  onOpenChange={setShowMentions}
+                                >
+                                  <PopoverAnchor
+                                    className="absolute left-0 top-0"
+                                    style={{
+                                      left: mentionPosition?.x + "px",
+                                      top: mentionPosition?.y + "px",
+                                    }}
+                                  />
+                                  <PopoverContent
+                                    onOpenAutoFocus={(e) => e.preventDefault()}
+                                    onCloseAutoFocus={(e) => e.preventDefault()}
+                                  >
+                                    <div>
+                                      <p className="text-sm">Users</p>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
                             </FormControl>
                           </FormItem>
                         )}
                       ></FormField>
                       <div className="bg-secondary-background flex items-center rounded-md rounded-t-none border-t border-border px-2 py-2">
-                        <div className="flex w-full gap-x-2">
-                          <AtSign className="h-4 w-4" />
-                          <Paperclip className="h-4 w-4" />
+                        <div className="gap-x flex w-full">
+                          <Button variant="ghost" size="icon" type="button">
+                            <AtSign className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              uploadFileRef.current?.click();
+                            }}
+                            variant="ghost"
+                            size="icon"
+                            type="button"
+                          >
+                            <Paperclip className="h-4 w-4" />
+                          </Button>
+                          <input
+                            ref={uploadFileRef}
+                            type="file"
+                            accept=".png, .jpg, .jpeg"
+                            className="hidden"
+                            onChange={handleUploadFile}
+                          />
                         </div>
                         <Button>
                           <Send className="h-4 w-4" />
@@ -134,7 +238,7 @@ export default function OrderDetail() {
                   <div className="flex items-center gap-x-2">
                     <MessageCircleWarning className="h-4 w-4" />
                     <p className="text-gray text-sm">
-                      Jane Eyre changed this customer’s email
+                      Jane Eyre changed this customer's email
                       hello.kitty@gmail.com
                     </p>
                   </div>
@@ -194,16 +298,6 @@ export default function OrderDetail() {
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium">Billing address</p>
                   <p className="text-gray text-sm">Same as shipping address</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-white px-6 py-4">
-              <div className="flex flex-col gap-y-3">
-                <p className="font-medium">Notes</p>
-                <div className="flex items-center gap-x-2">
-                  <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-gray text-sm">Very friendly</p>
                 </div>
               </div>
             </div>
