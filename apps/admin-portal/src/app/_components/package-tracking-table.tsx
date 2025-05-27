@@ -159,8 +159,8 @@ export default function PackageTrackingTable(): JSX.Element {
     e.preventDefault();
   };
 
-  const handleRowClick = (orderId: string, locationId: number) => {
-    router.push(`orders/order-details/${orderId}?locationId=${locationId}`);
+  const handleRowClick = (orderId: string) => {
+    router.push(`orders/order-details/${orderId}`);
   };
 
   return (
@@ -391,9 +391,7 @@ export default function PackageTrackingTable(): JSX.Element {
               <TableRow
                 className="cursor-pointer"
                 key={order.id}
-                onClick={() =>
-                  handleRowClick(order.id.toString(), order.shippedLocationId)
-                }
+                onClick={() => handleRowClick(order.id.toString())}
               >
                 <TableCell>
                   <Checkbox

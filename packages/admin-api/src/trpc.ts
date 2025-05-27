@@ -122,6 +122,7 @@ export const protectedEmployeeProcedure = protectedProcedure.use(
     if (!userType || userType.userType !== "EMPLOYEE") {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
+
     return next({
       ctx: {
         // infers the `session` as non-nullable

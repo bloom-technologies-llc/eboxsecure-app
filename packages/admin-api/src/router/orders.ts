@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
@@ -52,4 +53,46 @@ export const ordersRouter = createTRPCRouter({
       });
     }
   }),
+
+  getOrderDetails: protectedAdminProcedure
+    .input(
+      z.object({
+        orderId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.employeeAccount.findUnique({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          locationId: true,
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not found",
+        });
+      }
+      const order = await ctx.db.order.findUnique({
+        where: {
+          id: input.orderId,
+        },
+        include: {
+          customer: true,
+          shippedLocation: true,
+        },
+      });
+
+      if (order?.shippedLocationId !== user.locationId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Order cannot be accessed",
+        });
+      }
+
+      return order;
+    }),
 });
