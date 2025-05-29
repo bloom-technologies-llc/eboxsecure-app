@@ -1,3 +1,4 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { CommentType } from "@prisma/client";
 import { z } from "zod";
 
@@ -38,9 +39,26 @@ export const orderComments = createTRPCRouter({
             create: input.notifications?.map((notification) => ({
               userId: notification.userId,
               message: notification.message,
-              commentId: notification.commentId,
             })),
           },
+        },
+      });
+    }),
+
+  updateOrderComments: protectedAdminProcedure
+    .input(
+      z.object({
+        commentId: z.string(),
+        text: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.comment.update({
+        where: {
+          id: input.commentId,
+        },
+        data: {
+          text: input.text,
         },
       });
     }),
@@ -73,6 +91,42 @@ export const orderComments = createTRPCRouter({
         where: {
           id: input.commentId,
         },
+      });
+    }),
+
+  getLocationEmployees: protectedAdminProcedure
+    .input(
+      z.object({
+        locationId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const clerk = await clerkClient();
+      const eligibleEmployees = await ctx.db.employeeAccount.findMany({
+        where: {
+          locationId: input.locationId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const userIds = eligibleEmployees.map((employee) => employee.id);
+
+      const clerkUserDetails = await clerk.users.getUserList({
+        userId: userIds,
+      });
+
+      return eligibleEmployees.map((employee) => {
+        const clerkUserDetail = clerkUserDetails.data.find(
+          (user) => user.id === employee.id,
+        );
+        return {
+          id: employee.id,
+          firstName: clerkUserDetail?.firstName ?? "",
+          lastName: clerkUserDetail?.lastName ?? "",
+          email: clerkUserDetail?.emailAddresses[0]?.emailAddress ?? "",
+        };
       });
     }),
 });

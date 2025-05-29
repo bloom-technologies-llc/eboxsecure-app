@@ -80,9 +80,15 @@ export const ordersRouter = createTRPCRouter({
         where: {
           id: input.orderId,
         },
-        include: {
+        select: {
+          id: true,
+          shippedLocationId: true,
           customer: true,
-          shippedLocation: true,
+          shippedLocation: {
+            select: {
+              id: true,
+            },
+          },
         },
       });
 

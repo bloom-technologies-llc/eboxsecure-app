@@ -1,7 +1,15 @@
-import { useCallback, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useRef, useState } from "react";
+
+interface MentionedUser {
+  id: string;
+  display: string;
+  indices: [number, number]; // start and end positions in text
+}
 
 export const useMentionTrigger = () => {
   const [showMentions, setShowMentions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mentionedUsers, setMentionedUsers] = useState<MentionedUser[]>([]);
   const [mentionPosition, setMentionPosition] = useState<{
     x: number;
     y: number;
@@ -65,10 +73,22 @@ export const useMentionTrigger = () => {
   }, []);
 
   const handleInputChange = useCallback((value: string, cursorPos: number) => {
+    // First, update mentions that might have been deleted
+    setMentionedUsers((prev) => {
+      // Filter out mentions that are no longer in the text
+      return prev.filter((mention) => {
+        const mentionText = value.substring(
+          mention.indices[0],
+          mention.indices[1],
+        );
+        return mentionText.trim() === mention.display;
+      });
+    });
+
+    // Then handle new mentions
     const textBeforeCursor = value.substring(0, cursorPos);
     const lastAtSignIndex = textBeforeCursor.lastIndexOf("@");
     if (lastAtSignIndex === -1) {
-      console.log("no @ sign found");
       setShowMentions(false);
       return;
     }
@@ -76,7 +96,6 @@ export const useMentionTrigger = () => {
     const textAfterAtSign = textBeforeCursor.substring(lastAtSignIndex + 1);
 
     if (textAfterAtSign.includes(" ") || textAfterAtSign.includes("\n")) {
-      console.log("space or new line");
       setShowMentions(false);
       return;
     }
@@ -85,11 +104,103 @@ export const useMentionTrigger = () => {
     setShowMentions(true);
   }, []);
 
+  //TODO: usertype is not any
+  const handleUserSelect = useCallback(
+    (user: any) => {
+      if (!textareaRef.current) return;
+
+      const input = textareaRef.current;
+      const cursorPos = getCursorPosition();
+      const textBeforeCursor = input.value.substring(0, cursorPos.start);
+      const textAfterCursor = input.value.substring(cursorPos.end);
+
+      // Find the last @ symbol before cursor
+      const lastAtSignIndex = textBeforeCursor.lastIndexOf("@");
+      if (lastAtSignIndex === -1) return;
+
+      // Create display text for the mention
+      const displayText = `@${user.firstName} `;
+
+      // Replace the @mention with the selected user
+      const newText =
+        textBeforeCursor.substring(0, lastAtSignIndex) +
+        displayText +
+        textAfterCursor;
+
+      // Add to mentioned users array with updated indices
+      setMentionedUsers((prev) => {
+        const newMention = {
+          id: user.id,
+          display: displayText.trim(),
+          indices: [lastAtSignIndex, lastAtSignIndex + displayText.length] as [
+            number,
+            number,
+          ],
+        };
+
+        // Update indices for all mentions that come after this one
+        const offset = displayText.length - (cursorPos.start - lastAtSignIndex);
+        const updatedPrev = prev.map((mention) => {
+          if (mention.indices[0] > lastAtSignIndex) {
+            return {
+              ...mention,
+              indices: [
+                mention.indices[0] + offset,
+                mention.indices[1] + offset,
+              ] as [number, number],
+            };
+          }
+          return mention;
+        });
+
+        return [...updatedPrev, newMention];
+      });
+
+      input.value = newText;
+      setShowMentions(false);
+      setSelectedIndex(0);
+    },
+    [getCursorPosition],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>, filteredUsers: any[]) => {
+      if (!showMentions || filteredUsers.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev + 1) % filteredUsers.length);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex(
+            (prev) => (prev - 1 + filteredUsers.length) % filteredUsers.length,
+          );
+          break;
+        case "Enter":
+        case "Tab":
+          e.preventDefault();
+          handleUserSelect(filteredUsers[selectedIndex]);
+          break;
+        case "Escape":
+          setShowMentions(false);
+          break;
+      }
+    },
+    [showMentions, selectedIndex, handleUserSelect],
+  );
+
   return {
     textareaRef,
     showMentions,
     setShowMentions,
     handleInputChange,
     mentionPosition,
+    handleKeyDown,
+    selectedIndex,
+    handleUserSelect,
+    mentionedUsers,
+    setMentionedUsers,
   };
 };

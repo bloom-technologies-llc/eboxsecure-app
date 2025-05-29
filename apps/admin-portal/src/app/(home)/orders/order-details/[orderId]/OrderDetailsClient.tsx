@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CommentType, LocationType } from "@prisma/client";
+import { CommentType } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -31,16 +31,12 @@ import { api } from "../../../../../trpc/react";
 
 interface OrderDetailsClientProps {
   orderDetails: {
+    id: number;
     customer: {
       id: string;
     };
     shippedLocation: {
-      address: string;
       id: number;
-      name: string;
-      createdAt: Date;
-      updatedAt: Date;
-      locationType: LocationType;
     };
   };
 }
@@ -56,20 +52,28 @@ export default function OrderDetailsClient({
     handleInputChange,
     mentionPosition,
     textareaRef,
+    handleKeyDown,
+    selectedIndex,
+    handleUserSelect,
+    mentionedUsers,
+    setMentionedUsers,
   } = useMentionTrigger();
-
-  const params = useParams();
+  const { id, customer, shippedLocation } = orderDetails;
   const router = useRouter();
-  const orderId = params.orderId as string;
+  const orderId = id;
+
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
-  const locationId = searchParams.get("locationId");
+
+  const { data: locationEmployees } =
+    api.orderComments.getLocationEmployees.useQuery({
+      locationId: shippedLocation.id,
+    });
 
   const { data: queryOrderComments } =
     api.orderComments.queryOrderComments.useQuery({
-      orderId: parseInt(orderId),
+      orderId: orderId,
     });
 
   const { mutate: createOrderComment } =
@@ -120,14 +124,25 @@ export default function OrderDetailsClient({
     createOrderComment({
       text: values.comment,
       commentType: CommentType.ORDER,
-      orderId: parseInt(orderId),
+      orderId: orderId,
       authorId: user.id,
       imagePaths: [],
-      notifications: [],
+      notifications: mentionedUsers.map((user) => ({
+        userId: user.id,
+        message: `${user.display} was mentioned in a comment`,
+      })),
     });
 
     form.reset();
+    setMentionedUsers([]);
+    if (textareaRef.current) {
+      textareaRef.current.value = "";
+    }
   };
+
+  useEffect(() => {
+    console.log(locationEmployees);
+  }, [locationEmployees]);
 
   return (
     <main className="bg-pageBackground w-full">
@@ -173,6 +188,9 @@ export default function OrderDetailsClient({
                                   ref={textareaRef}
                                   placeholder="Leave a comment..."
                                   className="rounded-none border border-none px-4 py-6"
+                                  onKeyDown={(e) =>
+                                    handleKeyDown(e, locationEmployees ?? [])
+                                  }
                                   onChange={(e) => {
                                     field.onChange(e);
                                     handleInputChange(
@@ -196,8 +214,31 @@ export default function OrderDetailsClient({
                                     onOpenAutoFocus={(e) => e.preventDefault()}
                                     onCloseAutoFocus={(e) => e.preventDefault()}
                                   >
-                                    <div>
+                                    <div className="flex flex-col gap-y-2">
                                       <p className="text-sm">Users</p>
+                                      <div className="border"></div>
+                                      {locationEmployees?.map(
+                                        (employee, index) => {
+                                          return (
+                                            <div
+                                              key={employee.id}
+                                              className={`cursor-pointer rounded-sm px-2 py-1 ${
+                                                index === selectedIndex
+                                                  ? "bg-secondary-background"
+                                                  : ""
+                                              }`}
+                                              onClick={() =>
+                                                handleUserSelect(employee.id)
+                                              }
+                                            >
+                                              <p className="text-sm">
+                                                {employee.firstName}{" "}
+                                                {employee.lastName}
+                                              </p>
+                                            </div>
+                                          );
+                                        },
+                                      )}
                                     </div>
                                   </PopoverContent>
                                 </Popover>
