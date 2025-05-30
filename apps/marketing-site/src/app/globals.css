@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 196 15% 97%; /* Light greenish-blue white */
+    --foreground: 196 15% 20%; /* Dark greenish-blue gray */
+    --card: 196 15% 97%; /* Match background */
+    --card-foreground: 196 15% 20%;
+    --popover: 196 15% 97%;
+    --popover-foreground: 196 15% 20%;
+    --primary: 196 100% 23.5%; /* Logo color */
+    --primary-foreground: 196 10% 95%; /* Light for contrast */
+    --secondary: 196 40% 85%; /* Soft complementary shade */
+    --secondary-foreground: 196 25% 20%; /* Darker text */
+    --muted: 196 30% 90%; /* Muted complementary light */
+    --muted-foreground: 196 20% 40%; /* Slightly stronger muted */
+    --accent: 196 100% 23.5%; /* Match primary/logo */
+    --accent-foreground: 196 10% 95%;
+    --destructive: 0 72.22% 50.59%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 98%;
+    --border: 196 20% 85%; /* Subtle greenish-blue border */
+    --input: 196 20% 85%; /* Match border */
+    --ring: 196 90% 40%; /* Slightly brighter greenish-blue for focus */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 196 15% 10%; /* Dark greenish-blue navy */
+    --foreground: 196 15% 85%; /* Light greenish-blue gray */
+    --card: 196 15% 10%;
+    --card-foreground: 196 15% 85%;
+    --popover: 196 15% 10%;
+    --popover-foreground: 196 15% 85%;
+    --primary: 196 100% 23.5%; /* Logo color */
+    --primary-foreground: 196 10% 95%; /* Light for contrast */
+    --secondary: 196 20% 25%; /* Muted dark greenish-blue */
+    --secondary-foreground: 196 15% 85%;
+    --muted: 196 20% 25%; /* Match secondary */
+    --muted-foreground: 196 40% 65%; /* Muted brighter greenish-blue */
+    --accent: 196 100% 23.5%; /* Match primary/logo */
+    --accent-foreground: 196 10% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 196 20% 25%; /* Match muted dark */
+    --input: 196 20% 25%;
+    --ring: 196 90% 35%; /* Bright greenish-blue focus */
+  }
+}
