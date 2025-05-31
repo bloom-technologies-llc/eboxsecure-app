@@ -18,7 +18,7 @@ export function FAQContact() {
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-3">
+        <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
           <div className="flex flex-col items-center rounded-xl bg-background p-8 text-center shadow-sm">
             <Mail className="h-10 w-10 text-primary" />
             <h3 className="mt-4 text-lg font-semibold text-foreground">
@@ -44,34 +44,6 @@ export function FAQContact() {
             </p>
             <Button asChild className="mt-6">
               <Link href="tel:+13175551234">(317) 555-1234</Link>
-            </Button>
-          </div>
-
-          <div className="flex flex-col items-center rounded-xl bg-background p-8 text-center shadow-sm">
-            <MessageSquare className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">
-              Live Chat
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Chat with our support team in real-time.
-            </p>
-            <Button asChild className="mt-6">
-              <Link href="#chat">Start Chat</Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-16 max-w-3xl rounded-xl bg-background p-8 shadow-sm">
-          <h3 className="text-center text-xl font-semibold text-foreground">
-            Visit Our Help Center
-          </h3>
-          <p className="mt-4 text-center text-muted-foreground">
-            Our comprehensive knowledge base contains detailed guides,
-            tutorials, and troubleshooting information.
-          </p>
-          <div className="mt-8 text-center">
-            <Button asChild>
-              <Link href="/help-center">Browse Help Center</Link>
             </Button>
           </div>
         </div>
