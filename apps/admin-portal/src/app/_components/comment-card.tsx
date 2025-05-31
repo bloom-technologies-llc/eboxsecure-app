@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
 
+import { cn } from "@ebox/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ interface CommentCardProps {
   name: string;
   time: Date; //TODO: change to Date after backend integration
   comment: string;
+  highlighted: string | null;
 }
 
 export default function CommentCard({
@@ -32,6 +34,7 @@ export default function CommentCard({
   name,
   time,
   comment,
+  highlighted,
 }: CommentCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -85,7 +88,12 @@ export default function CommentCard({
   };
 
   return (
-    <div className="flex-flex-col w-full rounded-md border border-border bg-white px-4 py-3">
+    <div
+      className={cn(
+        "flex w-full flex-col rounded-md border border-border bg-white px-4 py-3",
+        highlighted === commentId && "border-secondary bg-secondary/5",
+      )}
+    >
       <div className="flex flex-col gap-x-2">
         <div className="flex items-center">
           <div className="flex w-full gap-x-2">

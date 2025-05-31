@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CommentType } from "@prisma/client";
@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   AtSign,
   CircleArrowUp,
+  Info,
   MessageCircleWarning,
   Paperclip,
   Pencil,
@@ -24,6 +25,12 @@ import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Popover, PopoverAnchor, PopoverContent } from "@ebox/ui/popover";
 import { Textarea } from "@ebox/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@ebox/ui/tooltip";
 
 import { useMentionTrigger } from "~/app/hooks/useMentionTrigger";
 import CommentCard from "../../../../_components/comment-card";
@@ -65,6 +72,8 @@ export default function OrderDetailsClient({
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const highlightedCommentId = searchParams.get("highlight");
 
   const { data: locationEmployees } =
     api.orderComments.getLocationEmployees.useQuery({
@@ -215,10 +224,31 @@ export default function OrderDetailsClient({
                                     onCloseAutoFocus={(e) => e.preventDefault()}
                                   >
                                     <div className="flex flex-col gap-y-2">
-                                      <p className="text-sm">Users</p>
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm">
+                                          Employees in this location
+                                        </p>
+                                        <TooltipProvider delayDuration={100}>
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <Info className="h-4 w-4 cursor-help text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
+                                                The mentioned employee will be
+                                                notified
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </div>
                                       <div className="border"></div>
-                                      {locationEmployees?.map(
-                                        (employee, index) => {
+                                      {locationEmployees
+                                        ?.filter(
+                                          (employee) =>
+                                            employee.id !== user?.id,
+                                        )
+                                        .map((employee, index) => {
                                           return (
                                             <div
                                               key={employee.id}
@@ -228,17 +258,15 @@ export default function OrderDetailsClient({
                                                   : ""
                                               }`}
                                               onClick={() =>
-                                                handleUserSelect(employee.id)
+                                                handleUserSelect(employee)
                                               }
                                             >
                                               <p className="text-sm">
-                                                {employee.firstName}{" "}
-                                                {employee.lastName}
+                                                {employee.firstName}
                                               </p>
                                             </div>
                                           );
-                                        },
-                                      )}
+                                        })}
                                     </div>
                                   </PopoverContent>
                                 </Popover>
@@ -292,6 +320,7 @@ export default function OrderDetailsClient({
                   {queryOrderComments?.map((comment) => {
                     return (
                       <CommentCard
+                        highlighted={highlightedCommentId}
                         key={comment.comment.id}
                         commentId={comment.comment.id}
                         name={comment.comment.authorId}

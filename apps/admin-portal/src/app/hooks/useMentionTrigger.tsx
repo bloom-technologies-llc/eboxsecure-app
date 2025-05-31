@@ -1,4 +1,5 @@
 import { KeyboardEvent, useCallback, useRef, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 interface MentionedUser {
   id: string;
@@ -14,6 +15,8 @@ export const useMentionTrigger = () => {
     x: number;
     y: number;
   } | null>(null);
+
+  const { user: currentUser } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const getCursorPosition = useCallback(() => {
@@ -104,7 +107,6 @@ export const useMentionTrigger = () => {
     setShowMentions(true);
   }, []);
 
-  //TODO: usertype is not any
   const handleUserSelect = useCallback(
     (user: any) => {
       if (!textareaRef.current) return;
@@ -112,7 +114,7 @@ export const useMentionTrigger = () => {
       const input = textareaRef.current;
       const cursorPos = getCursorPosition();
       const textBeforeCursor = input.value.substring(0, cursorPos.start);
-      const textAfterCursor = input.value.substring(cursorPos.end);
+      const textAfterCursor = input.value.substring(cursorPos.start);
 
       // Find the last @ symbol before cursor
       const lastAtSignIndex = textBeforeCursor.lastIndexOf("@");
@@ -160,35 +162,46 @@ export const useMentionTrigger = () => {
       setShowMentions(false);
       setSelectedIndex(0);
     },
-    [getCursorPosition],
+    [getCursorPosition, currentUser],
   );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>, filteredUsers: any[]) => {
       if (!showMentions || filteredUsers.length === 0) return;
 
+      // Filter out current user from suggestions
+      const availableUsers = currentUser
+        ? filteredUsers.filter((user) => user.id !== currentUser.id)
+        : filteredUsers;
+
+      if (availableUsers.length === 0) {
+        setShowMentions(false);
+        return;
+      }
+
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex((prev) => (prev + 1) % filteredUsers.length);
+          setSelectedIndex((prev) => (prev + 1) % availableUsers.length);
           break;
         case "ArrowUp":
           e.preventDefault();
           setSelectedIndex(
-            (prev) => (prev - 1 + filteredUsers.length) % filteredUsers.length,
+            (prev) =>
+              (prev - 1 + availableUsers.length) % availableUsers.length,
           );
           break;
         case "Enter":
         case "Tab":
           e.preventDefault();
-          handleUserSelect(filteredUsers[selectedIndex]);
+          handleUserSelect(availableUsers[selectedIndex]);
           break;
         case "Escape":
           setShowMentions(false);
           break;
       }
     },
-    [showMentions, selectedIndex, handleUserSelect],
+    [showMentions, selectedIndex, handleUserSelect, currentUser],
   );
 
   return {
