@@ -7,11 +7,6 @@ import { Container } from "@ebox/ui/container";
 
 const faqs = [
   {
-    question: "How does the free trial work?",
-    answer:
-      "All plans include a 14-day free trial with full access to all features in your selected tier. No credit card is required to start your trial. You'll receive a reminder email 3 days before your trial ends.",
-  },
-  {
     question: "Can I change my plan later?",
     answer:
       "Yes, you can upgrade or downgrade your plan at any time. Upgrades take effect immediately, while downgrades will take effect at the end of your current billing cycle.",

@@ -40,11 +40,6 @@ const faqCategories = [
           "Yes, you can upgrade or downgrade your plan at any time through your account dashboard. Upgrades take effect immediately, while downgrades will take effect at the end of your current billing cycle.",
       },
       {
-        question: "Is there a free trial?",
-        answer:
-          "Yes, all new accounts come with a 14-day free trial. You can try any plan during this period without being charged.",
-      },
-      {
         question: "What happens if I exceed my package limit?",
         answer:
           "If you exceed your monthly package limit, you'll be charged a small fee per additional package. You'll always be notified before any overage charges are applied.",

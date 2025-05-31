@@ -12,8 +12,8 @@ export function CTASection() {
             Ready to secure your deliveries?
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-foreground/90">
-            Start your free trial today and experience the convenience of secure
-            package delivery with EboxSecure.
+            Transform your delivery experience today and experience the
+            convenience of secure package delivery with EboxSecure.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button

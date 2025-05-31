@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
+import logo from "public/eboxsecure-logo.png";
 
 import { Button } from "@ebox/ui/button";
 import { Container } from "@ebox/ui/container";
@@ -96,9 +98,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-primary">
-                EboxSecure
-              </span>
+              <Image src={logo} alt="EboxSecure Logo" width={80} />
             </Link>
           </div>
 
@@ -120,11 +120,12 @@ export function Header() {
                   <div className="flex items-center">
                     <button
                       onClick={() => toggleDropdown(item.name)}
-                      className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                      className="group relative flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                       aria-expanded={activeDropdown === item.name}
                       aria-haspopup="true"
                     >
                       {item.name}
+                      <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-primary transition-all duration-300 ease-out group-hover:w-full" />
                       <ChevronDown
                         className={`ml-1 h-4 w-4 transition-transform duration-200 ${activeDropdown === item.name ? "rotate-180" : ""}`}
                       />
@@ -136,10 +137,11 @@ export function Header() {
                             <Link
                               key={subItem.name}
                               href={subItem.href}
-                              className="block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                              className="group relative block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                               onClick={() => setActiveDropdown(null)}
                             >
                               {subItem.name}
+                              <span className="absolute bottom-1 left-4 h-0.5 w-0 bg-primary transition-all duration-300 ease-out group-hover:w-[calc(100%-2rem)]" />
                             </Link>
                           ))}
                         </div>
@@ -149,9 +151,10 @@ export function Header() {
                 ) : (
                   <Link
                     href={item.href || "#"}
-                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    className="group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {item.name}
+                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-primary transition-all duration-300 ease-out group-hover:w-full" />
                   </Link>
                 )}
               </div>

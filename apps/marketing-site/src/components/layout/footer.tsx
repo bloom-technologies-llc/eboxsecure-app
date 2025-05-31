@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import logo from "public/eboxsecure-logo.png";
 
 import { Container } from "@ebox/ui/container";
 
@@ -45,6 +47,7 @@ export function Footer() {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8">
             <Link href="/" className="flex items-center space-x-2">
+              <Image src={logo} alt="EboxSecure Logo" width={80} />
               <span className="text-2xl font-bold text-primary">
                 EboxSecure
               </span>
