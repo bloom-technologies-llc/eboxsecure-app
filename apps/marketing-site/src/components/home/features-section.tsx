@@ -23,6 +23,9 @@ const features = [
     icon: MapPin,
     category: "core",
     size: "large",
+    iconColor: "from-blue-500 to-blue-600",
+    iconBg: "bg-blue-50",
+    iconTextColor: "text-blue-600",
   },
   {
     id: 2,
@@ -32,6 +35,9 @@ const features = [
     icon: ShoppingBag,
     category: "integration",
     size: "large",
+    iconColor: "from-purple-500 to-purple-600",
+    iconBg: "bg-purple-50",
+    iconTextColor: "text-purple-600",
   },
   {
     id: 3,
@@ -41,6 +47,9 @@ const features = [
     icon: Shield,
     category: "core",
     size: "small",
+    iconColor: "from-green-500 to-green-600",
+    iconBg: "bg-green-50",
+    iconTextColor: "text-green-600",
   },
   {
     id: 4,
@@ -50,6 +59,9 @@ const features = [
     icon: Clock,
     category: "benefit",
     size: "small",
+    iconColor: "from-orange-500 to-orange-600",
+    iconBg: "bg-orange-50",
+    iconTextColor: "text-orange-600",
   },
   {
     id: 5,
@@ -59,6 +71,9 @@ const features = [
     icon: Package,
     category: "benefit",
     size: "medium",
+    iconColor: "from-indigo-500 to-indigo-600",
+    iconBg: "bg-indigo-50",
+    iconTextColor: "text-indigo-600",
   },
   {
     id: 6,
@@ -68,6 +83,9 @@ const features = [
     icon: Truck,
     category: "integration",
     size: "medium",
+    iconColor: "from-red-500 to-red-600",
+    iconBg: "bg-red-50",
+    iconTextColor: "text-red-600",
   },
 ];
 
@@ -168,9 +186,9 @@ function FeatureCard({
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             whileHover="hover"
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary/20"
+            className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.iconColor} shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl`}
           >
-            <feature.icon className="h-6 w-6" />
+            <feature.icon className="h-6 w-6 text-white" />
           </motion.div>
 
           <div className="flex-1">
