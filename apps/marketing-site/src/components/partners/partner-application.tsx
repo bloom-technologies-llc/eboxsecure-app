@@ -4,8 +4,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const partnershipTiers = [
   {

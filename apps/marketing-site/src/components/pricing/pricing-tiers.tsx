@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const tiers = [
   {
@@ -17,7 +16,7 @@ const tiers = [
       "Maximum 5 packages",
       "Standard support",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     mostPopular: false,
   },
   {
@@ -31,7 +30,7 @@ const tiers = [
       "Maximum 20 packages",
       "Standard support",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     mostPopular: false,
   },
   {
@@ -47,7 +46,7 @@ const tiers = [
       "Returns handling",
       "Discounted last-mile delivery service",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     mostPopular: true,
   },
   {
@@ -64,7 +63,7 @@ const tiers = [
       "Discounted last-mile delivery service",
       "Dedicated account management",
     ],
-    cta: "Contact Sales",
+    cta: "Get Started",
     mostPopular: false,
   },
 ];
@@ -146,14 +145,6 @@ export function PricingTiers() {
               </Button>
             </div>
           ))}
-        </div>
-        <div className="mt-8 text-center">
-          <p className="text-muted-foreground">
-            All plans include a 14-day free trial. No credit card required.
-          </p>
-          <p className="mt-2 text-muted-foreground">
-            Annual billing available with 2 months free.
-          </p>
         </div>
       </Container>
     </div>

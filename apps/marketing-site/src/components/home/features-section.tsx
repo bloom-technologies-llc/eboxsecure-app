@@ -7,7 +7,7 @@ import {
   Truck,
 } from "lucide-react";
 
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const features = [
   {

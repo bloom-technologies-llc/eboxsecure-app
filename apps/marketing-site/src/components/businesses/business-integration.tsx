@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Code, FileJson, Webhook } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const integrationOptions = [
   {
