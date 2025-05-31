@@ -48,3 +48,8 @@
     --ring: 196 90% 35%; /* Bright greenish-blue focus */
   }
 }
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
