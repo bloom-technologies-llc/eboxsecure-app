@@ -16,6 +16,21 @@ enum UserType {
     CORPORATE
 }
 
+enum CommentType {
+    EMPLOYEE
+    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    LOCATION
+    CUSTOMER
+    ORDER
+}
+
+enum NoteType {
+    EMPLOYEE
+    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    LOCATION
+    CUSTOMER
+}
+
 enum SessionStatus {
     ABANDONED
     ACTIVE
@@ -25,77 +40,203 @@ enum SessionStatus {
     REPLACED
     REVOKED
 }
-model User {
-    id String @id
-    userType UserType
-    customerAccount CustomerAccount?
-    employeeAccount EmployeeAccount?
-    corporateAccount CorporateAccount?
-    sessions Session[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+
+enum EmployeeRole {
+    MANAGER
+    ASSOCIATE
 }
 
+enum LocationType {
+    AGENT
+    FRANCHISE
+}
+
+model User {
+    id               String            @id
+    userType         UserType
+    customerAccount  CustomerAccount?
+    employeeAccount  EmployeeAccount?
+    corporateAccount CorporateAccount?
+    sessions         Session[]
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt
+    notifications    Notification[]
+}
 
 model Session {
-    id String @id
+    id     String        @id
     userId String
     status SessionStatus
-    user User @relation(fields: [userId], references: [id])
+    user   User          @relation(fields: [userId], references: [id])
 }
 
 model CustomerAccount {
-    id String @id
-    orders Order[]
-    user User @relation(fields: [id], references: [id])
-    phoneUploadLink OnboardingPhoneUploadLink?
+    id               String                     @id
+    orders           Order[]
+    user             User                       @relation(fields: [id], references: [id])
+    phoneUploadLink  OnboardingPhoneUploadLink?
+    customerNotes    CustomerNote[]
+    customerComments CustomerComment[]
 }
+
 model EmployeeAccount {
-    id String @id
-    user User @relation(fields: [id], references: [id])
+    id               String            @id
+    employeeRole     EmployeeRole
+    employeeComments EmployeeComment[]
+    employeeNotes    EmployeeNote[]
+    locationId       Int
+
+    location Location @relation(fields: [locationId], references: [id])
+    user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
 }
+
 model CorporateAccount {
-    id String @id
-    user User @relation(fields: [id], references: [id])
+    id   String @id
+    user User   @relation(fields: [id], references: [id])
 }
-model PendingAccount {
-    id Int @id @default(autoincrement())
-    email String @unique
+
+// TODO: This holds pending account creation for Employees and Corporate. 
+// Add an optional field for Employee Role, if the Pending Account is an Employee UserType. Modify the webhook accordingly.
+model PendingAdminAccount {
+    id          Int      @id @default(autoincrement())
+    email       String   @unique
     accountType UserType
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-} 
-
-model Location {
-    id Int @id @default(autoincrement())
-    name String
-    address String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    Order Order[]
-}
-
-model Order {
-    id Int @id @default(autoincrement())
-    customerId String
-    vendorOrderId String
-    total Float
-    shippedLocationid Int
-    delivered DateTime?
-    customer CustomerAccount @relation(fields: [customerId], references: [id])
-    shippedLocation Location @relation(fields: [shippedLocationid], references: [id])
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 }
 
 model OnboardingPhoneUploadLink {
-    id String @id @default(cuid())
-    customerId String @unique
-    expiresAt DateTime
-    completed Boolean @default(false)
+    id         String   @id @default(cuid())
+    customerId String   @unique
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    expiresAt  DateTime
+    completed  Boolean  @default(false)
 
-    Customer CustomerAccount @relation(fields: [customerId], references: [id])
+    customer CustomerAccount @relation(fields: [customerId], references: [id])
+}
+
+model Order {
+    id                Int       @id @default(autoincrement())
+    customerId        String
+    vendorOrderId     String
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    total             Float
+    shippedLocationId Int
+    deliveredDate     DateTime?
+
+    customer        CustomerAccount @relation(fields: [customerId], references: [id])
+    shippedLocation Location        @relation(fields: [shippedLocationId], references: [id])
+    orderComments   OrderComment[]
+}
+
+model Location {
+    id           Int          @id @default(autoincrement())
+    name         String
+    address      String
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
+    locationType LocationType
+
+    locationComments LocationComment[]
+    locationNotes    LocationNote[]
+    orders           Order[]
+    employeeAccounts EmployeeAccount[]
+}
+
+model Note {
+    id           String        @id @default(cuid())
+    text         String
+    createdAt    DateTime
+    updatedAt    DateTime
+    noteType     NoteType
+    locationNote LocationNote?
+    employeeNote EmployeeNote?
+    // storeNotes TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    customerNote CustomerNote?
+}
+
+model LocationNote {
+    id         String @unique
+    locationId Int
+
+    note     Note     @relation(fields: [id], references: [id])
+    location Location @relation(fields: [locationId], references: [id])
+}
+
+model CustomerNote {
+    id         String @unique
+    customerId String
+
+    note     Note            @relation(fields: [id], references: [id])
+    customer CustomerAccount @relation(fields: [customerId], references: [id])
+}
+
+model EmployeeNote {
+    id         String @unique
+    employeeId String
+
+    note     Note            @relation(fields: [id], references: [id])
+    employee EmployeeAccount @relation(fields: [employeeId], references: [id])
+}
+
+model Comment {
+    id              String           @id @default(cuid())
+    text            String
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    commentType     CommentType
+    // storeComments TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
+    imagePaths      String[]
+    locationComment LocationComment?
+    employeeComment EmployeeComment?
+    customerComment CustomerComment?
+    orderComment    OrderComment?
+    notifications   Notification[]
+}
+
+model LocationComment {
+    id         String @unique
+    locationId Int
+
+    location Location @relation(fields: [locationId], references: [id])
+    comment  Comment  @relation(fields: [id], references: [id])
+}
+
+model EmployeeComment {
+    id                String @unique
+    employeeAccountId String
+
+    employee EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
+    comment  Comment         @relation(fields: [id], references: [id])
+}
+
+model CustomerComment {
+    id                String @unique
+    customerAccountId String
+
+    customer CustomerAccount @relation(fields: [customerAccountId], references: [id])
+    comment  Comment         @relation(fields: [id], references: [id])
+}
+
+model OrderComment {
+    id      String @unique
+    orderId Int
+
+    order   Order   @relation(fields: [orderId], references: [id])
+    comment Comment @relation(fields: [id], references: [id])
+}
+
+model Notification {
+    id        String   @id @default(cuid())
+    userId    String
+    message   String
+    read      Boolean  @default(false)
+    commentId String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    user    User     @relation(fields: [userId], references: [id])
+    comment Comment? @relation(fields: [commentId], references: [id])
 }

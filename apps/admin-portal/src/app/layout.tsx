@@ -17,9 +17,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import "~/app/globals.css";
 
 import { SidebarProvider, SidebarTrigger } from "@ebox/ui/sidebar";
-
-import Navbar from "./_components/navbar";
-import AppSidebar from "./_components/sidebar";
+import { Toaster } from "@ebox/ui/toaster";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -40,11 +38,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
               GeistMono.variable,
             )}
           >
-              <div className="[--header-height:calc(theme(spacing.14))]">
-                <SidebarProvider className="flex flex-col">
-                  <div className="flex flex-1">{props.children}</div>
-                </SidebarProvider>
-              </div>
+            <div className="[--header-height:calc(theme(spacing.14))]">
+              <SidebarProvider className="flex flex-col">
+                <Toaster />
+                <div className="flex flex-1">{props.children}</div>
+              </SidebarProvider>
+            </div>
           </body>
         </html>
       </ClerkProvider>

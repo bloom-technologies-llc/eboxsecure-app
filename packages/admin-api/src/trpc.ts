@@ -131,7 +131,7 @@ export const protectedEmployeeProcedure = protectedProcedure.use(
   },
 );
 
-export const protectedEboxProcedure = protectedProcedure.use(
+export const protectedAdminProcedure = protectedProcedure.use(
   async ({ ctx, next }) => {
     const userId = ctx.session.userId;
     const userType = await ctx.db.user.findUnique({
