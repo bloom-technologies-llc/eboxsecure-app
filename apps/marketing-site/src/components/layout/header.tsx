@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
+import logo from "public/eboxsecure-logo.png";
 
 import { Button } from "@ebox/ui/button";
 import { Container } from "@ebox/ui/container";
@@ -96,9 +98,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-primary">
-                EboxSecure
-              </span>
+              <Image src={logo} alt="EboxSecure Logo" width={80} />
             </Link>
           </div>
 
