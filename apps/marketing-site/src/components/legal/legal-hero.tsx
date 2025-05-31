@@ -1,4 +1,4 @@
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 interface LegalHeroProps {
   title: string;

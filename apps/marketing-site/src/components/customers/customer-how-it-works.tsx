@@ -1,6 +1,6 @@
 import { ArrowRight, Clock, Package, Truck, User } from "lucide-react";
 
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const steps = [
   {

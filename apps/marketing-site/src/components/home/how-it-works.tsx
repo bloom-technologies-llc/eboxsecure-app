@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@ebox/ui/button";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const steps = [
   {

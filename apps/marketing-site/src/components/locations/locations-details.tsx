@@ -1,6 +1,6 @@
 import { Clock, MapPin, Phone, Truck } from "lucide-react";
 
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const locationDetails = {
   address: "123 Main Street, Carmel, IN 46032",

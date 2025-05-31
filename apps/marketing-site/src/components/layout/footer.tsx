@@ -1,7 +1,8 @@
 import Link from "next/link";
 
+import { Container } from "@ebox/ui/container";
+
 import { LinkedIn, Twitter } from "../icons";
-import { Container } from "../ui/container";
 
 const navigation = {
   main: [

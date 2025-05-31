@@ -4,8 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@ebox/ui/accordion";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const faqs = [
   {

@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Mail, MessageSquare, Phone } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
-
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 export function FAQContact() {
   return (
