@@ -1,4 +1,4 @@
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 // In a real implementation, these would be actual partner logos
 const partners = [

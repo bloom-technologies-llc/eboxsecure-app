@@ -1,6 +1,6 @@
 import { Clock, Package, ShieldCheck, Truck } from "lucide-react";
 
-import { Container } from "../ui/container";
+import { Container } from "@ebox/ui/container";
 
 const stats = [
   { id: 1, name: "Secure Deliveries", value: "100%", icon: ShieldCheck },

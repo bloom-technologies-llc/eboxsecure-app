@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@ebox/ui/button";
+import { Container } from "@ebox/ui/container";
 import {
   Form,
   FormControl,
@@ -22,8 +23,6 @@ import {
   SelectValue,
 } from "@ebox/ui/select";
 import { Textarea } from "@ebox/ui/textarea";
-
-import { Container } from "../ui/container";
 
 const formSchema = z.object({
   name: z.string().min(2, {
