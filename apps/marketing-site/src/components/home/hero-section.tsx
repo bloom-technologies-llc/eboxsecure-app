@@ -39,15 +39,18 @@ export function HeroSection() {
 
   // Handle search
   const performSearch = useCallback(async (query: string) => {
+    console.log("query", query);
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
       setShowResults(false);
+      console.log("returning early");
       return;
     }
 
     setIsLoading(true);
     try {
       const results = await searchLocations(query);
+      console.log("results", results);
       setSearchResults(results);
       setShowResults(true);
     } catch (error) {
