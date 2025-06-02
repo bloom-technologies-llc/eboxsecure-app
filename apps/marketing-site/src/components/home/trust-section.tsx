@@ -170,6 +170,7 @@ const stats = [
     suffix: "+",
     icon: Package,
     color: "text-blue-600",
+    trending: 15,
   },
   {
     id: 2,
@@ -178,6 +179,7 @@ const stats = [
     suffix: "+",
     icon: Users,
     color: "text-green-600",
+    trending: 12,
   },
   {
     id: 3,
@@ -186,6 +188,7 @@ const stats = [
     suffix: "",
     icon: ShieldCheck,
     color: "text-purple-600",
+    trending: 8,
   },
   {
     id: 4,
@@ -194,6 +197,7 @@ const stats = [
     suffix: "%",
     icon: Star,
     color: "text-orange-600",
+    trending: 5,
   },
 ];
 
@@ -255,12 +259,13 @@ const generateActivity = () => {
     "Supplies",
   ];
 
-  const typeIndex = Math.floor(Math.random() * types.length);
-  const locationIndex = Math.floor(Math.random() * locations.length);
-  const packageIndex = Math.floor(Math.random() * packages.length);
+  const now = Date.now();
+  const typeIndex = now % types.length;
+  const locationIndex = Math.floor(now / 1000) % locations.length;
+  const packageIndex = Math.floor(now / 10000) % packages.length;
 
   return {
-    id: Math.random().toString(36).substr(2, 9),
+    id: now.toString(36),
     type: types[typeIndex] as "delivery" | "pickup" | "signup",
     location: locations[locationIndex] as string,
     time: "Just now",
@@ -396,7 +401,7 @@ export function TrustSection() {
                   transition={{ delay: idx * 0.1 + 1 }}
                 >
                   <TrendingUp className="h-3 w-3" />
-                  <span>+{Math.floor(Math.random() * 20 + 5)}%</span>
+                  <span>+{stat.trending}%</span>
                 </motion.div>
               </motion.div>
             ))}
