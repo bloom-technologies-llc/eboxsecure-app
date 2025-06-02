@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { env } from "@/env";
 import { MapPin } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 import { Container } from "@ebox/ui/container";
 
 export function AboutMarkets() {
+  const locationAddress = "1964 Rhettsbury St, Carmel, IN 46032";
   return (
     <div className="bg-muted/50 py-24 sm:py-32">
       <Container>
@@ -23,9 +25,13 @@ export function AboutMarkets() {
         <div className="mx-auto mt-16 max-w-2xl lg:mx-0 lg:max-w-none">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div className="relative h-80 overflow-hidden rounded-xl bg-muted">
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                Map of Carmel, Indiana Location
-              </div>
+              <iframe
+                width="100%"
+                height="300"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${env.NEXT_PUBLIC_MAPS_EMBED_API_KEY}&q=${locationAddress}`}
+                allowFullScreen
+              ></iframe>
             </div>
             <div className="flex flex-col justify-center">
               <div className="rounded-2xl bg-background p-8">
