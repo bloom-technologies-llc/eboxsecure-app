@@ -1,6 +1,9 @@
+import { env } from "@/env";
+
 import { Container } from "@ebox/ui/container";
 
 export function LocationsMap() {
+  const locationAddress = "1964 Rhettsbury St, Carmel, IN 46032";
   return (
     <div id="current-locations" className="bg-background py-24 sm:py-32">
       <Container>
@@ -21,14 +24,14 @@ export function LocationsMap() {
         <div className="mx-auto mt-16 max-w-5xl">
           {/* Map placeholder - in a real implementation, this would be an interactive map */}
           <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted shadow-lg">
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <p className="text-lg font-medium text-foreground">
-                Interactive Map
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                In a production environment, this would be an interactive map
-                showing the Carmel, Indiana location.
-              </p>
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <iframe
+                width="100%"
+                height="100%"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${env.NEXT_PUBLIC_MAPS_EMBED_API_KEY}&q=${locationAddress}`}
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
         </div>

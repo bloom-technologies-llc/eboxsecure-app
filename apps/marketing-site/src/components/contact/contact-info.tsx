@@ -1,5 +1,6 @@
 "use client";
 
+import { env } from "@/env";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 import { Container } from "@ebox/ui/container";
@@ -23,6 +24,7 @@ const contactDetails = [
 ];
 
 export function ContactInfo() {
+  const locationAddress = "1964 Rhettsbury St, Carmel, IN 46032";
   return (
     <div className="bg-muted/50 py-24 sm:py-32">
       <Container>
@@ -92,11 +94,9 @@ export function ContactInfo() {
                   Headquarters
                 </h3>
                 <address className="mt-1 text-sm not-italic text-muted-foreground">
-                  123 Main Street
+                  1964 Rhettsbury St
                   <br />
                   Carmel, IN 46032
-                  <br />
-                  United States
                 </address>
               </div>
             </div>
@@ -108,7 +108,13 @@ export function ContactInfo() {
             </h3>
             <div className="mt-4 aspect-video w-full rounded-md bg-muted">
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                Interactive map will be displayed here
+                <iframe
+                  width="100%"
+                  height="100%"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps/embed/v1/place?key=${env.NEXT_PUBLIC_MAPS_EMBED_API_KEY}&q=${locationAddress}`}
+                  allowFullScreen
+                ></iframe>
               </div>
             </div>
           </div>
