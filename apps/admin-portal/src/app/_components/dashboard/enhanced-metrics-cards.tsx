@@ -16,6 +16,9 @@ import { cn } from "@ebox/ui";
 import { Badge } from "@ebox/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@ebox/ui/card";
 
+import { api } from "~/trpc/react";
+import { ErrorState, MetricsCardSkeleton } from "./loading-states";
+
 interface MetricCardProps {
   title: string;
   value: string | number;
@@ -117,72 +120,189 @@ function MetricCard({
   );
 }
 
-// Mock data that matches the expected Prisma types structure
-// This will be replaced with real data from the API later
-const mockMetricsData = {
-  totalPackages: 1847,
-  totalPackagesChange: 12.3,
-  currentUtilization: 76.4,
-  currentUtilizationChange: 8.2,
-  avgDailyUtilization: 68.7,
-  avgDailyUtilizationChange: 5.1,
-  avgPickupTime: 28.4, // hours
-  avgPickupTimeChange: -12.7,
-  uniqueCustomers: 342,
-  uniqueCustomersChange: 18.9,
-  avgProcessingTime: 1.8, // hours
-  avgProcessingTimeChange: -23.4,
-};
+interface EnhancedMetricsCardsProps {
+  locationId?: number;
+  dateRange: {
+    from: Date;
+    to: Date;
+  };
+}
 
-export function EnhancedMetricsCards() {
+export function EnhancedMetricsCards({
+  locationId,
+  dateRange,
+}: EnhancedMetricsCardsProps) {
+  // Fetch utilization metrics
+  const {
+    data: utilizationData,
+    isLoading: isLoadingUtilization,
+    error: utilizationError,
+    refetch: refetchUtilization,
+  } = api.analytics.getUtilizationMetrics.useQuery({
+    locationId,
+    dateRange,
+  });
+
+  // Fetch pickup analytics
+  const {
+    data: pickupData,
+    isLoading: isLoadingPickup,
+    error: pickupError,
+    refetch: refetchPickup,
+  } = api.analytics.getPickupAnalytics.useQuery({
+    locationId,
+    dateRange,
+  });
+
+  // Fetch customer usage metrics
+  const {
+    data: customerData,
+    isLoading: isLoadingCustomers,
+    error: customerError,
+    refetch: refetchCustomers,
+  } = api.analytics.getCustomerUsageMetrics.useQuery({
+    locationId,
+    dateRange,
+  });
+
+  // Fetch processing time analytics
+  const {
+    data: processingData,
+    isLoading: isLoadingProcessing,
+    error: processingError,
+    refetch: refetchProcessing,
+  } = api.analytics.getProcessingTimeAnalytics.useQuery({
+    locationId,
+    dateRange,
+  });
+
+  const isLoading =
+    isLoadingUtilization ||
+    isLoadingPickup ||
+    isLoadingCustomers ||
+    isLoadingProcessing;
+  const hasError =
+    utilizationError || pickupError || customerError || processingError;
+
+  const handleRetry = () => {
+    refetchUtilization();
+    refetchPickup();
+    refetchCustomers();
+    refetchProcessing();
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <MetricsCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  // Show error state
+  if (hasError) {
+    return (
+      <ErrorState
+        title="Failed to load metrics"
+        description="Unable to fetch analytics data. Please try again."
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  // TODO: Calculate actual percentage changes by comparing with previous period
+  // For now using mock changes until historical comparison is implemented
+  const mockChanges = {
+    totalPackagesChange: 12.3,
+    currentUtilizationChange: 8.2,
+    avgDailyUtilizationChange: 5.1,
+    avgPickupTimeChange: -12.7,
+    uniqueCustomersChange: 18.9,
+    avgProcessingTimeChange: -23.4,
+  };
+
+  // Extract values for single location or aggregate for all locations
+  let totalPackages = 0;
+  let currentUtilization = 0;
+  let avgDailyUtilization = 0;
+
+  if (Array.isArray(utilizationData)) {
+    // All locations data
+    totalPackages = utilizationData.reduce(
+      (sum, loc) => sum + loc.currentPackageCount,
+      0,
+    );
+    const totalCapacity = utilizationData.reduce(
+      (sum, loc) => sum + loc.storageCapacity,
+      0,
+    );
+    currentUtilization =
+      totalCapacity > 0 ? (totalPackages / totalCapacity) * 100 : 0;
+    avgDailyUtilization =
+      utilizationData.reduce(
+        (sum, loc) => sum + loc.averageDailyUtilization,
+        0,
+      ) / utilizationData.length;
+  } else if (utilizationData) {
+    // Single location data
+    totalPackages = utilizationData.currentPackageCount;
+    currentUtilization = utilizationData.currentUtilization;
+    avgDailyUtilization = utilizationData.averageDailyUtilization;
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <MetricCard
         title="Total Packages"
-        value={mockMetricsData.totalPackages}
-        change={mockMetricsData.totalPackagesChange}
+        value={totalPackages}
+        change={mockChanges.totalPackagesChange}
         icon={Package}
         format="number"
       />
 
       <MetricCard
         title="Current Utilization"
-        value={mockMetricsData.currentUtilization}
-        change={mockMetricsData.currentUtilizationChange}
+        value={Math.round(currentUtilization * 10) / 10}
+        change={mockChanges.currentUtilizationChange}
         icon={Gauge}
         format="percentage"
-        utilization={mockMetricsData.currentUtilization}
+        utilization={currentUtilization}
       />
 
       <MetricCard
         title="Avg Daily Utilization"
-        value={mockMetricsData.avgDailyUtilization}
-        change={mockMetricsData.avgDailyUtilizationChange}
+        value={Math.round(avgDailyUtilization * 10) / 10}
+        change={mockChanges.avgDailyUtilizationChange}
         icon={TrendingUp}
         format="percentage"
-        utilization={mockMetricsData.avgDailyUtilization}
+        utilization={avgDailyUtilization}
       />
 
       <MetricCard
         title="Avg Pickup Time"
-        value={mockMetricsData.avgPickupTime}
-        change={mockMetricsData.avgPickupTimeChange}
+        value={Math.round((pickupData?.averagePickupTime || 0) * 10) / 10}
+        change={mockChanges.avgPickupTimeChange}
         icon={Clock}
         format="time"
       />
 
       <MetricCard
         title="Unique Customers"
-        value={mockMetricsData.uniqueCustomers}
-        change={mockMetricsData.uniqueCustomersChange}
+        value={customerData?.uniqueCustomers || 0}
+        change={mockChanges.uniqueCustomersChange}
         icon={Users}
         format="number"
       />
 
       <MetricCard
         title="Processing Time"
-        value={mockMetricsData.avgProcessingTime}
-        change={mockMetricsData.avgProcessingTimeChange}
+        value={
+          Math.round((processingData?.averageProcessingTime || 0) * 10) / 10
+        }
+        change={mockChanges.avgProcessingTimeChange}
         icon={Timer}
         format="time"
       />

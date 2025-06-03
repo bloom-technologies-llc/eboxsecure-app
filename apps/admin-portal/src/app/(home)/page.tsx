@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { subDays } from "date-fns";
 import { BarChart3 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
@@ -33,20 +34,40 @@ import { PickupAnalysisChart } from "../_components/dashboard/pickup-analysis-ch
 import { RecentActivity } from "../_components/dashboard/recent-activity";
 import { RevenuePerformanceChart } from "../_components/dashboard/revenue-performance-chart";
 import { UtilizationTrendsChart } from "../_components/dashboard/utilization-trends-chart";
-
-// Mock location data that matches the expected Prisma structure
-const mockLocations = [
-  { id: 1, name: "Location A", storageCapacity: 500 },
-  { id: 2, name: "Location B", storageCapacity: 350 },
-  { id: 3, name: "Location C", storageCapacity: 750 },
-  { id: 4, name: "Location D", storageCapacity: 400 },
-  { id: 5, name: "Location E", storageCapacity: 600 },
-];
+import { api } from "../../trpc/react";
 
 export default function Page() {
   const [selectedLocation, setSelectedLocation] = useState("all");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30), // Default to last 30 days
+    to: new Date(),
+  });
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+
+  // Fetch locations for the dropdown
+  const {
+    data: locations,
+    isLoading: isLoadingLocations,
+    error: locationsError,
+  } = api.analytics.getLocations.useQuery();
+
+  // Calculate derived values
+  const selectedLocationId = useMemo(() => {
+    if (selectedLocation === "all") return undefined;
+    return parseInt(selectedLocation);
+  }, [selectedLocation]);
+
+  // Ensure we always have valid dates for the API
+  const effectiveDateRange = useMemo(() => {
+    const from = dateRange?.from || subDays(new Date(), 30);
+    const to = dateRange?.to || new Date();
+
+    // Ensure both dates are valid
+    return {
+      from: from instanceof Date ? from : subDays(new Date(), 30),
+      to: to instanceof Date ? to : new Date(),
+    };
+  }, [dateRange]);
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
@@ -57,11 +78,42 @@ export default function Page() {
     console.log(
       `Exporting analytics data for ${selectedLocation} as ${format.toUpperCase()}`,
     );
+    // TODO: Implement actual export when analytics.exportAnalyticsData is working
   };
 
   const handleCompareLocations = () => {
     setShowComparisonModal(true);
   };
+
+  // Loading state for locations
+  if (isLoadingLocations) {
+    return (
+      <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">
+            Analytics Dashboard
+          </h2>
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state for locations
+  if (locationsError) {
+    return (
+      <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">
+            Analytics Dashboard
+          </h2>
+          <div className="text-sm text-red-600">
+            Error loading locations: {locationsError.message}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
@@ -78,7 +130,7 @@ export default function Page() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {mockLocations.map((location) => (
+              {locations?.map((location: { id: number; name: string }) => (
                 <SelectItem key={location.id} value={location.id.toString()}>
                   {location.name}
                 </SelectItem>
@@ -93,15 +145,39 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Enhanced Key Metrics Cards */}
-      <EnhancedMetricsCards />
+      {/* Enhanced Key Metrics Cards with real data */}
+      <EnhancedMetricsCards
+        locationId={selectedLocationId}
+        dateRange={effectiveDateRange}
+      />
 
       {/* Primary Analytics Section (2x2 grid) */}
       <div className="grid gap-4 md:grid-cols-2">
-        <UtilizationTrendsChart />
-        <PickupAnalysisChart />
-        <CustomerUsageChart />
-        <RevenuePerformanceChart />
+        {/* Charts still using mock data until Phase 4 - pass props as any for now */}
+        <UtilizationTrendsChart
+          {...({
+            locationId: selectedLocationId,
+            dateRange: effectiveDateRange,
+          } as any)}
+        />
+        <PickupAnalysisChart
+          {...({
+            locationId: selectedLocationId,
+            dateRange: effectiveDateRange,
+          } as any)}
+        />
+        <CustomerUsageChart
+          {...({
+            locationId: selectedLocationId,
+            dateRange: effectiveDateRange,
+          } as any)}
+        />
+        <RevenuePerformanceChart
+          {...({
+            locationId: selectedLocationId,
+            dateRange: effectiveDateRange,
+          } as any)}
+        />
       </div>
 
       {/* Operational Insights Section (2x1 grid) */}
