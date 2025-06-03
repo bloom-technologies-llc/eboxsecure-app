@@ -23,9 +23,12 @@ import {
 import { CustomerUsageChart } from "../_components/dashboard/customer-usage-chart";
 import { CalendarDateRangePicker } from "../_components/dashboard/date-range-picker";
 import { EnhancedMetricsCards } from "../_components/dashboard/enhanced-metrics-cards";
+import { EnhancedRecentActivity } from "../_components/dashboard/enhanced-recent-activity";
 import { ExportControls } from "../_components/dashboard/export-controls";
+import { LocationComparisonModal } from "../_components/dashboard/location-comparison-modal";
 import { LocationPerformance } from "../_components/dashboard/location-performance";
 import { Overview } from "../_components/dashboard/overview";
+import { PeakCapacityHeatmap } from "../_components/dashboard/peak-capacity-heatmap";
 import { PickupAnalysisChart } from "../_components/dashboard/pickup-analysis-chart";
 import { RecentActivity } from "../_components/dashboard/recent-activity";
 import { RevenuePerformanceChart } from "../_components/dashboard/revenue-performance-chart";
@@ -43,6 +46,7 @@ const mockLocations = [
 export default function Page() {
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
@@ -56,10 +60,7 @@ export default function Page() {
   };
 
   const handleCompareLocations = () => {
-    // Placeholder for Phase 2 implementation
-    alert(
-      "Multi-location comparison will be available in Phase 2 of the implementation",
-    );
+    setShowComparisonModal(true);
   };
 
   return (
@@ -106,39 +107,12 @@ export default function Page() {
       {/* Operational Insights Section (2x1 grid) */}
       <div className="grid gap-4 md:grid-cols-2">
         <LocationPerformance />
-        <Card>
-          <CardHeader>
-            <CardTitle>Processing Efficiency</CardTitle>
-            <CardDescription>
-              Package processing time trends and bottlenecks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="py-8 text-center text-muted-foreground">
-              <div className="text-lg font-semibold">
-                Processing Efficiency Chart
-              </div>
-              <div className="mt-2 text-sm">
-                Peak capacity heatmap will be implemented in Week 2 of Phase 1
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <PeakCapacityHeatmap />
       </div>
 
-      {/* Bottom Section - Recent Activity */}
+      {/* Bottom Section - Enhanced Activity and Overview */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Recent activities across all locations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RecentActivity />
-          </CardContent>
-        </Card>
+        <EnhancedRecentActivity />
 
         <Card>
           <CardHeader>
@@ -152,6 +126,12 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Location Comparison Modal */}
+      <LocationComparisonModal
+        open={showComparisonModal}
+        onOpenChange={setShowComparisonModal}
+      />
     </div>
   );
 }
