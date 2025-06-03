@@ -27,114 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ebox/ui/select";
+import { Skeleton } from "@ebox/ui/skeleton";
 
-// Mock activity data with more detailed information
-const mockActivities = [
-  {
-    id: 1,
-    type: "delivery",
-    title: "Package Delivered",
-    description: "Order #12847 delivered to Location A",
-    location: "Location A",
-    customer: "John Doe",
-    timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-    status: "completed",
-    priority: "normal",
-    packageCount: 1,
-    revenue: 24.99,
-  },
-  {
-    id: 2,
-    type: "pickup",
-    title: "Package Picked Up",
-    description: "Customer retrieved Order #12832",
-    location: "Location C",
-    customer: "Sarah Wilson",
-    timestamp: new Date(Date.now() - 1000 * 60 * 32), // 32 minutes ago
-    status: "completed",
-    priority: "normal",
-    packageCount: 2,
-    revenue: 45.98,
-  },
-  {
-    id: 3,
-    type: "alert",
-    title: "High Utilization Alert",
-    description: "Location C approaching capacity limit",
-    location: "Location C",
-    customer: null,
-    timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
-    status: "warning",
-    priority: "high",
-    packageCount: null,
-    revenue: null,
-  },
-  {
-    id: 4,
-    type: "delivery",
-    title: "Bulk Delivery",
-    description: "5 packages delivered to Location B",
-    location: "Location B",
-    customer: "Multiple",
-    timestamp: new Date(Date.now() - 1000 * 60 * 67), // 1 hour 7 minutes ago
-    status: "completed",
-    priority: "normal",
-    packageCount: 5,
-    revenue: 124.95,
-  },
-  {
-    id: 5,
-    type: "processing",
-    title: "Package Processing",
-    description: "Order #12841 ready for pickup",
-    location: "Location A",
-    customer: "Mike Johnson",
-    timestamp: new Date(Date.now() - 1000 * 60 * 89), // 1 hour 29 minutes ago
-    status: "ready",
-    priority: "normal",
-    packageCount: 1,
-    revenue: 18.99,
-  },
-  {
-    id: 6,
-    type: "pickup",
-    title: "Package Picked Up",
-    description: "Customer retrieved Order #12825",
-    location: "Location D",
-    customer: "Emma Davis",
-    timestamp: new Date(Date.now() - 1000 * 60 * 112), // 1 hour 52 minutes ago
-    status: "completed",
-    priority: "normal",
-    packageCount: 1,
-    revenue: 32.5,
-  },
-  {
-    id: 7,
-    type: "alert",
-    title: "Delayed Pickup Alert",
-    description: "Package in Location E for >48 hours",
-    location: "Location E",
-    customer: "Robert Brown",
-    timestamp: new Date(Date.now() - 1000 * 60 * 134), // 2 hours 14 minutes ago
-    status: "warning",
-    priority: "medium",
-    packageCount: 1,
-    revenue: null,
-  },
-  {
-    id: 8,
-    type: "delivery",
-    title: "Package Delivered",
-    description: "Order #12816 delivered to Location B",
-    location: "Location B",
-    customer: "Lisa Garcia",
-    timestamp: new Date(Date.now() - 1000 * 60 * 156), // 2 hours 36 minutes ago
-    status: "completed",
-    priority: "normal",
-    packageCount: 1,
-    revenue: 19.99,
-  },
-];
+import { api } from "../../../trpc/react";
 
 const activityTypeIcons = {
   delivery: Package,
@@ -158,30 +53,129 @@ const statusColors = {
 };
 
 const priorityColors = {
-  low: "border-l-gray-300",
   normal: "border-l-blue-300",
   medium: "border-l-orange-300",
   high: "border-l-red-300",
 };
 
 interface EnhancedRecentActivityProps {
+  locationId?: number;
   className?: string;
 }
 
 export function EnhancedRecentActivity({
+  locationId,
   className,
 }: EnhancedRecentActivityProps) {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
 
-  const filteredActivities = mockActivities.filter((activity) => {
-    const typeMatch = filterType === "all" || activity.type === filterType;
-    const locationMatch =
-      filterLocation === "all" || activity.location === filterLocation;
-    return typeMatch && locationMatch;
+  // TODO: Add Redis caching for performance optimization
+  const {
+    data: activities,
+    isLoading,
+    error,
+    refetch,
+  } = api.analytics.getRecentActivity.useQuery({
+    locationId,
+    limit: 20,
+    activityTypes:
+      filterType === "all"
+        ? undefined
+        : [filterType as "delivery" | "pickup" | "processing" | "alert"],
   });
 
-  const locations = [...new Set(mockActivities.map((a) => a.location))];
+  // Get locations for filter dropdown
+  const { data: locations } = api.analytics.getLocations.useQuery();
+
+  const filteredActivities =
+    activities?.filter((activity) => {
+      const locationMatch =
+        filterLocation === "all" || activity.location === filterLocation;
+      return locationMatch;
+    }) || [];
+
+  // Get unique locations from activities for filter
+  const activityLocations = [
+    ...new Set(activities?.map((a) => a.location) || []),
+  ];
+
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Latest activities across all locations with filtering
+              </CardDescription>
+            </div>
+            <Skeleton className="h-6 w-16" />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-32" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-start space-x-3 rounded-lg border-l-4 bg-muted/20 p-3"
+              >
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                  <Skeleton className="h-3 w-48" />
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>
+            Latest activities across all locations with filtering
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
+              <p>Failed to load recent activity</p>
+              <p className="text-sm">Please try again later</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                className="mt-2"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={className}>
@@ -219,7 +213,7 @@ export function EnhancedRecentActivity({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {locations.map((location) => (
+              {activityLocations.map((location) => (
                 <SelectItem key={location} value={location}>
                   {location}
                 </SelectItem>
@@ -270,10 +264,10 @@ export function EnhancedRecentActivity({
                       <span>{activity.location}</span>
                     </div>
 
-                    {activity.customer && (
+                    {activity.customerId && (
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        <span>{activity.customer}</span>
+                        <span>{activity.customerId}</span>
                       </div>
                     )}
 
@@ -290,13 +284,13 @@ export function EnhancedRecentActivity({
                     {activity.revenue && (
                       <div className="flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
-                        <span>${activity.revenue}</span>
+                        <span>${activity.revenue.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(activity.timestamp, {
+                    {formatDistanceToNow(new Date(activity.timestamp), {
                       addSuffix: true,
                     })}
                   </p>

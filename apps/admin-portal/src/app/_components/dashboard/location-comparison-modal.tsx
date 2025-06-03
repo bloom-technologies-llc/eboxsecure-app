@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { subDays } from "date-fns";
 import { BarChart3, Minus, TrendingDown, TrendingUp, X } from "lucide-react";
 import {
   Bar,
@@ -22,82 +23,55 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@ebox/ui/dialog";
+import { Skeleton } from "@ebox/ui/skeleton";
 
-// Mock location data
-const mockLocations = [
-  { id: 1, name: "Location A", storageCapacity: 500 },
-  { id: 2, name: "Location B", storageCapacity: 350 },
-  { id: 3, name: "Location C", storageCapacity: 750 },
-  { id: 4, name: "Location D", storageCapacity: 400 },
-  { id: 5, name: "Location E", storageCapacity: 600 },
-];
-
-// Mock comparison data for each location
-const mockComparisonData = {
-  1: {
-    // Location A
-    currentUtilization: 76.4,
-    avgDailyUtilization: 68.7,
-    avgPickupTime: 28.4,
-    uniqueCustomers: 342,
-    totalPackages: 1847,
-    revenue: 12450,
-    avgProcessingTime: 1.8,
-  },
-  2: {
-    // Location B
-    currentUtilization: 62.8,
-    avgDailyUtilization: 55.3,
-    avgPickupTime: 32.1,
-    uniqueCustomers: 287,
-    totalPackages: 1456,
-    revenue: 9875,
-    avgProcessingTime: 2.1,
-  },
-  3: {
-    // Location C
-    currentUtilization: 86.7,
-    avgDailyUtilization: 78.9,
-    avgPickupTime: 24.6,
-    uniqueCustomers: 429,
-    totalPackages: 2341,
-    revenue: 15230,
-    avgProcessingTime: 1.5,
-  },
-  4: {
-    // Location D
-    currentUtilization: 45.2,
-    avgDailyUtilization: 41.8,
-    avgPickupTime: 36.8,
-    uniqueCustomers: 198,
-    totalPackages: 892,
-    revenue: 7650,
-    avgProcessingTime: 2.4,
-  },
-  5: {
-    // Location E
-    currentUtilization: 70.3,
-    avgDailyUtilization: 64.2,
-    avgPickupTime: 29.7,
-    uniqueCustomers: 315,
-    totalPackages: 1678,
-    revenue: 11320,
-    avgProcessingTime: 1.9,
-  },
-};
+import { api } from "../../../trpc/react";
 
 interface LocationComparisonModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultDateRange?: {
+    from: Date;
+    to: Date;
+  };
 }
 
 export function LocationComparisonModal({
   open,
   onOpenChange,
+  defaultDateRange = {
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  },
 }: LocationComparisonModalProps) {
-  const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([
-    1, 3,
-  ]);
+  const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
+
+  // Get all locations
+  const { data: locations, isLoading: isLoadingLocations } =
+    api.analytics.getLocations.useQuery();
+
+  // Get comparison data when locations are selected
+  const { data: comparisonData, isLoading: isLoadingComparison } =
+    api.analytics.getLocationComparison.useQuery(
+      {
+        locationIds: selectedLocationIds,
+        dateRange: defaultDateRange,
+      },
+      {
+        enabled: selectedLocationIds.length >= 2,
+      },
+    );
+
+  // Initialize selected locations when locations are first loaded
+  useState(() => {
+    if (
+      locations &&
+      locations.length >= 2 &&
+      selectedLocationIds.length === 0
+    ) {
+      setSelectedLocationIds([locations[0]!.id, locations[1]!.id]);
+    }
+  });
 
   const handleLocationToggle = (locationId: number, checked: boolean) => {
     if (checked) {
@@ -129,58 +103,94 @@ export function LocationComparisonModal({
     return "text-red-600";
   };
 
-  const selectedLocations = mockLocations.filter((loc) =>
-    selectedLocationIds.includes(loc.id),
-  );
-  const comparisonMetrics = selectedLocationIds.map((id) => ({
-    locationId: id,
-    locationName: mockLocations.find((loc) => loc.id === id)?.name || "",
-    ...mockComparisonData[id as keyof typeof mockComparisonData],
-  }));
+  if (isLoadingLocations) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Location Performance Comparison
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-16" />
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!locations || locations.length < 2) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Location Performance Comparison
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p>Insufficient locations for comparison</p>
+              <p className="text-sm">At least 2 locations are required</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // Create chart data for comparative visualization
-  const chartData = [
-    {
-      metric: "Current Utilization",
-      ...comparisonMetrics.reduce(
-        (acc, loc) => ({
-          ...acc,
-          [loc.locationName]: loc.currentUtilization,
-        }),
-        {},
-      ),
-    },
-    {
-      metric: "Avg Daily Utilization",
-      ...comparisonMetrics.reduce(
-        (acc, loc) => ({
-          ...acc,
-          [loc.locationName]: loc.avgDailyUtilization,
-        }),
-        {},
-      ),
-    },
-    {
-      metric: "Avg Pickup Time",
-      ...comparisonMetrics.reduce(
-        (acc, loc) => ({
-          ...acc,
-          [loc.locationName]: loc.avgPickupTime,
-        }),
-        {},
-      ),
-    },
-    {
-      metric: "Processing Time",
-      ...comparisonMetrics.reduce(
-        (acc, loc) => ({
-          ...acc,
-          [loc.locationName]: loc.avgProcessingTime,
-        }),
-        {},
-      ),
-    },
-  ];
+  const chartData = comparisonData
+    ? [
+        {
+          metric: "Current Utilization (%)",
+          ...comparisonData.locations.reduce(
+            (acc, loc) => ({
+              ...acc,
+              [loc.location.name]: loc.metrics.utilization.current,
+            }),
+            {},
+          ),
+        },
+        {
+          metric: "Avg Daily Utilization (%)",
+          ...comparisonData.locations.reduce(
+            (acc, loc) => ({
+              ...acc,
+              [loc.location.name]: loc.metrics.utilization.average,
+            }),
+            {},
+          ),
+        },
+        {
+          metric: "Avg Pickup Time (hrs)",
+          ...comparisonData.locations.reduce(
+            (acc, loc) => ({
+              ...acc,
+              [loc.location.name]: loc.metrics.pickup.averageHours,
+            }),
+            {},
+          ),
+        },
+        {
+          metric: "Processing Time (hrs)",
+          ...comparisonData.locations.reduce(
+            (acc, loc) => ({
+              ...acc,
+              [loc.location.name]: loc.metrics.processing.avgProcessingHours,
+            }),
+            {},
+          ),
+        },
+      ]
+    : [];
 
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300"];
 
@@ -201,7 +211,7 @@ export function LocationComparisonModal({
               Select Locations to Compare (2-4 locations)
             </h3>
             <div className="grid grid-cols-5 gap-3">
-              {mockLocations.map((location) => (
+              {locations.map((location) => (
                 <div key={location.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`location-${location.id}`}
@@ -250,36 +260,37 @@ export function LocationComparisonModal({
                           gridTemplateColumns: `repeat(${selectedLocationIds.length}, 1fr)`,
                         }}
                       >
-                        {comparisonMetrics.map((metric, index) => {
+                        {comparisonData?.locations.map((metric, index) => {
                           const baseline =
-                            comparisonMetrics[0]?.currentUtilization || 0;
+                            comparisonData?.locations[0]?.metrics.utilization
+                              .current || 0;
                           const diff =
                             index > 0
                               ? calculatePercentageDifference(
-                                  metric.currentUtilization,
+                                  metric.metrics.utilization.current,
                                   baseline,
                                 )
                               : 0;
 
                           return (
                             <div
-                              key={metric.locationId}
+                              key={metric.location.id}
                               className="rounded-lg bg-muted/50 p-3 text-center"
                             >
                               <div className="text-sm font-semibold text-muted-foreground">
-                                {metric.locationName}
+                                {metric.location.name}
                               </div>
                               <div className="mt-1 text-2xl font-bold">
-                                {metric.currentUtilization}%
+                                {metric.metrics.utilization.current}%
                               </div>
                               {index > 0 && (
                                 <div
-                                  className={`mt-1 flex items-center justify-center text-xs ${getDifferenceColor(diff)}`}
+                                  className={`mt-1 flex items-center justify-center gap-1 text-xs ${getDifferenceColor(diff)}`}
                                 >
                                   {getDifferenceIcon(diff)}
-                                  <span className="ml-1">
+                                  <span>
                                     {diff > 0 ? "+" : ""}
-                                    {diff.toFixed(1)}%
+                                    {Math.round(diff * 10) / 10}%
                                   </span>
                                 </div>
                               )}
@@ -312,27 +323,28 @@ export function LocationComparisonModal({
                           gridTemplateColumns: `repeat(${selectedLocationIds.length}, 1fr)`,
                         }}
                       >
-                        {comparisonMetrics.map((metric, index) => {
+                        {comparisonData?.locations.map((metric, index) => {
                           const baseline =
-                            comparisonMetrics[0]?.avgPickupTime || 0;
+                            comparisonData?.locations[0]?.metrics.pickup
+                              .averageHours || 0;
                           const diff =
                             index > 0
                               ? calculatePercentageDifference(
-                                  metric.avgPickupTime,
+                                  metric.metrics.pickup.averageHours,
                                   baseline,
                                 )
                               : 0;
 
                           return (
                             <div
-                              key={metric.locationId}
+                              key={metric.location.id}
                               className="rounded-lg bg-muted/50 p-3 text-center"
                             >
                               <div className="text-sm font-semibold text-muted-foreground">
-                                {metric.locationName}
+                                {metric.location.name}
                               </div>
                               <div className="mt-1 text-2xl font-bold">
-                                {metric.avgPickupTime}h
+                                {metric.metrics.pickup.averageHours}h
                               </div>
                               {index > 0 && (
                                 <div
@@ -372,26 +384,29 @@ export function LocationComparisonModal({
                           gridTemplateColumns: `repeat(${selectedLocationIds.length}, 1fr)`,
                         }}
                       >
-                        {comparisonMetrics.map((metric, index) => {
-                          const baseline = comparisonMetrics[0]?.revenue || 0;
+                        {comparisonData?.locations.map((metric, index) => {
+                          const baseline =
+                            comparisonData?.locations[0]?.metrics.revenue
+                              .totalRevenue || 0;
                           const diff =
                             index > 0
                               ? calculatePercentageDifference(
-                                  metric.revenue,
+                                  metric.metrics.revenue.totalRevenue,
                                   baseline,
                                 )
                               : 0;
 
                           return (
                             <div
-                              key={metric.locationId}
+                              key={metric.location.id}
                               className="rounded-lg bg-muted/50 p-3 text-center"
                             >
                               <div className="text-sm font-semibold text-muted-foreground">
-                                {metric.locationName}
+                                {metric.location.name}
                               </div>
                               <div className="mt-1 text-2xl font-bold">
-                                ${metric.revenue.toLocaleString()}
+                                $
+                                {metric.metrics.revenue.totalRevenue.toLocaleString()}
                               </div>
                               {index > 0 && (
                                 <div
@@ -488,10 +503,10 @@ export function LocationComparisonModal({
                           }}
                         />
                         <Legend />
-                        {comparisonMetrics.map((metric, index) => (
+                        {comparisonData?.locations.map((metric, index) => (
                           <Bar
-                            key={metric.locationId}
-                            dataKey={metric.locationName}
+                            key={metric.location.id}
+                            dataKey={metric.location.name}
                             fill={colors[index % colors.length]}
                             radius={[2, 2, 0, 0]}
                           />

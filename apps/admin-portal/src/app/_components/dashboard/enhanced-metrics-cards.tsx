@@ -176,11 +176,19 @@ export function EnhancedMetricsCards({
     dateRange,
   });
 
+  // Fetch historical trend comparison for percentage changes
+  const { data: trendComparison, isLoading: isLoadingTrends } =
+    api.analytics.getHistoricalTrendComparison.useQuery({
+      locationId,
+      dateRange,
+    });
+
   const isLoading =
     isLoadingUtilization ||
     isLoadingPickup ||
     isLoadingCustomers ||
-    isLoadingProcessing;
+    isLoadingProcessing ||
+    isLoadingTrends;
   const hasError =
     utilizationError || pickupError || customerError || processingError;
 
@@ -212,17 +220,6 @@ export function EnhancedMetricsCards({
       />
     );
   }
-
-  // TODO: Calculate actual percentage changes by comparing with previous period
-  // For now using mock changes until historical comparison is implemented
-  const mockChanges = {
-    totalPackagesChange: 12.3,
-    currentUtilizationChange: 8.2,
-    avgDailyUtilizationChange: 5.1,
-    avgPickupTimeChange: -12.7,
-    uniqueCustomersChange: 18.9,
-    avgProcessingTimeChange: -23.4,
-  };
 
   // Extract values for single location or aggregate for all locations
   let totalPackages = 0;
@@ -258,7 +255,7 @@ export function EnhancedMetricsCards({
       <MetricCard
         title="Total Packages"
         value={totalPackages}
-        change={mockChanges.totalPackagesChange}
+        change={trendComparison?.metrics.packages.change}
         icon={Package}
         format="number"
       />
@@ -266,7 +263,7 @@ export function EnhancedMetricsCards({
       <MetricCard
         title="Current Utilization"
         value={Math.round(currentUtilization * 10) / 10}
-        change={mockChanges.currentUtilizationChange}
+        change={trendComparison?.metrics.utilization.change}
         icon={Gauge}
         format="percentage"
         utilization={currentUtilization}
@@ -275,7 +272,7 @@ export function EnhancedMetricsCards({
       <MetricCard
         title="Avg Daily Utilization"
         value={Math.round(avgDailyUtilization * 10) / 10}
-        change={mockChanges.avgDailyUtilizationChange}
+        change={trendComparison?.metrics.utilization.change}
         icon={TrendingUp}
         format="percentage"
         utilization={avgDailyUtilization}
@@ -284,7 +281,7 @@ export function EnhancedMetricsCards({
       <MetricCard
         title="Avg Pickup Time"
         value={Math.round((pickupData?.averagePickupTime || 0) * 10) / 10}
-        change={mockChanges.avgPickupTimeChange}
+        change={trendComparison?.metrics.pickupTime.change}
         icon={Clock}
         format="time"
       />
@@ -292,7 +289,7 @@ export function EnhancedMetricsCards({
       <MetricCard
         title="Unique Customers"
         value={customerData?.uniqueCustomers || 0}
-        change={mockChanges.uniqueCustomersChange}
+        change={trendComparison?.metrics.customers.change}
         icon={Users}
         format="number"
       />
@@ -302,7 +299,7 @@ export function EnhancedMetricsCards({
         value={
           Math.round((processingData?.averageProcessingTime || 0) * 10) / 10
         }
-        change={mockChanges.avgProcessingTimeChange}
+        change={trendComparison?.metrics.pickupTime.change}
         icon={Timer}
         format="time"
       />

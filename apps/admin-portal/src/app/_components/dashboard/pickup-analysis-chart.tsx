@@ -19,31 +19,178 @@ import {
   CardHeader,
   CardTitle,
 } from "@ebox/ui/card";
+import { Skeleton } from "@ebox/ui/skeleton";
 
-// Mock pickup distribution data
-const mockPickupData = [
-  { timeRange: "Same Day", count: 145, percentage: 42.3, avgHours: 8.5 },
-  { timeRange: "1-2 Days", count: 98, percentage: 28.6, avgHours: 36.2 },
-  { timeRange: "3-5 Days", count: 67, percentage: 19.5, avgHours: 84.1 },
-  { timeRange: "6+ Days", count: 33, percentage: 9.6, avgHours: 168.3 },
-];
+import { api } from "../../../trpc/react";
 
 interface PickupAnalysisChartProps {
+  locationId?: number;
+  dateRange: {
+    from: Date;
+    to: Date;
+  };
   className?: string;
 }
 
-export function PickupAnalysisChart({ className }: PickupAnalysisChartProps) {
+export function PickupAnalysisChart({
+  locationId,
+  dateRange,
+  className,
+}: PickupAnalysisChartProps) {
+  // TODO: Add Redis caching for performance optimization
+  const {
+    data: pickupData,
+    isLoading,
+    error,
+  } = api.analytics.getPickupAnalytics.useQuery({
+    locationId,
+    dateRange,
+  });
+
+  const chartData = pickupData
+    ? [
+        {
+          timeRange: "Same Day",
+          count: pickupData.pickupDistribution.sameDay,
+          percentage:
+            Math.round(
+              (pickupData.pickupDistribution.sameDay /
+                (pickupData.pickupDistribution.sameDay +
+                  pickupData.pickupDistribution.oneTwoDay +
+                  pickupData.pickupDistribution.threeFiveDay +
+                  pickupData.pickupDistribution.sixPlusDay)) *
+                1000,
+            ) / 10,
+          avgHours: 12, // Estimate for same day
+        },
+        {
+          timeRange: "1-2 Days",
+          count: pickupData.pickupDistribution.oneTwoDay,
+          percentage:
+            Math.round(
+              (pickupData.pickupDistribution.oneTwoDay /
+                (pickupData.pickupDistribution.sameDay +
+                  pickupData.pickupDistribution.oneTwoDay +
+                  pickupData.pickupDistribution.threeFiveDay +
+                  pickupData.pickupDistribution.sixPlusDay)) *
+                1000,
+            ) / 10,
+          avgHours: 36, // Estimate for 1-2 days
+        },
+        {
+          timeRange: "3-5 Days",
+          count: pickupData.pickupDistribution.threeFiveDay,
+          percentage:
+            Math.round(
+              (pickupData.pickupDistribution.threeFiveDay /
+                (pickupData.pickupDistribution.sameDay +
+                  pickupData.pickupDistribution.oneTwoDay +
+                  pickupData.pickupDistribution.threeFiveDay +
+                  pickupData.pickupDistribution.sixPlusDay)) *
+                1000,
+            ) / 10,
+          avgHours: 96, // Estimate for 3-5 days
+        },
+        {
+          timeRange: "6+ Days",
+          count: pickupData.pickupDistribution.sixPlusDay,
+          percentage:
+            Math.round(
+              (pickupData.pickupDistribution.sixPlusDay /
+                (pickupData.pickupDistribution.sameDay +
+                  pickupData.pickupDistribution.oneTwoDay +
+                  pickupData.pickupDistribution.threeFiveDay +
+                  pickupData.pickupDistribution.sixPlusDay)) *
+                1000,
+            ) / 10,
+          avgHours: 168, // Estimate for 6+ days
+        },
+      ]
+    : [];
+
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Pickup Rate Analysis</CardTitle>
+          <CardDescription>
+            Package pickup time distribution and average pickup times
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-64 w-full" />
+            <div className="grid grid-cols-4 gap-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Pickup Rate Analysis</CardTitle>
+          <CardDescription>
+            Package pickup time distribution and average pickup times
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p>Failed to load pickup analytics</p>
+              <p className="text-sm">Please try again later</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!pickupData || chartData.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Pickup Rate Analysis</CardTitle>
+          <CardDescription>
+            Package pickup time distribution and average pickup times
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p>No pickup data available</p>
+              <p className="text-sm">Try selecting a different date range</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>Pickup Rate Analysis</CardTitle>
         <CardDescription>
           Package pickup time distribution and average pickup times
+          {pickupData && (
+            <span className="block text-sm">
+              Average pickup time:{" "}
+              {Math.round(pickupData.averagePickupTime * 10) / 10} hours
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
-          <ComposedChart data={mockPickupData}>
+          <ComposedChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timeRange"
@@ -132,7 +279,7 @@ export function PickupAnalysisChart({ className }: PickupAnalysisChartProps) {
 
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-4 gap-4 text-sm">
-          {mockPickupData.map((item, index) => (
+          {chartData.map((item, index) => (
             <div key={index} className="text-center">
               <div className="font-semibold text-muted-foreground">
                 {item.timeRange}

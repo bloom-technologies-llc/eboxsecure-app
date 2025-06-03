@@ -31,7 +31,6 @@ import { LocationPerformance } from "../_components/dashboard/location-performan
 import { Overview } from "../_components/dashboard/overview";
 import { PeakCapacityHeatmap } from "../_components/dashboard/peak-capacity-heatmap";
 import { PickupAnalysisChart } from "../_components/dashboard/pickup-analysis-chart";
-import { RecentActivity } from "../_components/dashboard/recent-activity";
 import { RevenuePerformanceChart } from "../_components/dashboard/revenue-performance-chart";
 import { UtilizationTrendsChart } from "../_components/dashboard/utilization-trends-chart";
 import { api } from "../../trpc/react";
@@ -141,7 +140,11 @@ export default function Page() {
             <BarChart3 className="mr-2 h-4 w-4" />
             Compare Locations
           </Button>
-          <ExportControls onExport={handleExport} />
+          <ExportControls
+            locationId={selectedLocationId}
+            dateRange={effectiveDateRange}
+            onExport={handleExport}
+          />
         </div>
       </div>
 
@@ -153,30 +156,21 @@ export default function Page() {
 
       {/* Primary Analytics Section (2x2 grid) */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Charts still using mock data until Phase 4 - pass props as any for now */}
         <UtilizationTrendsChart
-          {...({
-            locationId: selectedLocationId,
-            dateRange: effectiveDateRange,
-          } as any)}
+          locationId={selectedLocationId}
+          dateRange={effectiveDateRange}
         />
         <PickupAnalysisChart
-          {...({
-            locationId: selectedLocationId,
-            dateRange: effectiveDateRange,
-          } as any)}
+          locationId={selectedLocationId}
+          dateRange={effectiveDateRange}
         />
         <CustomerUsageChart
-          {...({
-            locationId: selectedLocationId,
-            dateRange: effectiveDateRange,
-          } as any)}
+          locationId={selectedLocationId}
+          dateRange={effectiveDateRange}
         />
         <RevenuePerformanceChart
-          {...({
-            locationId: selectedLocationId,
-            dateRange: effectiveDateRange,
-          } as any)}
+          locationId={selectedLocationId}
+          dateRange={effectiveDateRange}
         />
       </div>
 
@@ -188,7 +182,7 @@ export default function Page() {
 
       {/* Bottom Section - Enhanced Activity and Overview */}
       <div className="grid gap-4 md:grid-cols-2">
-        <EnhancedRecentActivity />
+        <EnhancedRecentActivity locationId={selectedLocationId} />
 
         <Card>
           <CardHeader>
