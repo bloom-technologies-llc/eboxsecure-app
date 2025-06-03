@@ -395,6 +395,17 @@ export const analyticsRouter = createTRPCRouter({
                 AND "shippedLocationId" = ${locationId}
               GROUP BY DATE("deliveredDate")
             ),
+            current_packages_per_day AS (
+              SELECT 
+                ds.date,
+                COUNT(o.id) as packages_in_storage
+              FROM date_series ds
+              LEFT JOIN "Order" o ON o."shippedLocationId" = ${locationId}
+                AND DATE(o."deliveredDate") <= ds.date
+                AND (o."pickedUpAt" IS NULL OR DATE(o."pickedUpAt") > ds.date)
+                AND o."deliveredDate" IS NOT NULL
+              GROUP BY ds.date
+            ),
             location_info AS (
               SELECT "storageCapacity" as storage_capacity
               FROM "Location" WHERE id = ${locationId}
@@ -402,10 +413,11 @@ export const analyticsRouter = createTRPCRouter({
             SELECT 
               ds.date::text,
               COALESCE(dp.package_count, 0) as package_count,
-              COALESCE(dp.package_count, 0) as current_packages,
+              COALESCE(cp.packages_in_storage, 0) as current_packages,
               li.storage_capacity
             FROM date_series ds
             LEFT JOIN daily_packages dp ON ds.date = dp.date
+            LEFT JOIN current_packages_per_day cp ON ds.date = cp.date
             CROSS JOIN location_info li
             ORDER BY ds.date
           `
@@ -433,14 +445,35 @@ export const analyticsRouter = createTRPCRouter({
                 AND "deliveredDate" <= ${dateRange.to}
                 AND "deliveredDate" IS NOT NULL
               GROUP BY DATE("deliveredDate")
+            ),
+            current_packages_per_day AS (
+              SELECT 
+                ds.date,
+                AVG(packages_in_storage) as avg_packages_in_storage
+              FROM date_series ds
+              LEFT JOIN (
+                SELECT 
+                  ds2.date,
+                  o."shippedLocationId",
+                  COUNT(o.id) as packages_in_storage
+                FROM date_series ds2
+                CROSS JOIN "Location" l
+                LEFT JOIN "Order" o ON o."shippedLocationId" = l.id
+                  AND DATE(o."deliveredDate") <= ds2.date
+                  AND (o."pickedUpAt" IS NULL OR DATE(o."pickedUpAt") > ds2.date)
+                  AND o."deliveredDate" IS NOT NULL
+                GROUP BY ds2.date, o."shippedLocationId", l.id
+              ) location_packages ON ds.date = location_packages.date
+              GROUP BY ds.date
             )
             SELECT 
               ds.date::text,
               COALESCE(dp.package_count, 0) as package_count,
-              COALESCE(dp.package_count, 0) as current_packages,
+              COALESCE(ROUND(cp.avg_packages_in_storage), 0) as current_packages,
               500 as storage_capacity
             FROM date_series ds
             LEFT JOIN daily_packages dp ON ds.date = dp.date
+            LEFT JOIN current_packages_per_day cp ON ds.date = cp.date
             ORDER BY ds.date
           `;
 
