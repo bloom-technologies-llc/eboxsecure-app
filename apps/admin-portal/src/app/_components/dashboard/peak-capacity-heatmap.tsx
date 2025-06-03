@@ -1,5 +1,6 @@
 "use client";
 
+// TODO: check if this is accurate. Heatmap seems to go against Peak Hours Summary.
 import React from "react";
 
 import { cn } from "@ebox/ui";
