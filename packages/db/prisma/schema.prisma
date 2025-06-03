@@ -125,6 +125,8 @@ model Order {
     total             Float
     shippedLocationId Int
     deliveredDate     DateTime?
+    pickedUpAt        DateTime?
+    processedAt       DateTime?
 
     customer        CustomerAccount @relation(fields: [customerId], references: [id])
     shippedLocation Location        @relation(fields: [shippedLocationId], references: [id])
@@ -132,12 +134,13 @@ model Order {
 }
 
 model Location {
-    id           Int          @id @default(autoincrement())
-    name         String
-    address      String
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime     @updatedAt
-    locationType LocationType
+    id              Int          @id @default(autoincrement())
+    name            String
+    address         String
+    storageCapacity Int          @default(500)
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
+    locationType    LocationType
 
     locationComments LocationComment[]
     locationNotes    LocationNote[]
