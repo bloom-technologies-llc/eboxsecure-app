@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedCorporateProcedure } from "../trpc";
@@ -324,95 +325,6 @@ export const analyticsRouter = createTRPCRouter({
         totalPackages,
       };
     }),
-
-  // Get revenue analytics
-  getRevenueAnalytics: protectedCorporateProcedure
-    .input(analyticsInputSchema)
-    .query(async ({ ctx, input }) => {
-      const { locationId, dateRange } = input;
-
-      const result = locationId
-        ? await ctx.db.$queryRaw<
-            Array<{
-              total_revenue: number;
-              package_count: number;
-            }>
-          >`
-            SELECT 
-              SUM(total) as total_revenue,
-              COUNT(*) as package_count
-            FROM "Order"
-            WHERE "deliveredDate" >= ${dateRange.from}
-              AND "deliveredDate" <= ${dateRange.to}
-              AND "deliveredDate" IS NOT NULL
-              AND "shippedLocationId" = ${locationId}
-          `
-        : await ctx.db.$queryRaw<
-            Array<{
-              total_revenue: number;
-              package_count: number;
-            }>
-          >`
-            SELECT 
-              SUM(total) as total_revenue,
-              COUNT(*) as package_count
-            FROM "Order"
-            WHERE "deliveredDate" >= ${dateRange.from}
-              AND "deliveredDate" <= ${dateRange.to}
-              AND "deliveredDate" IS NOT NULL
-          `;
-
-      const monthlyTrend = locationId
-        ? await ctx.db.$queryRaw<
-            Array<{
-              month: string;
-              revenue: number;
-            }>
-          >`
-            SELECT 
-              TO_CHAR("deliveredDate", 'YYYY-MM') as month,
-              SUM(total) as revenue
-            FROM "Order"
-            WHERE "deliveredDate" >= ${dateRange.from}
-              AND "deliveredDate" <= ${dateRange.to}
-              AND "deliveredDate" IS NOT NULL
-              AND "shippedLocationId" = ${locationId}
-            GROUP BY TO_CHAR("deliveredDate", 'YYYY-MM')
-            ORDER BY month
-          `
-        : await ctx.db.$queryRaw<
-            Array<{
-              month: string;
-              revenue: number;
-            }>
-          >`
-            SELECT 
-              TO_CHAR("deliveredDate", 'YYYY-MM') as month,
-              SUM(total) as revenue
-            FROM "Order"
-            WHERE "deliveredDate" >= ${dateRange.from}
-              AND "deliveredDate" <= ${dateRange.to}
-              AND "deliveredDate" IS NOT NULL
-            GROUP BY TO_CHAR("deliveredDate", 'YYYY-MM')
-            ORDER BY month
-          `;
-
-      const data = result[0];
-      const totalRevenue = Number(data?.total_revenue || 0);
-      const packageCount = Number(data?.package_count || 0);
-
-      return {
-        totalRevenue,
-        packageCount,
-        averageRevenuePerPackage:
-          packageCount > 0 ? totalRevenue / packageCount : 0,
-        monthlyRevenueTrend: monthlyTrend.map((row) => ({
-          month: row.month,
-          revenue: Number(row.revenue),
-        })),
-      };
-    }),
-
   // Get processing time analytics
   getProcessingTimeAnalytics: protectedCorporateProcedure
     .input(analyticsInputSchema)
@@ -484,7 +396,7 @@ export const analyticsRouter = createTRPCRouter({
               GROUP BY DATE("deliveredDate")
             ),
             location_info AS (
-              SELECT storage_capacity
+              SELECT "storageCapacity" as storage_capacity
               FROM "Location" WHERE id = ${locationId}
             )
             SELECT 
@@ -599,7 +511,7 @@ export const analyticsRouter = createTRPCRouter({
           FROM "Order" o
           JOIN "Location" l ON o."shippedLocationId" = l.id
           WHERE o."deliveredDate" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
           ORDER BY o."deliveredDate" DESC
           LIMIT ${Math.ceil(limit / 3)}
         `;
@@ -649,7 +561,7 @@ export const analyticsRouter = createTRPCRouter({
           FROM "Order" o
           JOIN "Location" l ON o."shippedLocationId" = l.id
           WHERE o."pickedUpAt" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
           ORDER BY o."pickedUpAt" DESC
           LIMIT ${Math.ceil(limit / 3)}
         `;
@@ -697,7 +609,7 @@ export const analyticsRouter = createTRPCRouter({
           FROM "Order" o
           JOIN "Location" l ON o."shippedLocationId" = l.id
           WHERE o."processedAt" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
           ORDER BY o."processedAt" DESC
           LIMIT ${Math.ceil(limit / 3)}
         `;
@@ -745,7 +657,7 @@ export const analyticsRouter = createTRPCRouter({
               AND o."deliveredDate" IS NOT NULL 
               AND o."pickedUpAt" IS NULL
             WHERE l."storageCapacity" > 0
-              ${locationId ? `AND l.id = ${locationId}` : ""}
+              ${locationId ? Prisma.sql`AND l.id = ${locationId}` : Prisma.empty}
             GROUP BY l.id, l.name, l."storageCapacity"
           )
           SELECT * FROM current_utilization
@@ -799,7 +711,7 @@ export const analyticsRouter = createTRPCRouter({
           WHERE o."deliveredDate" IS NOT NULL
             AND o."pickedUpAt" IS NULL
             AND o."deliveredDate"::timestamp < (NOW() - INTERVAL '48 hours')::timestamp
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
           ORDER BY o."deliveredDate" ASC
           LIMIT 10
         `;
@@ -874,7 +786,7 @@ export const analyticsRouter = createTRPCRouter({
               AND o."deliveredDate" >= ${dateRange.from}
               AND o."deliveredDate" <= ${dateRange.to}
               AND o."deliveredDate" IS NOT NULL
-              ${locationId ? `AND l.id = ${locationId}` : ""}
+              ${locationId ? Prisma.sql`AND l.id = ${locationId}` : Prisma.empty}
             GROUP BY l.id, l."storageCapacity"
           ) utilization_data
         `,
@@ -891,7 +803,7 @@ export const analyticsRouter = createTRPCRouter({
             AND o."deliveredDate" <= ${dateRange.to}
             AND o."pickedUpAt" IS NOT NULL
             AND o."deliveredDate" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
 
         // Current customer metrics
@@ -905,7 +817,7 @@ export const analyticsRouter = createTRPCRouter({
           WHERE o."deliveredDate" >= ${dateRange.from}
             AND o."deliveredDate" <= ${dateRange.to}
             AND o."deliveredDate" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
 
         // Current revenue metrics
@@ -919,7 +831,7 @@ export const analyticsRouter = createTRPCRouter({
           WHERE "deliveredDate" >= ${dateRange.from}
             AND "deliveredDate" <= ${dateRange.to}
             AND "deliveredDate" IS NOT NULL
-            ${locationId ? `AND "shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND "shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
       ]);
 
@@ -946,7 +858,7 @@ export const analyticsRouter = createTRPCRouter({
               AND o."deliveredDate" >= ${previousPeriodStart}
               AND o."deliveredDate" <= ${previousPeriodEnd}
               AND o."deliveredDate" IS NOT NULL
-              ${locationId ? `AND l.id = ${locationId}` : ""}
+              ${locationId ? Prisma.sql`AND l.id = ${locationId}` : Prisma.empty}
             GROUP BY l.id, l."storageCapacity"
           ) utilization_data
         `,
@@ -963,7 +875,7 @@ export const analyticsRouter = createTRPCRouter({
             AND o."deliveredDate" <= ${previousPeriodEnd}
             AND o."pickedUpAt" IS NOT NULL
             AND o."deliveredDate" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
 
         // Previous customer metrics
@@ -977,7 +889,7 @@ export const analyticsRouter = createTRPCRouter({
           WHERE o."deliveredDate" >= ${previousPeriodStart}
             AND o."deliveredDate" <= ${previousPeriodEnd}
             AND o."deliveredDate" IS NOT NULL
-            ${locationId ? `AND o."shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND o."shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
 
         // Previous revenue metrics
@@ -991,7 +903,7 @@ export const analyticsRouter = createTRPCRouter({
           WHERE "deliveredDate" >= ${previousPeriodStart}
             AND "deliveredDate" <= ${previousPeriodEnd}
             AND "deliveredDate" IS NOT NULL
-            ${locationId ? `AND "shippedLocationId" = ${locationId}` : ""}
+            ${locationId ? Prisma.sql`AND "shippedLocationId" = ${locationId}` : Prisma.empty}
         `,
       ]);
 
@@ -1115,313 +1027,415 @@ export const analyticsRouter = createTRPCRouter({
       };
     }),
 
-  // Enhanced location comparison with detailed metrics
-  getLocationComparison: protectedCorporateProcedure
+  // Peak Capacity Analysis - Hour-by-hour utilization patterns
+  getPeakCapacityAnalysis: protectedCorporateProcedure
     .input(
-      z.object({
-        locationIds: z.array(z.number()).min(2).max(4),
-        dateRange: z.object({
-          from: z.date(),
-          to: z.date(),
-        }),
+      analyticsInputSchema.extend({
+        granularity: z.enum(["hourly", "daily", "weekly"]).default("hourly"),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { locationIds, dateRange } = input;
-      // TODO: Add Redis caching for performance optimization
+      const { locationId, dateRange, granularity } = input;
+      // TODO: Add Redis caching here for performance
 
-      const comparisonData = await Promise.all(
-        locationIds.map(async (locationId) => {
-          // Get location info
-          const location = await ctx.db.location.findUnique({
-            where: { id: locationId },
-            select: {
-              id: true,
-              name: true,
-              storageCapacity: true,
-              address: true,
-            },
-          });
-
-          if (!location) {
-            throw new Error(`Location with ID ${locationId} not found`);
-          }
-
-          // Get comprehensive metrics for this location
-          const [utilization, pickup, customer, revenue, processing] =
-            await Promise.all([
-              // Utilization metrics
-              ctx.db.$queryRaw<
-                Array<{ current_packages: number; avg_daily_packages: number }>
-              >`
-              SELECT 
-                COUNT(CASE WHEN o."deliveredDate" IS NOT NULL AND o."pickedUpAt" IS NULL THEN 1 END) as current_packages,
-                (COUNT(CASE WHEN o."deliveredDate" IS NOT NULL THEN 1 END) * 1.0 / 
-                  GREATEST(EXTRACT(DAYS FROM ${dateRange.to}::date - ${dateRange.from}::date), 1)) as avg_daily_packages
-              FROM "Order" o
-              WHERE o."shippedLocationId" = ${locationId}
-                AND ((o."deliveredDate" IS NOT NULL AND o."pickedUpAt" IS NULL) 
-                     OR (o."deliveredDate" >= ${dateRange.from} AND o."deliveredDate" <= ${dateRange.to}))
-            `,
-
-              // Pickup metrics
-              ctx.db.$queryRaw<
-                Array<{
-                  avg_pickup_hours: number;
-                  pickup_count: number;
-                  same_day: number;
-                  one_two_day: number;
-                  three_plus_day: number;
-                }>
-              >`
-              SELECT 
-                AVG(EXTRACT(EPOCH FROM (o."pickedUpAt"::timestamp - o."deliveredDate"::timestamp))::float / 3600) as avg_pickup_hours,
-                COUNT(*) as pickup_count,
-                COUNT(CASE WHEN EXTRACT(EPOCH FROM (o."pickedUpAt"::timestamp - o."deliveredDate"::timestamp))::float / 86400 < 1 THEN 1 END) as same_day,
-                COUNT(CASE WHEN EXTRACT(EPOCH FROM (o."pickedUpAt"::timestamp - o."deliveredDate"::timestamp))::float / 86400 BETWEEN 1 AND 2 THEN 1 END) as one_two_day,
-                COUNT(CASE WHEN EXTRACT(EPOCH FROM (o."pickedUpAt"::timestamp - o."deliveredDate"::timestamp))::float / 86400 > 2 THEN 1 END) as three_plus_day
-              FROM "Order" o
-              WHERE o."shippedLocationId" = ${locationId}
-                AND o."deliveredDate" >= ${dateRange.from}
-                AND o."deliveredDate" <= ${dateRange.to}
-                AND o."pickedUpAt" IS NOT NULL
-                AND o."deliveredDate" IS NOT NULL
-            `,
-
-              // Customer metrics
-              ctx.db.$queryRaw<
-                Array<{
-                  unique_customers: number;
-                  total_packages: number;
-                  new_customers: number;
-                }>
-              >`
-              WITH customer_stats AS (
+      if (granularity === "hourly") {
+        // Hour-by-hour utilization patterns
+        const hourlyPatterns = locationId
+          ? await ctx.db.$queryRaw<
+              Array<{
+                hour: number;
+                day_of_week: number;
+                avg_utilization: number;
+                peak_utilization: number;
+                package_count: number;
+                total_deliveries: number;
+              }>
+            >`
+              WITH hourly_data AS (
                 SELECT 
-                  o."customerId",
-                  COUNT(*) as package_count,
-                  (
-                    SELECT MIN("deliveredDate") 
-                    FROM "Order" o2 
-                    WHERE o2."customerId" = o."customerId" 
-                      AND o2."shippedLocationId" = ${locationId}
-                      AND o2."deliveredDate" IS NOT NULL
-                  ) as first_ever_delivery_at_location
+                  EXTRACT(HOUR FROM o."deliveredDate") as hour,
+                  EXTRACT(DOW FROM o."deliveredDate") as day_of_week,
+                  DATE(o."deliveredDate") as delivery_date,
+                  COUNT(*) as packages_delivered
                 FROM "Order" o
                 WHERE o."deliveredDate" >= ${dateRange.from}
                   AND o."deliveredDate" <= ${dateRange.to}
                   AND o."deliveredDate" IS NOT NULL
                   AND o."shippedLocationId" = ${locationId}
-                GROUP BY o."customerId"
+                GROUP BY 
+                  EXTRACT(HOUR FROM o."deliveredDate"),
+                  EXTRACT(DOW FROM o."deliveredDate"),
+                  DATE(o."deliveredDate")
+              ),
+              location_capacity AS (
+                SELECT "storageCapacity" as capacity
+                FROM "Location" WHERE id = ${locationId}
               )
               SELECT 
-                COUNT(DISTINCT "customerId") as unique_customers,
-                SUM(package_count) as total_packages,
-                COUNT(CASE WHEN first_ever_delivery_at_location >= ${dateRange.from} THEN 1 END) as new_customers
-              FROM customer_stats
-            `,
-
-              // Revenue metrics
-              ctx.db.$queryRaw<
-                Array<{ total_revenue: number; package_count: number }>
-              >`
+                hd.hour::integer,
+                hd.day_of_week::integer,
+                ROUND(AVG(hd.packages_delivered * 100.0 / lc.capacity), 2) as avg_utilization,
+                ROUND(MAX(hd.packages_delivered * 100.0 / lc.capacity), 2) as peak_utilization,
+                ROUND(AVG(hd.packages_delivered), 1) as package_count,
+                SUM(hd.packages_delivered) as total_deliveries
+              FROM hourly_data hd
+              CROSS JOIN location_capacity lc
+              GROUP BY hd.hour, hd.day_of_week
+              ORDER BY hd.day_of_week, hd.hour
+            `
+          : await ctx.db.$queryRaw<
+              Array<{
+                hour: number;
+                day_of_week: number;
+                avg_utilization: number;
+                peak_utilization: number;
+                package_count: number;
+                total_deliveries: number;
+              }>
+            >`
+              WITH hourly_data AS (
+                SELECT 
+                  EXTRACT(HOUR FROM o."deliveredDate") as hour,
+                  EXTRACT(DOW FROM o."deliveredDate") as day_of_week,
+                  DATE(o."deliveredDate") as delivery_date,
+                  o."shippedLocationId" as location_id,
+                  COUNT(*) as packages_delivered
+                FROM "Order" o
+                WHERE o."deliveredDate" >= ${dateRange.from}
+                  AND o."deliveredDate" <= ${dateRange.to}
+                  AND o."deliveredDate" IS NOT NULL
+                GROUP BY 
+                  EXTRACT(HOUR FROM o."deliveredDate"),
+                  EXTRACT(DOW FROM o."deliveredDate"),
+                  DATE(o."deliveredDate"),
+                  o."shippedLocationId"
+              ),
+              location_capacity AS (
+                SELECT l.id as location_id, l."storageCapacity" as capacity
+                FROM "Location" l
+              )
               SELECT 
-                SUM(total) as total_revenue,
-                COUNT(*) as package_count
-              FROM "Order"
-              WHERE "deliveredDate" >= ${dateRange.from}
-                AND "deliveredDate" <= ${dateRange.to}
-                AND "deliveredDate" IS NOT NULL
-                AND "shippedLocationId" = ${locationId}
-            `,
+                hd.hour::integer,
+                hd.day_of_week::integer,
+                ROUND(AVG(hd.packages_delivered * 100.0 / lc.capacity), 2) as avg_utilization,
+                ROUND(MAX(hd.packages_delivered * 100.0 / lc.capacity), 2) as peak_utilization,
+                ROUND(AVG(hd.packages_delivered), 1) as package_count,
+                SUM(hd.packages_delivered) as total_deliveries
+              FROM hourly_data hd
+              JOIN location_capacity lc ON hd.location_id = lc.location_id
+              GROUP BY hd.hour, hd.day_of_week
+              ORDER BY hd.day_of_week, hd.hour
+            `;
 
-              // Processing metrics
-              ctx.db.$queryRaw<
-                Array<{ avg_processing_hours: number; processed_count: number }>
-              >`
-              SELECT 
-                AVG(EXTRACT(EPOCH FROM (o."processedAt"::timestamp - o."deliveredDate"::timestamp))::float / 3600) as avg_processing_hours,
-                COUNT(*) as processed_count
-              FROM "Order" o
-              WHERE o."shippedLocationId" = ${locationId}
-                AND o."deliveredDate" >= ${dateRange.from}
-                AND o."deliveredDate" <= ${dateRange.to}
-                AND o."processedAt" IS NOT NULL
-                AND o."deliveredDate" IS NOT NULL
-            `,
-            ]);
+        // Transform data into heatmap format
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const heatmapData = dayNames.map((dayName, dayIndex) => ({
+          day: dayName,
+          dayOfWeek: dayIndex,
+          hours: Array.from({ length: 24 }, (_, hour) => {
+            const hourData = hourlyPatterns.find(
+              (p) => p.hour === hour && p.day_of_week === dayIndex,
+            );
+            return {
+              hour,
+              utilization: Number(hourData?.avg_utilization || 0),
+              peakUtilization: Number(hourData?.peak_utilization || 0),
+              packageCount: Number(hourData?.package_count || 0),
+              totalDeliveries: Number(hourData?.total_deliveries || 0),
+            };
+          }),
+        }));
 
-          const utilizationData = utilization[0];
-          const pickupData = pickup[0];
-          const customerData = customer[0];
-          const revenueData = revenue[0];
-          const processingData = processing[0];
+        // Calculate peak hours across all days
+        const hourlyAverages = Array.from({ length: 24 }, (_, hour) => {
+          const hourData = hourlyPatterns.filter((p) => p.hour === hour);
+          const avgUtilization =
+            hourData.length > 0
+              ? hourData.reduce(
+                  (sum, h) => sum + Number(h.avg_utilization),
+                  0,
+                ) / hourData.length
+              : 0;
+          const totalPackages = hourData.reduce(
+            (sum, h) => sum + Number(h.total_deliveries),
+            0,
+          );
 
           return {
-            location: {
-              id: location.id,
-              name: location.name,
-              address: location.address,
-              storageCapacity: location.storageCapacity,
-            },
-            metrics: {
-              utilization: {
-                current:
-                  Math.round(
-                    (Number(utilizationData?.current_packages || 0) /
-                      location.storageCapacity) *
-                      1000,
-                  ) / 10,
-                average:
-                  Math.round(
-                    (Number(utilizationData?.avg_daily_packages || 0) /
-                      location.storageCapacity) *
-                      1000,
-                  ) / 10,
-                currentPackages: Number(utilizationData?.current_packages || 0),
-                avgDailyPackages:
-                  Math.round(
-                    Number(utilizationData?.avg_daily_packages || 0) * 10,
-                  ) / 10,
-              },
-              pickup: {
-                averageHours:
-                  Math.round(Number(pickupData?.avg_pickup_hours || 0) * 10) /
-                  10,
-                totalPickups: Number(pickupData?.pickup_count || 0),
-                sameDayPercentage: pickupData?.pickup_count
-                  ? Math.round(
-                      (Number(pickupData.same_day) /
-                        Number(pickupData.pickup_count)) *
-                        1000,
-                    ) / 10
-                  : 0,
-                oneTwoDayPercentage: pickupData?.pickup_count
-                  ? Math.round(
-                      (Number(pickupData.one_two_day) /
-                        Number(pickupData.pickup_count)) *
-                        1000,
-                    ) / 10
-                  : 0,
-                delayedPercentage: pickupData?.pickup_count
-                  ? Math.round(
-                      (Number(pickupData.three_plus_day) /
-                        Number(pickupData.pickup_count)) *
-                        1000,
-                    ) / 10
-                  : 0,
-              },
-              customers: {
-                uniqueCustomers: Number(customerData?.unique_customers || 0),
-                totalPackages: Number(customerData?.total_packages || 0),
-                newCustomers: Number(customerData?.new_customers || 0),
-                avgPackagesPerCustomer: customerData?.unique_customers
-                  ? Math.round(
-                      (Number(customerData.total_packages) /
-                        Number(customerData.unique_customers)) *
-                        10,
-                    ) / 10
-                  : 0,
-              },
-              revenue: {
-                totalRevenue:
-                  Math.round(Number(revenueData?.total_revenue || 0) * 100) /
-                  100,
-                packageCount: Number(revenueData?.package_count || 0),
-                avgRevenuePerPackage: revenueData?.package_count
-                  ? Math.round(
-                      (Number(revenueData.total_revenue) /
-                        Number(revenueData.package_count)) *
-                        100,
-                    ) / 100
-                  : 0,
-              },
-              processing: {
-                avgProcessingHours:
-                  Math.round(
-                    Number(processingData?.avg_processing_hours || 0) * 10,
-                  ) / 10,
-                processedCount: Number(processingData?.processed_count || 0),
-              },
-              performance: {
-                // Calculate overall performance score based on multiple factors
-                efficiency: pickupData?.avg_pickup_hours
-                  ? Math.max(0, 100 - Number(pickupData.avg_pickup_hours))
-                  : 0,
-                utilization: Math.round(
-                  (Number(utilizationData?.avg_daily_packages || 0) /
-                    location.storageCapacity) *
-                    100,
-                ),
-                customerSatisfaction: pickupData?.pickup_count
-                  ? Math.round(
-                      ((Number(pickupData.same_day) +
-                        Number(pickupData.one_two_day)) /
-                        Number(pickupData.pickup_count)) *
-                        100,
-                    )
-                  : 0,
-              },
-            },
+            hour,
+            avgUtilization: Math.round(avgUtilization * 10) / 10,
+            totalPackages,
           };
-        }),
-      );
+        });
 
-      // Calculate rankings for each metric
-      const rankings = {
-        utilization: comparisonData
-          .map((loc, index) => ({
-            index,
-            value: loc.metrics.utilization.average,
-          }))
-          .sort((a, b) => b.value - a.value)
-          .map((item, rank) => ({ locationIndex: item.index, rank: rank + 1 })),
-        pickup: comparisonData
-          .map((loc, index) => ({
-            index,
-            value: loc.metrics.pickup.averageHours,
-          }))
-          .sort((a, b) => a.value - b.value) // Lower is better for pickup time
-          .map((item, rank) => ({ locationIndex: item.index, rank: rank + 1 })),
-        customers: comparisonData
-          .map((loc, index) => ({
-            index,
-            value: loc.metrics.customers.uniqueCustomers,
-          }))
-          .sort((a, b) => b.value - a.value)
-          .map((item, rank) => ({ locationIndex: item.index, rank: rank + 1 })),
-        revenue: comparisonData
-          .map((loc, index) => ({
-            index,
-            value: loc.metrics.revenue.totalRevenue,
-          }))
-          .sort((a, b) => b.value - a.value)
-          .map((item, rank) => ({ locationIndex: item.index, rank: rank + 1 })),
-      };
+        const peakHours = hourlyAverages
+          .sort((a, b) => b.avgUtilization - a.avgUtilization)
+          .slice(0, 3);
 
-      return {
-        locations: comparisonData,
-        rankings,
-        summary: {
-          totalLocations: comparisonData.length,
-          dateRange,
-          bestPerforming: {
-            utilization:
-              comparisonData[rankings.utilization[0]?.locationIndex || 0],
-            pickup: comparisonData[rankings.pickup[0]?.locationIndex || 0],
-            customers:
-              comparisonData[rankings.customers[0]?.locationIndex || 0],
-            revenue: comparisonData[rankings.revenue[0]?.locationIndex || 0],
+        // Calculate weekly patterns
+        const weeklyPatterns = dayNames.map((dayName, dayIndex) => {
+          const dayData = hourlyPatterns.filter(
+            (p) => p.day_of_week === dayIndex,
+          );
+          const dayAvg =
+            dayData.length > 0
+              ? dayData.reduce((sum, h) => sum + Number(h.avg_utilization), 0) /
+                dayData.length
+              : 0;
+          const dayPeak =
+            dayData.length > 0
+              ? Math.max(...dayData.map((h) => Number(h.peak_utilization)))
+              : 0;
+          const totalPackages = dayData.reduce(
+            (sum, h) => sum + Number(h.total_deliveries),
+            0,
+          );
+
+          return {
+            day: dayName,
+            dayOfWeek: dayIndex,
+            avgUtilization: Math.round(dayAvg * 10) / 10,
+            peakUtilization: Math.round(dayPeak * 10) / 10,
+            totalPackages,
+          };
+        });
+
+        return {
+          granularity: "hourly" as const,
+          heatmapData,
+          peakHours,
+          weeklyPatterns,
+          insights: {
+            busiestHour: peakHours[0]?.hour || 0,
+            busiestDay: weeklyPatterns.reduce((max, day) =>
+              day.avgUtilization > max.avgUtilization ? day : max,
+            ).day,
+            averageUtilization:
+              Math.round(
+                (weeklyPatterns.reduce(
+                  (sum, day) => sum + day.avgUtilization,
+                  0,
+                ) /
+                  weeklyPatterns.length) *
+                  10,
+              ) / 10,
+            peakUtilization: Math.max(
+              ...weeklyPatterns.map((day) => day.peakUtilization),
+            ),
           },
-        },
-      };
+        };
+      } else if (granularity === "daily") {
+        // Daily patterns over the date range
+        const dailyPatterns = locationId
+          ? await ctx.db.$queryRaw<
+              Array<{
+                date: string;
+                packages_delivered: number;
+                utilization: number;
+                day_of_week: number;
+              }>
+            >`
+              WITH daily_data AS (
+                SELECT 
+                  DATE(o."deliveredDate") as date,
+                  EXTRACT(DOW FROM o."deliveredDate") as day_of_week,
+                  COUNT(*) as packages_delivered
+                FROM "Order" o
+                WHERE o."deliveredDate" >= ${dateRange.from}
+                  AND o."deliveredDate" <= ${dateRange.to}
+                  AND o."deliveredDate" IS NOT NULL
+                  AND o."shippedLocationId" = ${locationId}
+                GROUP BY DATE(o."deliveredDate"), EXTRACT(DOW FROM o."deliveredDate")
+              ),
+              location_capacity AS (
+                SELECT "storageCapacity" as capacity
+                FROM "Location" WHERE id = ${locationId}
+              )
+              SELECT 
+                dd.date::text,
+                dd.packages_delivered::integer,
+                ROUND((dd.packages_delivered * 100.0 / lc.capacity), 2) as utilization,
+                dd.day_of_week::integer
+              FROM daily_data dd
+              CROSS JOIN location_capacity lc
+              ORDER BY dd.date
+            `
+          : await ctx.db.$queryRaw<
+              Array<{
+                date: string;
+                packages_delivered: number;
+                utilization: number;
+                day_of_week: number;
+              }>
+            >`
+              WITH daily_data AS (
+                SELECT 
+                  DATE(o."deliveredDate") as date,
+                  EXTRACT(DOW FROM o."deliveredDate") as day_of_week,
+                  o."shippedLocationId" as location_id,
+                  COUNT(*) as packages_delivered
+                FROM "Order" o
+                WHERE o."deliveredDate" >= ${dateRange.from}
+                  AND o."deliveredDate" <= ${dateRange.to}
+                  AND o."deliveredDate" IS NOT NULL
+                GROUP BY DATE(o."deliveredDate"), EXTRACT(DOW FROM o."deliveredDate"), o."shippedLocationId"
+              ),
+              location_capacity AS (
+                SELECT l.id as location_id, l."storageCapacity" as capacity
+                FROM "Location" l
+              )
+              SELECT 
+                dd.date::text,
+                SUM(dd.packages_delivered)::integer as packages_delivered,
+                ROUND(AVG(dd.packages_delivered * 100.0 / lc.capacity), 2) as utilization,
+                dd.day_of_week::integer
+              FROM daily_data dd
+              JOIN location_capacity lc ON dd.location_id = lc.location_id
+              GROUP BY dd.date, dd.day_of_week
+              ORDER BY dd.date
+            `;
+
+        return {
+          granularity: "daily" as const,
+          dailyData: dailyPatterns.map((day) => ({
+            date: day.date,
+            packagesDelivered: day.packages_delivered,
+            utilization: Number(day.utilization),
+            dayOfWeek: day.day_of_week,
+          })),
+          insights: {
+            averageDaily:
+              Math.round(
+                (dailyPatterns.reduce(
+                  (sum, day) => sum + Number(day.utilization),
+                  0,
+                ) /
+                  dailyPatterns.length) *
+                  10,
+              ) / 10,
+            peakDaily: Math.max(
+              ...dailyPatterns.map((day) => Number(day.utilization)),
+            ),
+            totalPackages: dailyPatterns.reduce(
+              (sum, day) => sum + day.packages_delivered,
+              0,
+            ),
+          },
+        };
+      } else {
+        // Weekly aggregation
+        const weeklyPatterns = locationId
+          ? await ctx.db.$queryRaw<
+              Array<{
+                week_start: string;
+                week_end: string;
+                packages_delivered: number;
+                avg_utilization: number;
+                peak_utilization: number;
+              }>
+            >`
+              WITH weekly_data AS (
+                SELECT 
+                  DATE_TRUNC('week', o."deliveredDate") as week_start,
+                  DATE_TRUNC('week', o."deliveredDate") + INTERVAL '6 days' as week_end,
+                  DATE(o."deliveredDate") as date,
+                  COUNT(*) as daily_packages
+                FROM "Order" o
+                WHERE o."deliveredDate" >= ${dateRange.from}
+                  AND o."deliveredDate" <= ${dateRange.to}
+                  AND o."deliveredDate" IS NOT NULL
+                  AND o."shippedLocationId" = ${locationId}
+                GROUP BY DATE_TRUNC('week', o."deliveredDate"), DATE(o."deliveredDate")
+              ),
+              location_capacity AS (
+                SELECT "storageCapacity" as capacity
+                FROM "Location" WHERE id = ${locationId}
+              )
+              SELECT 
+                wd.week_start::text,
+                wd.week_end::text,
+                SUM(wd.daily_packages)::integer as packages_delivered,
+                ROUND(AVG(wd.daily_packages * 100.0 / lc.capacity), 2) as avg_utilization,
+                ROUND(MAX(wd.daily_packages * 100.0 / lc.capacity), 2) as peak_utilization
+              FROM weekly_data wd
+              CROSS JOIN location_capacity lc
+              GROUP BY wd.week_start, wd.week_end
+              ORDER BY wd.week_start
+            `
+          : await ctx.db.$queryRaw<
+              Array<{
+                week_start: string;
+                week_end: string;
+                packages_delivered: number;
+                avg_utilization: number;
+                peak_utilization: number;
+              }>
+            >`
+              WITH weekly_data AS (
+                SELECT 
+                  DATE_TRUNC('week', o."deliveredDate") as week_start,
+                  DATE_TRUNC('week', o."deliveredDate") + INTERVAL '6 days' as week_end,
+                  DATE(o."deliveredDate") as date,
+                  o."shippedLocationId" as location_id,
+                  COUNT(*) as daily_packages
+                FROM "Order" o
+                WHERE o."deliveredDate" >= ${dateRange.from}
+                  AND o."deliveredDate" <= ${dateRange.to}
+                  AND o."deliveredDate" IS NOT NULL
+                GROUP BY DATE_TRUNC('week', o."deliveredDate"), DATE(o."deliveredDate"), o."shippedLocationId"
+              ),
+              location_capacity AS (
+                SELECT l.id as location_id, l."storageCapacity" as capacity
+                FROM "Location" l
+              )
+              SELECT 
+                wd.week_start::text,
+                wd.week_end::text,
+                SUM(wd.daily_packages)::integer as packages_delivered,
+                ROUND(AVG(wd.daily_packages * 100.0 / lc.capacity), 2) as avg_utilization,
+                ROUND(MAX(wd.daily_packages * 100.0 / lc.capacity), 2) as peak_utilization
+              FROM weekly_data wd
+              JOIN location_capacity lc ON wd.location_id = lc.location_id
+              GROUP BY wd.week_start, wd.week_end
+              ORDER BY wd.week_start
+            `;
+
+        return {
+          granularity: "weekly" as const,
+          weeklyData: weeklyPatterns.map((week) => ({
+            weekStart: week.week_start,
+            weekEnd: week.week_end,
+            packagesDelivered: week.packages_delivered,
+            avgUtilization: Number(week.avg_utilization),
+            peakUtilization: Number(week.peak_utilization),
+          })),
+          insights: {
+            averageWeekly:
+              Math.round(
+                (weeklyPatterns.reduce(
+                  (sum, week) => sum + Number(week.avg_utilization),
+                  0,
+                ) /
+                  weeklyPatterns.length) *
+                  10,
+              ) / 10,
+            peakWeekly: Math.max(
+              ...weeklyPatterns.map((week) => Number(week.peak_utilization)),
+            ),
+            totalPackages: weeklyPatterns.reduce(
+              (sum, week) => sum + week.packages_delivered,
+              0,
+            ),
+          },
+        };
+      }
     }),
 
-  // Export analytics data (CSV and PDF functionality)
+  // Export analytics data (CSV functionality)
   exportAnalyticsData: protectedCorporateProcedure
     .input(
       analyticsInputSchema.extend({
-        format: z.enum(["csv", "pdf"]),
+        format: z.enum(["csv"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1697,272 +1711,194 @@ export const analyticsRouter = createTRPCRouter({
               `,
         ]);
 
-        if (format === "csv") {
-          // Generate CSV content
-          const csvData = [];
+        // Generate CSV content
+        const csvData = [];
 
-          // Add headers
+        // Add headers
+        csvData.push([
+          "Metric Category",
+          "Metric Name",
+          "Value",
+          "Unit",
+          "Location",
+          "Date Range",
+        ]);
+
+        const dateRangeStr = `${dateRange.from.toISOString().split("T")[0]} to ${dateRange.to.toISOString().split("T")[0]}`;
+        const locationStr = locationId
+          ? utilizationData[0]?.location_name || "Unknown"
+          : "All Locations";
+
+        // Add utilization data
+        utilizationData.forEach((location) => {
           csvData.push([
-            "Metric Category",
-            "Metric Name",
-            "Value",
-            "Unit",
-            "Location",
-            "Date Range",
+            "Utilization",
+            "Current Utilization",
+            location.current_utilization,
+            "%",
+            location.location_name,
+            dateRangeStr,
           ]);
+          csvData.push([
+            "Utilization",
+            "Average Daily Utilization",
+            location.avg_daily_utilization,
+            "%",
+            location.location_name,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Utilization",
+            "Storage Capacity",
+            location.storage_capacity,
+            "packages",
+            location.location_name,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Utilization",
+            "Current Packages",
+            location.current_packages,
+            "packages",
+            location.location_name,
+            dateRangeStr,
+          ]);
+        });
 
-          const dateRangeStr = `${dateRange.from.toISOString().split("T")[0]} to ${dateRange.to.toISOString().split("T")[0]}`;
-          const locationStr = locationId
-            ? utilizationData[0]?.location_name || "Unknown"
-            : "All Locations";
-
-          // Add utilization data
-          utilizationData.forEach((location) => {
-            csvData.push([
-              "Utilization",
-              "Current Utilization",
-              location.current_utilization,
-              "%",
-              location.location_name,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Utilization",
-              "Average Daily Utilization",
-              location.avg_daily_utilization,
-              "%",
-              location.location_name,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Utilization",
-              "Storage Capacity",
-              location.storage_capacity,
-              "packages",
-              location.location_name,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Utilization",
-              "Current Packages",
-              location.current_packages,
-              "packages",
-              location.location_name,
-              dateRangeStr,
-            ]);
-          });
-
-          // Add pickup data
-          if (pickupData[0]) {
-            csvData.push([
-              "Pickup",
-              "Average Pickup Time",
-              pickupData[0].avg_pickup_hours || 0,
-              "hours",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Pickup",
-              "Same Day Pickups",
-              pickupData[0].same_day || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Pickup",
-              "1-2 Day Pickups",
-              pickupData[0].one_two_day || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Pickup",
-              "3-5 Day Pickups",
-              pickupData[0].three_five_day || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Pickup",
-              "6+ Day Pickups",
-              pickupData[0].six_plus_day || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-          }
-
-          // Add customer data
-          if (customerData[0]) {
-            csvData.push([
-              "Customer",
-              "Unique Customers",
-              customerData[0].unique_customers || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Customer",
-              "New Customers",
-              customerData[0].new_customers || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Customer",
-              "Returning Customers",
-              customerData[0].returning_customers || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Customer",
-              "Total Packages",
-              customerData[0].total_packages || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-          }
-
-          // Add revenue data
-          if (revenueData[0]) {
-            csvData.push([
-              "Revenue",
-              "Total Revenue",
-              revenueData[0].total_revenue || 0,
-              "USD",
-              locationStr,
-              dateRangeStr,
-            ]);
-            csvData.push([
-              "Revenue",
-              "Package Count",
-              revenueData[0].package_count || 0,
-              "count",
-              locationStr,
-              dateRangeStr,
-            ]);
-            const avgRevenue = revenueData[0].package_count
-              ? Number(revenueData[0].total_revenue) /
-                Number(revenueData[0].package_count)
-              : 0;
-            csvData.push([
-              "Revenue",
-              "Average Revenue per Package",
-              avgRevenue,
-              "USD",
-              locationStr,
-              dateRangeStr,
-            ]);
-          }
-
-          // Add processing data
-          if (processingData[0]) {
-            csvData.push([
-              "Processing",
-              "Average Processing Time",
-              processingData[0].avg_processing_hours || 0,
-              "hours",
-              locationStr,
-              dateRangeStr,
-            ]);
-          }
-
-          // Convert to CSV string
-          const csvContent = csvData
-            .map((row) => row.map((field) => `"${field}"`).join(","))
-            .join("\n");
-
-          return {
-            success: true,
-            message: `CSV export completed successfully with ${csvData.length - 1} data points`,
-            downloadUrl: `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`,
-            filename: `eboxsecure-analytics-${locationStr.replace(/\s+/g, "-").toLowerCase()}-${dateRangeStr}.csv`,
-          };
-        } else if (format === "pdf") {
-          // For PDF, we'll return structured data that the frontend can use to generate a PDF
-          // In a real implementation, you'd use a PDF generation library here
-
-          const pdfData = {
-            title: "EboxSecure Analytics Report",
-            dateRange: `${dateRange.from.toISOString().split("T")[0]} to ${dateRange.to.toISOString().split("T")[0]}`,
-            location: locationId
-              ? utilizationData[0]?.location_name || "Unknown"
-              : "All Locations",
-            sections: [
-              {
-                title: "Utilization Metrics",
-                data: utilizationData.map((location) => ({
-                  location: location.location_name,
-                  currentUtilization: `${location.current_utilization}%`,
-                  avgDailyUtilization: `${location.avg_daily_utilization}%`,
-                  storageCapacity: `${location.storage_capacity} packages`,
-                  currentPackages: `${location.current_packages} packages`,
-                })),
-              },
-              {
-                title: "Pickup Analytics",
-                data: pickupData[0]
-                  ? [
-                      {
-                        avgPickupTime: `${(pickupData[0].avg_pickup_hours || 0).toFixed(1)} hours`,
-                        sameDayPickups: `${pickupData[0].same_day || 0}`,
-                        oneTwoDayPickups: `${pickupData[0].one_two_day || 0}`,
-                        threeFiveDayPickups: `${pickupData[0].three_five_day || 0}`,
-                        sixPlusDayPickups: `${pickupData[0].six_plus_day || 0}`,
-                      },
-                    ]
-                  : [],
-              },
-              {
-                title: "Customer Metrics",
-                data: customerData[0]
-                  ? [
-                      {
-                        uniqueCustomers: `${customerData[0].unique_customers || 0}`,
-                        newCustomers: `${customerData[0].new_customers || 0}`,
-                        returningCustomers: `${customerData[0].returning_customers || 0}`,
-                        totalPackages: `${customerData[0].total_packages || 0}`,
-                      },
-                    ]
-                  : [],
-              },
-              {
-                title: "Revenue Analytics",
-                data: revenueData[0]
-                  ? [
-                      {
-                        totalRevenue: `$${(Number(revenueData[0].total_revenue) || 0).toLocaleString()}`,
-                        packageCount: `${revenueData[0].package_count || 0}`,
-                        avgRevenuePerPackage: `$${revenueData[0].package_count ? (Number(revenueData[0].total_revenue) / Number(revenueData[0].package_count)).toFixed(2) : "0.00"}`,
-                      },
-                    ]
-                  : [],
-              },
-            ],
-          };
-
-          return {
-            success: true,
-            message:
-              "PDF export data prepared successfully. Note: Actual PDF generation would be implemented in the frontend using a PDF library.",
-            downloadUrl: null, // In real implementation, this would be a URL to download the generated PDF
-            data: pdfData,
-          };
+        // Add pickup data
+        if (pickupData[0]) {
+          csvData.push([
+            "Pickup",
+            "Average Pickup Time",
+            pickupData[0].avg_pickup_hours || 0,
+            "hours",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Pickup",
+            "Same Day Pickups",
+            pickupData[0].same_day || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Pickup",
+            "1-2 Day Pickups",
+            pickupData[0].one_two_day || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Pickup",
+            "3-5 Day Pickups",
+            pickupData[0].three_five_day || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Pickup",
+            "6+ Day Pickups",
+            pickupData[0].six_plus_day || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
         }
 
+        // Add customer data
+        if (customerData[0]) {
+          csvData.push([
+            "Customer",
+            "Unique Customers",
+            customerData[0].unique_customers || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Customer",
+            "New Customers",
+            customerData[0].new_customers || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Customer",
+            "Returning Customers",
+            customerData[0].returning_customers || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Customer",
+            "Total Packages",
+            customerData[0].total_packages || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+        }
+
+        // Add revenue data
+        if (revenueData[0]) {
+          csvData.push([
+            "Revenue",
+            "Total Revenue",
+            revenueData[0].total_revenue || 0,
+            "USD",
+            locationStr,
+            dateRangeStr,
+          ]);
+          csvData.push([
+            "Revenue",
+            "Package Count",
+            revenueData[0].package_count || 0,
+            "count",
+            locationStr,
+            dateRangeStr,
+          ]);
+          const avgRevenue = revenueData[0].package_count
+            ? Number(revenueData[0].total_revenue) /
+              Number(revenueData[0].package_count)
+            : 0;
+          csvData.push([
+            "Revenue",
+            "Average Revenue per Package",
+            avgRevenue,
+            "USD",
+            locationStr,
+            dateRangeStr,
+          ]);
+        }
+
+        // Add processing data
+        if (processingData[0]) {
+          csvData.push([
+            "Processing",
+            "Average Processing Time",
+            processingData[0].avg_processing_hours || 0,
+            "hours",
+            locationStr,
+            dateRangeStr,
+          ]);
+        }
+
+        // Convert to CSV string
+        const csvContent = csvData
+          .map((row) => row.map((field) => `"${field}"`).join(","))
+          .join("\n");
+
         return {
-          success: false,
-          message: "Unsupported export format",
-          downloadUrl: null,
+          success: true,
+          message: `CSV export completed successfully with ${csvData.length - 1} data points`,
+          downloadUrl: `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`,
+          filename: `eboxsecure-analytics-${locationStr.replace(/\s+/g, "-").toLowerCase()}-${dateRangeStr}.csv`,
         };
       } catch (error) {
         console.error("Export error:", error);

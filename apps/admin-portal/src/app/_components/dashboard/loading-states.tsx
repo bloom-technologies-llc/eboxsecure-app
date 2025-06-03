@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Card, CardContent, CardHeader } from "@ebox/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@ebox/ui/card";
 import { Skeleton } from "@ebox/ui/skeleton";
 
 export function MetricsCardSkeleton() {
@@ -144,60 +144,27 @@ export function HeatmapSkeleton() {
   );
 }
 
-export function ComparisonModalSkeleton() {
+export function RecentActivitySkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Location selection skeleton */}
-      <div>
-        <Skeleton className="mb-3 h-4 w-48" />
-        <div className="grid grid-cols-5 gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-2">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-16" />
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
+        <Skeleton className="h-4 w-4" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-8 rounded" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-3 w-32" />
+              </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Metrics comparison skeleton */}
-      <div>
-        <Skeleton className="mb-3 h-4 w-32" />
-        <div className="grid gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-3">
-                <Skeleton className="h-4 w-40" />
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3">
-                  {Array.from({ length: 3 }).map((_, j) => (
-                    <div
-                      key={j}
-                      className="rounded-lg bg-muted/50 p-3 text-center"
-                    >
-                      <Skeleton className="mx-auto mb-2 h-3 w-16" />
-                      <Skeleton className="mx-auto mb-1 h-6 w-12" />
-                      <Skeleton className="mx-auto h-3 w-8" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Chart skeleton */}
-      <div>
-        <Skeleton className="mb-3 h-4 w-40" />
-        <Card>
-          <CardContent className="pt-6">
-            <Skeleton className="h-96 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 

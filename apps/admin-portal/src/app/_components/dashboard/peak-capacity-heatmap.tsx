@@ -11,95 +11,156 @@ import {
   CardHeader,
   CardTitle,
 } from "@ebox/ui/card";
+import { Skeleton } from "@ebox/ui/skeleton";
 
-// Generate mock heatmap data for peak capacity analysis
-function generateMockHeatmapData() {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-
-  return days.map((day) => ({
-    day,
-    hours: hours.map((hour) => {
-      // Simulate realistic patterns:
-      // - Higher utilization during business hours (9-17)
-      // - Peak during lunch (12-13) and evening (17-19)
-      // - Lower on weekends
-      let baseUtilization = 30;
-
-      if (day === "Sat" || day === "Sun") {
-        baseUtilization = 20; // Lower on weekends
-      }
-
-      if (hour >= 9 && hour <= 17) {
-        baseUtilization += 25; // Business hours boost
-      }
-
-      if (hour >= 12 && hour <= 13) {
-        baseUtilization += 20; // Lunch peak
-      }
-
-      if (hour >= 17 && hour <= 19) {
-        baseUtilization += 30; // Evening peak
-      }
-
-      // Add some randomness
-      const noise = (Math.random() - 0.5) * 15;
-      const utilization = Math.max(0, Math.min(100, baseUtilization + noise));
-
-      return {
-        hour,
-        utilization: Math.round(utilization),
-        packageCount: Math.round((utilization / 100) * 45 + Math.random() * 10),
-      };
-    }),
-  }));
-}
-
-const mockHeatmapData = generateMockHeatmapData();
-
-// Helper function to get color based on utilization
-const getUtilizationColor = (utilization: number) => {
-  if (utilization < 30) return "bg-green-100 text-green-800";
-  if (utilization < 50) return "bg-green-200 text-green-900";
-  if (utilization < 70) return "bg-yellow-200 text-yellow-900";
-  if (utilization < 85) return "bg-orange-200 text-orange-900";
-  return "bg-red-200 text-red-900";
-};
-
-// Helper function to get intensity for background
-const getIntensity = (utilization: number) => {
-  if (utilization < 30) return "opacity-30";
-  if (utilization < 50) return "opacity-50";
-  if (utilization < 70) return "opacity-70";
-  if (utilization < 85) return "opacity-85";
-  return "opacity-100";
-};
+import { api } from "../../../trpc/react";
 
 interface PeakCapacityHeatmapProps {
+  locationId?: number;
+  dateRange: {
+    from: Date;
+    to: Date;
+  };
   className?: string;
 }
 
-export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
-  // Calculate peak hours across all days
-  const hourlyAverages = Array.from({ length: 24 }, (_, hour) => {
-    const hourData = mockHeatmapData.flatMap((day) =>
-      day.hours.filter((h) => h.hour === hour),
-    );
-    const avgUtilization =
-      hourData.reduce((sum, h) => sum + h.utilization, 0) / hourData.length;
-    return {
-      hour,
-      avgUtilization: Math.round(avgUtilization),
-      totalPackages: hourData.reduce((sum, h) => sum + h.packageCount, 0),
-    };
+export function PeakCapacityHeatmap({
+  locationId,
+  dateRange,
+  className,
+}: PeakCapacityHeatmapProps) {
+  // TODO: Add Redis caching for performance optimization
+  const {
+    data: peakCapacityData,
+    isLoading,
+    error,
+  } = api.analytics.getPeakCapacityAnalysis.useQuery({
+    locationId,
+    dateRange,
+    granularity: "hourly",
   });
 
-  const peakHours = hourlyAverages
-    .sort((a, b) => b.avgUtilization - a.avgUtilization)
-    .slice(0, 3);
+  // Helper function to get color based on utilization
+  const getUtilizationColor = (utilization: number) => {
+    if (utilization < 30) return "bg-green-100 text-green-800";
+    if (utilization < 50) return "bg-green-200 text-green-900";
+    if (utilization < 70) return "bg-yellow-200 text-yellow-900";
+    if (utilization < 85) return "bg-orange-200 text-orange-900";
+    return "bg-red-200 text-red-900";
+  };
+
+  // Helper function to get intensity for background
+  const getIntensity = (utilization: number) => {
+    if (utilization < 30) return "opacity-30";
+    if (utilization < 50) return "opacity-50";
+    if (utilization < 70) return "opacity-70";
+    if (utilization < 85) return "opacity-85";
+    return "opacity-100";
+  };
+
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Peak Capacity Analysis</CardTitle>
+          <CardDescription>
+            Utilization patterns by day of week and hour of day
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Heatmap skeleton */}
+            <div
+              className="grid gap-1"
+              style={{ gridTemplateColumns: "auto repeat(24, 1fr)" }}
+            >
+              <div></div>
+              {Array.from({ length: 24 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-4" />
+              ))}
+              {Array.from({ length: 7 }).map((_, dayIndex) => (
+                <React.Fragment key={dayIndex}>
+                  <Skeleton className="h-8 w-8" />
+                  {Array.from({ length: 24 }).map((_, hourIndex) => (
+                    <Skeleton key={hourIndex} className="h-8 w-8" />
+                  ))}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Legend skeleton */}
+            <div className="flex items-center gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </div>
+
+            {/* Peak hours skeleton */}
+            <div className="grid grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-lg bg-muted/50 p-3 text-center">
+                  <Skeleton className="mx-auto mb-2 h-5 w-12" />
+                  <Skeleton className="mx-auto mb-1 h-6 w-8" />
+                  <Skeleton className="mx-auto mb-1 h-3 w-20" />
+                  <Skeleton className="mx-auto h-3 w-16" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Peak Capacity Analysis</CardTitle>
+          <CardDescription>
+            Utilization patterns by day of week and hour of day
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p>Failed to load peak capacity data</p>
+              <p className="text-sm">Please try again later</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!peakCapacityData || peakCapacityData.granularity !== "hourly") {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Peak Capacity Analysis</CardTitle>
+          <CardDescription>
+            Utilization patterns by day of week and hour of day
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p>No peak capacity data available</p>
+              <p className="text-sm">
+                Try adjusting your date range or location selection
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className={className}>
+    <Card className={cn(className, "flex h-fit flex-col")}>
       <CardHeader>
         <CardTitle>Peak Capacity Analysis</CardTitle>
         <CardDescription>
@@ -125,7 +186,7 @@ export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
                 </div>
               ))}
               {/* Data rows */}
-              {mockHeatmapData.map((dayData) => (
+              {peakCapacityData.heatmapData.map((dayData) => (
                 <React.Fragment key={dayData.day}>
                   {/* Day label */}
                   <div className="flex items-center pr-2 text-right font-medium text-muted-foreground">
@@ -141,9 +202,9 @@ export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
                         getUtilizationColor(hourData.utilization),
                         getIntensity(hourData.utilization),
                       )}
-                      title={`${dayData.day} ${hourData.hour}:00 - ${hourData.utilization}% utilization (${hourData.packageCount} packages)`}
+                      title={`${dayData.day} ${hourData.hour}:00 - ${hourData.utilization}% utilization (${hourData.packageCount} avg packages)`}
                     >
-                      {hourData.utilization}
+                      {Math.round(hourData.utilization)}
                     </div>
                   ))}
                 </React.Fragment>
@@ -178,7 +239,7 @@ export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
           <div>
             <h4 className="mb-3 text-sm font-semibold">Peak Hours Summary</h4>
             <div className="grid grid-cols-3 gap-4">
-              {peakHours.map((peak, index) => (
+              {peakCapacityData.peakHours.map((peak, index) => (
                 <div
                   key={peak.hour}
                   className="rounded-lg bg-muted/50 p-3 text-center"
@@ -200,7 +261,7 @@ export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
                     {peak.avgUtilization}% avg utilization
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {peak.totalPackages} packages/week
+                    {peak.totalPackages} packages total
                   </div>
                 </div>
               ))}
@@ -211,29 +272,60 @@ export function PeakCapacityHeatmap({ className }: PeakCapacityHeatmapProps) {
           <div>
             <h4 className="mb-3 text-sm font-semibold">Weekly Pattern</h4>
             <div className="grid grid-cols-7 gap-2">
-              {mockHeatmapData.map((dayData) => {
-                const dayAvg = Math.round(
-                  dayData.hours.reduce((sum, h) => sum + h.utilization, 0) /
-                    dayData.hours.length,
-                );
-                const dayPeak = Math.max(
-                  ...dayData.hours.map((h) => h.utilization),
-                );
-
-                return (
-                  <div
-                    key={dayData.day}
-                    className="rounded-lg bg-muted/50 p-2 text-center"
-                  >
-                    <div className="text-sm font-semibold">{dayData.day}</div>
-                    <div className="mt-1 text-lg font-bold">{dayAvg}%</div>
-                    <div className="text-xs text-muted-foreground">avg</div>
-                    <div className="text-xs text-muted-foreground">
-                      peak: {dayPeak}%
-                    </div>
+              {peakCapacityData.weeklyPatterns.map((dayData) => (
+                <div
+                  key={dayData.day}
+                  className="rounded-lg bg-muted/50 p-2 text-center"
+                >
+                  <div className="text-sm font-semibold">{dayData.day}</div>
+                  <div className="mt-1 text-lg font-bold">
+                    {dayData.avgUtilization}%
                   </div>
-                );
-              })}
+                  <div className="text-xs text-muted-foreground">avg</div>
+                  <div className="text-xs text-muted-foreground">
+                    peak: {dayData.peakUtilization}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Insights Summary */}
+          <div>
+            <h4 className="mb-3 text-sm font-semibold">Key Insights</h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="rounded-lg bg-muted/50 p-3">
+                <div className="font-medium text-muted-foreground">
+                  Busiest Hour
+                </div>
+                <div className="text-lg font-bold">
+                  {peakCapacityData.insights.busiestHour}:00
+                </div>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <div className="font-medium text-muted-foreground">
+                  Busiest Day
+                </div>
+                <div className="text-lg font-bold">
+                  {peakCapacityData.insights.busiestDay}
+                </div>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <div className="font-medium text-muted-foreground">
+                  Average Utilization
+                </div>
+                <div className="text-lg font-bold">
+                  {peakCapacityData.insights.averageUtilization}%
+                </div>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <div className="font-medium text-muted-foreground">
+                  Peak Utilization
+                </div>
+                <div className="text-lg font-bold">
+                  {peakCapacityData.insights.peakUtilization}%
+                </div>
+              </div>
             </div>
           </div>
         </div>

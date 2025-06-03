@@ -1,15 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileText, Table } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@ebox/ui/dropdown-menu";
 import { useToast } from "@ebox/ui/hooks/use-toast";
 
 import { api } from "../../../trpc/react";
@@ -21,7 +15,7 @@ interface ExportControlsProps {
     to: Date;
   };
   className?: string;
-  onExport?: (format: "csv" | "pdf") => void;
+  onExport?: (format: "csv") => void;
 }
 
 export function ExportControls({
@@ -52,24 +46,22 @@ export function ExportControls({
     },
   });
 
-  const handleExport = async (format: "csv" | "pdf") => {
+  const handleExport = async () => {
     if (isExporting) return;
 
     setIsExporting(true);
-    console.log(`Exporting analytics data as ${format.toUpperCase()}...`);
+    console.log("Exporting analytics data as CSV...");
 
     try {
       const result = await exportMutation.mutateAsync({
-        format,
+        format: "csv",
         locationId,
         dateRange,
       });
 
       // Call the optional callback
-      onExport?.(format);
+      onExport?.("csv");
 
-      // For now, the export returns a placeholder message
-      // In a full implementation, this would trigger a download
       if (result.downloadUrl) {
         // Create download link and trigger download
         const link = document.createElement("a");
@@ -77,8 +69,7 @@ export function ExportControls({
 
         // Use the filename from the response or generate one
         const filename =
-          result.filename ||
-          `analytics-export-${format}-${Date.now()}.${format}`;
+          result.filename || `analytics-export-csv-${Date.now()}.csv`;
         link.download = filename;
 
         document.body.appendChild(link);
@@ -92,31 +83,15 @@ export function ExportControls({
   };
 
   return (
-    <div className={className}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" disabled={isExporting}>
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export Data"}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => handleExport("csv")}
-            disabled={isExporting}
-          >
-            <Table className="mr-2 h-4 w-4" />
-            Export as CSV
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleExport("pdf")}
-            disabled={isExporting}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Export as PDF
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+      className={className}
+    >
+      <Download className="mr-2 h-4 w-4" />
+      {isExporting ? "Exporting..." : "Export CSV"}
+    </Button>
   );
 }

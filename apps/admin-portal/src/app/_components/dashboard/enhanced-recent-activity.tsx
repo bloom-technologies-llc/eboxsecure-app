@@ -11,6 +11,7 @@ import {
   User,
 } from "lucide-react";
 
+import { cn } from "@ebox/ui";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import {
@@ -85,9 +86,6 @@ export function EnhancedRecentActivity({
         : [filterType as "delivery" | "pickup" | "processing" | "alert"],
   });
 
-  // Get locations for filter dropdown
-  const { data: locations } = api.analytics.getLocations.useQuery();
-
   const filteredActivities =
     activities?.filter((activity) => {
       const locationMatch =
@@ -102,8 +100,8 @@ export function EnhancedRecentActivity({
 
   if (isLoading) {
     return (
-      <Card className={className}>
-        <CardHeader>
+      <Card className={cn(className, "flex h-full flex-col")}>
+        <CardHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Recent Activity</CardTitle>
@@ -118,29 +116,31 @@ export function EnhancedRecentActivity({
             <Skeleton className="h-8 w-32" />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-start space-x-3 rounded-lg border-l-4 bg-muted/20 p-3"
-              >
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-5 w-16" />
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <div className="h-full overflow-y-auto p-6">
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-start space-x-3 rounded-lg border-l-4 bg-muted/20 p-3"
+                >
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                    <Skeleton className="h-3 w-48" />
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-12" />
+                    </div>
+                    <Skeleton className="h-3 w-24" />
                   </div>
-                  <Skeleton className="h-3 w-48" />
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-3 w-12" />
-                  </div>
-                  <Skeleton className="h-3 w-24" />
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -149,28 +149,26 @@ export function EnhancedRecentActivity({
 
   if (error) {
     return (
-      <Card className={className}>
-        <CardHeader>
+      <Card className={cn(className, "flex h-full flex-col")}>
+        <CardHeader className="flex-shrink-0">
           <CardTitle>Recent Activity</CardTitle>
           <CardDescription>
             Latest activities across all locations with filtering
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex h-64 items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
-              <p>Failed to load recent activity</p>
-              <p className="text-sm">Please try again later</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refetch()}
-                className="mt-2"
-              >
-                Retry
-              </Button>
-            </div>
+        <CardContent className="flex flex-1 items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
+            <p>Failed to load recent activity</p>
+            <p className="text-sm">Please try again later</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-2"
+            >
+              Retry
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -178,8 +176,8 @@ export function EnhancedRecentActivity({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
+    <Card className={cn(className, "flex h-full flex-col")}>
+      <CardHeader className="flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Recent Activity</CardTitle>
@@ -222,108 +220,102 @@ export function EnhancedRecentActivity({
           </Select>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="max-h-96 space-y-3 overflow-y-auto">
-          {filteredActivities.map((activity) => {
-            const Icon =
-              activityTypeIcons[
-                activity.type as keyof typeof activityTypeIcons
-              ];
+      <CardContent className="flex-1 overflow-hidden p-0">
+        <div className="h-full overflow-y-auto p-6">
+          <div className="space-y-3">
+            {filteredActivities.map((activity) => {
+              const Icon =
+                activityTypeIcons[
+                  activity.type as keyof typeof activityTypeIcons
+                ];
 
-            return (
-              <div
-                key={activity.id}
-                className={`flex items-start space-x-3 rounded-lg border-l-4 bg-muted/20 p-3 ${priorityColors[activity.priority as keyof typeof priorityColors]}`}
-              >
+              return (
                 <div
-                  className={`rounded-full bg-background p-2 ${activityTypeColors[activity.type as keyof typeof activityTypeColors]}`}
+                  key={activity.id}
+                  className={`flex items-start space-x-3 rounded-lg border-l-4 bg-muted/20 p-3 ${priorityColors[activity.priority as keyof typeof priorityColors]}`}
                 >
-                  <Icon className="h-4 w-4" />
-                </div>
-
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium leading-none">
-                      {activity.title}
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${statusColors[activity.status as keyof typeof statusColors]}`}
-                    >
-                      {activity.status}
-                    </Badge>
+                  <div
+                    className={`rounded-full bg-background p-2 ${activityTypeColors[activity.type as keyof typeof activityTypeColors]}`}
+                  >
+                    <Icon className="h-4 w-4" />
                   </div>
 
-                  <p className="text-sm text-muted-foreground">
-                    {activity.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{activity.location}</span>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium leading-none">
+                        {activity.title}
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${statusColors[activity.status as keyof typeof statusColors]}`}
+                      >
+                        {activity.status}
+                      </Badge>
                     </div>
 
-                    {activity.customerId && (
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{activity.customerId}</span>
-                      </div>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {activity.description}
+                    </p>
 
-                    {activity.packageCount && (
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Package className="h-3 w-3" />
-                        <span>
-                          {activity.packageCount} pkg
-                          {activity.packageCount > 1 ? "s" : ""}
-                        </span>
+                        <MapPin className="h-3 w-3" />
+                        <span>{activity.location}</span>
                       </div>
-                    )}
 
-                    {activity.revenue && (
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>${activity.revenue.toFixed(2)}</span>
-                      </div>
-                    )}
+                      {activity.customerId && (
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span>{activity.customerId}</span>
+                        </div>
+                      )}
+
+                      {activity.packageCount && (
+                        <div className="flex items-center gap-1">
+                          <Package className="h-3 w-3" />
+                          <span>
+                            {activity.packageCount} pkg
+                            {activity.packageCount > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      )}
+
+                      {activity.revenue && (
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>${activity.revenue.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.timestamp), {
+                        addSuffix: true,
+                      })}
+                    </p>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(activity.timestamp), {
-                      addSuffix: true,
-                    })}
-                  </p>
                 </div>
+              );
+            })}
+
+            {filteredActivities.length === 0 && (
+              <div className="py-8 text-center text-muted-foreground">
+                <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                <p>No activities match the current filters</p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    setFilterType("all");
+                    setFilterLocation("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
               </div>
-            );
-          })}
-
-          {filteredActivities.length === 0 && (
-            <div className="py-8 text-center text-muted-foreground">
-              <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
-              <p>No activities match the current filters</p>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => {
-                  setFilterType("all");
-                  setFilterLocation("all");
-                }}
-              >
-                Clear filters
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {filteredActivities.length > 0 && (
-          <div className="mt-4 border-t pt-4">
-            <Button variant="outline" size="sm" className="w-full">
-              View All Activity
-            </Button>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
