@@ -20,6 +20,7 @@ import { Input } from "@ebox/ui/input";
 import { ToastAction } from "@ebox/ui/toast";
 
 import { api } from "../../trpc/react";
+import FileBadge from "./file-badge";
 
 interface CommentCardProps {
   commentId: string;
@@ -27,6 +28,48 @@ interface CommentCardProps {
   time: Date; //TODO: change to Date after backend integration
   comment: string;
   highlighted: string | null;
+  filePaths?: string[];
+}
+
+// Helper function to extract file info from URL
+function getFileInfoFromUrl(url: string) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const fileName = pathname.split("/").pop() || "Unknown file";
+
+    // Try to determine file type from extension
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    let type = "application/octet-stream";
+
+    if (extension) {
+      const typeMap: Record<string, string> = {
+        pdf: "application/pdf",
+        png: "image/png",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        gif: "image/gif",
+        webp: "image/webp",
+        mp3: "audio/mpeg",
+        mpeg: "audio/mpeg",
+      };
+      type = typeMap[extension] || type;
+    }
+
+    return {
+      name: fileName,
+      url,
+      size: 0, // We don't have size info from URL
+      type,
+    };
+  } catch {
+    return {
+      name: "Unknown file",
+      url,
+      size: 0,
+      type: "application/octet-stream",
+    };
+  }
 }
 
 export default function CommentCard({
@@ -35,6 +78,7 @@ export default function CommentCard({
   time,
   comment,
   highlighted,
+  filePaths = [],
 }: CommentCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -168,7 +212,20 @@ export default function CommentCard({
             </div>
           </div>
         ) : (
-          <p className="text-gray">{comment}</p>
+          <div className="flex flex-col gap-y-2">
+            <p className="text-gray">{comment}</p>
+            {filePaths.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {filePaths.map((filePath, index) => (
+                  <FileBadge
+                    key={index}
+                    file={getFileInfoFromUrl(filePath)}
+                    showRemove={false}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

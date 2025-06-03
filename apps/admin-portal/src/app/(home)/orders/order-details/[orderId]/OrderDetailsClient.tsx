@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,8 +31,10 @@ import {
   TooltipTrigger,
 } from "@ebox/ui/tooltip";
 
+import { useFileUpload } from "~/app/hooks/useFileUpload";
 import { useMentionTrigger } from "~/app/hooks/useMentionTrigger";
 import CommentCard from "../../../../_components/comment-card";
+import FileBadge from "../../../../_components/file-badge";
 import { api } from "../../../../../trpc/react";
 
 interface OrderDetailsClientProps {
@@ -52,7 +53,8 @@ export default function OrderDetailsClient({
   orderDetails,
 }: OrderDetailsClientProps) {
   const uploadFileRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { uploadedFiles, isUploading, uploadFiles, removeFile, clearAllFiles } =
+    useFileUpload();
   const {
     showMentions,
     setShowMentions,
@@ -112,18 +114,13 @@ export default function OrderDetailsClient({
 
   const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const file = e.target.files?.[0];
-    if (file) {
-      // 5MB limit
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: "Please select a file smaller than 5MB",
-        });
-        return;
-      }
-      setSelectedFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      uploadFiles(files);
+    }
+    // Reset the input so the same file can be selected again
+    if (uploadFileRef.current) {
+      uploadFileRef.current.value = "";
     }
   };
 
@@ -135,7 +132,7 @@ export default function OrderDetailsClient({
       commentType: CommentType.ORDER,
       orderId: orderId,
       authorId: user.id,
-      imagePaths: [],
+      filePaths: uploadedFiles.map((file) => file.url),
       notifications: mentionedUsers.map((user) => ({
         userId: user.id,
         message: `${user.display} was mentioned in a comment`,
@@ -144,6 +141,7 @@ export default function OrderDetailsClient({
 
     form.reset();
     setMentionedUsers([]);
+    clearAllFiles();
     if (textareaRef.current) {
       textareaRef.current.value = "";
     }
@@ -182,15 +180,17 @@ export default function OrderDetailsClient({
                           <FormItem>
                             <FormControl>
                               <div className="flex flex-col gap-y-2">
-                                {selectedFile && (
-                                  <div className="flex items-center gap-x-2">
-                                    <Image
-                                      src={URL.createObjectURL(selectedFile)}
-                                      alt="selected file"
-                                      width={100}
-                                      height={100}
-                                      className="rounded-md"
-                                    />
+                                {uploadedFiles.length > 0 && (
+                                  <div className="p-4 pb-0">
+                                    <div className="flex flex-wrap gap-2">
+                                      {uploadedFiles.map((file, index) => (
+                                        <FileBadge
+                                          key={index}
+                                          file={file}
+                                          onRemove={removeFile}
+                                        />
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                                 <Textarea
@@ -287,18 +287,20 @@ export default function OrderDetailsClient({
                             variant="ghost"
                             size="icon"
                             type="button"
+                            disabled={isUploading}
                           >
                             <Paperclip className="h-4 w-4" />
                           </Button>
                           <input
                             ref={uploadFileRef}
                             type="file"
-                            accept=".png, .jpg, .jpeg"
+                            accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.mp3,.mpeg"
+                            multiple
                             className="hidden"
                             onChange={handleUploadFile}
                           />
                         </div>
-                        <Button>
+                        <Button disabled={isUploading}>
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -326,6 +328,7 @@ export default function OrderDetailsClient({
                         name={comment.comment.authorId}
                         time={comment.comment.createdAt}
                         comment={comment.comment.text}
+                        filePaths={comment.comment.filePaths}
                       />
                     );
                   })}
