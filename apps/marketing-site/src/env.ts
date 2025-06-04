@@ -6,7 +6,9 @@ export const env = createEnv({
    * Specify your server-side environment variables schema here.
    * This way you can ensure the app isn't built with invalid env vars.
    */
-  server: {},
+  server: {
+    VERCEL_ENV: z.enum(["development", "preview", "production"]),
+  },
   /**
    * Specify your client-side environment variables schema here.
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
@@ -35,16 +37,13 @@ export const env = createEnv({
 // Utility function to get the client app URL based on NODE_ENV and hostname
 export function getClientAppUrl(): string {
   // Development environment
-  if (env.NODE_ENV === "development") {
+  if (env.VERCEL_ENV === "development") {
     return "http://localhost:3000";
   }
 
   // Production/other environments - check hostname for QA vs Prod
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    if (hostname.includes("qa")) {
-      return "https://app-qa.eboxsecure.com";
-    }
+  if (env.VERCEL_ENV === "preview") {
+    return "https://app-qa.eboxsecure.com";
   }
 
   // Default to production
