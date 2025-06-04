@@ -207,7 +207,7 @@ export function HeroSection() {
           </div>
           <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:justify-center">
             <Button asChild size="lg">
-              <Link href="https://app.eboxsecure.com">Go to app</Link>
+              <Link href={getClientAppUrl()}>Go to app</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/contact">Contact Sales</Link>

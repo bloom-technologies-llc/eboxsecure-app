@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getClientAppUrl } from "@/env";
 import { Check } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -137,7 +138,7 @@ export function PricingTiers() {
                   href={
                     tier.name === "Business Pro"
                       ? "/contact"
-                      : "https://app.eboxsecure.com/signup"
+                      : getClientAppUrl() + "signup"
                   }
                 >
                   {tier.cta}
