@@ -14,9 +14,6 @@ import { Container } from "@ebox/ui/container";
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
-  // TODO: remove
-  console.log("client app url", getClientAppUrl());
-  console.log("env", env.NEXT_PUBLIC_VERCEL_ENV);
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
