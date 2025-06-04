@@ -4,7 +4,7 @@ import type { LocationSearchResult } from "@/app/actions/search-locations";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { searchLocations } from "@/app/actions/search-locations";
-import { getClientAppUrl } from "@/env";
+import { env, getClientAppUrl } from "@/env";
 import { Heart, MapPin, X } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -14,6 +14,9 @@ import { Container } from "@ebox/ui/container";
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
+  // TODO: remove
+  console.log("client app url", getClientAppUrl());
+  console.log("env", env.NEXT_PUBLIC_VERCEL_ENV);
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
