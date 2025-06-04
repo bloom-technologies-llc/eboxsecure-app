@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
@@ -28,7 +28,7 @@ import {
 import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 
-export default function LocationsPage() {
+function LocationsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -296,5 +296,13 @@ export default function LocationsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function LocationsPage() {
+  return (
+    <Suspense fallback={<div className="container py-8">Loading...</div>}>
+      <LocationsContent />
+    </Suspense>
   );
 }
