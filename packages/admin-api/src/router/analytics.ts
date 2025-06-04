@@ -13,7 +13,7 @@ const analyticsInputSchema = z.object({
 });
 
 // Type definitions for activity data
-interface ActivityItem {
+export interface ActivityItem {
   id: string;
   type: "delivery" | "pickup" | "processing" | "alert";
   title: string;
