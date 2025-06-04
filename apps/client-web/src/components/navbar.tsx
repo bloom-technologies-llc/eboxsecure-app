@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import logo from "public/logo.png";
@@ -25,17 +26,40 @@ export default function Navbar() {
             </span>
           </a>
 
-          <div className="">
-            <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
-              <li className="flex items-center">
-                <NotificationDropdown />
-              </li>
-              <li>
-                <a href="#">
-                  <UserButton />
-                </a>
-              </li>
-            </ul>
+          <div className="flex items-center space-x-8">
+            <nav className="hidden md:flex md:space-x-8">
+              <Link
+                href="/"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname === "/" ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                Orders
+              </Link>
+              <Link
+                href="/locations"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname.startsWith("/locations")
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
+              >
+                Locations
+              </Link>
+            </nav>
+
+            <div className="">
+              <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
+                <li className="flex items-center">
+                  <NotificationDropdown />
+                </li>
+                <li>
+                  <a href="#">
+                    <UserButton />
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </nav>

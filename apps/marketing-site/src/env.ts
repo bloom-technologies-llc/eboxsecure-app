@@ -31,3 +31,22 @@ export const env = createEnv({
       .default("development"),
   },
 });
+
+// Utility function to get the client app URL based on NODE_ENV and hostname
+export function getClientAppUrl(): string {
+  // Development environment
+  if (env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+
+  // Production/other environments - check hostname for QA vs Prod
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname.includes("qa")) {
+      return "https://app-qa.eboxsecure.com";
+    }
+  }
+
+  // Default to production
+  return "https://app.eboxsecure.com";
+}

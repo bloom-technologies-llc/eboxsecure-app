@@ -4,6 +4,7 @@ import type { LocationSearchResult } from "@/app/actions/search-locations";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { searchLocations } from "@/app/actions/search-locations";
+import { getClientAppUrl } from "@/env";
 import { Heart, MapPin, X } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -82,8 +83,9 @@ export function HeroSection() {
 
   // Handle add to favorites
   const handleAddToFavorites = (locationId: number) => {
+    const clientAppUrl = getClientAppUrl();
     window.open(
-      `https://app.eboxsecure.com/favorites?addToFavorite=${locationId}`,
+      `${clientAppUrl}/locations?addToFavorite=${locationId}`,
       "_blank",
     );
   };
