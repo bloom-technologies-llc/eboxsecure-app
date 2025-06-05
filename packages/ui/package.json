@@ -49,16 +49,16 @@
     "@ebox/prettier-config": "workspace:*",
     "@ebox/tailwind-config": "workspace:*",
     "@ebox/tsconfig": "workspace:*",
-    "@types/react": "^18.2.74",
-    "eslint": "^9.0.0",
+    "@types/react": "~19.0.10",
+    "eslint": "^9.25.0",
     "prettier": "^3.2.5",
-    "react": "18.2.0",
-    "tailwindcss": "^3.4.13",
-    "typescript": "^5.4.4",
+    "react": "19.0.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
     "zod": "^3.22.4"
   },
   "peerDependencies": {
-    "react": "18.2.0",
+    "react": "19.0.0",
     "zod": "^3.22.4"
   },
   "prettier": "@ebox/prettier-config"
