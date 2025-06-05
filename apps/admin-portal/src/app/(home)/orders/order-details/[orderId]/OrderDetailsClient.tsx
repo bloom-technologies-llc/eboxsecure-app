@@ -77,6 +77,10 @@ export default function OrderDetailsClient({
   const searchParams = useSearchParams();
   const highlightedCommentId = searchParams.get("highlight");
 
+  const { data: customerUser } = api.customerUser.getCustomerUser.useQuery({
+    orderId: orderId,
+  });
+
   const { data: locationEmployees } =
     api.orderComments.getLocationEmployees.useQuery({
       locationId: shippedLocation.id,
@@ -356,19 +360,26 @@ export default function OrderDetailsClient({
                     <p className="w-full font-medium">Customer</p>
                     <Pencil className="text-gray h-4 w-4" />
                   </div>
-                  <p className="text-sm text-secondary">Henry Ford</p>
+                  <p className="text-sm text-secondary">
+                    {customerUser?.customer.firstName}{" "}
+                    {customerUser?.customer.lastName}
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium ">Contact information</p>
-                  <p className="text-sm text-secondary">henry@gmail.com</p>
-                  <p className="text-gray text-sm">732-555-1234</p>
+                  <p className="text-sm text-secondary">
+                    {customerUser?.customer.email}
+                  </p>
+                  <p className="text-gray text-sm">
+                    {customerUser?.customer.phoneNumber}
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-y-3">
                   <p className="font-medium">Shipping address</p>
                   <p className="text-gray text-sm">
-                    123 Main St, Anytown, USA 12345
+                    {customerUser?.customer.shippingAddress}
                   </p>
                 </div>
 

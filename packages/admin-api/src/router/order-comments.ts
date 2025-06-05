@@ -10,7 +10,7 @@ export const orderComments = createTRPCRouter({
       z.object({
         text: z.string(),
         commentType: z.nativeEnum(CommentType),
-        imagePaths: z.array(z.string()).optional(),
+        filePaths: z.array(z.string()).optional(),
         authorId: z.string(),
         orderId: z.number(),
         notifications: z
@@ -28,7 +28,7 @@ export const orderComments = createTRPCRouter({
         data: {
           text: input.text,
           commentType: input.commentType,
-          imagePaths: input.imagePaths,
+          filePaths: input.filePaths || [],
           authorId: input.authorId,
           orderComment: {
             create: {

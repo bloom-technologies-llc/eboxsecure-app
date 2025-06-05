@@ -8,6 +8,7 @@ import { db } from "@ebox/db";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
+  const WEBHOOK_SECRET_NGROK = env.CLERK_CREATE_USER_WEBHOOK_SECRET_NGROK;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
   // Create a new Svix instance with your secret.
-  const wh = new Webhook(WEBHOOK_SECRET);
+  const wh = new Webhook(WEBHOOK_SECRET_NGROK);
 
   let evt: WebhookEvent;
 
@@ -64,14 +65,21 @@ export async function POST(req: Request) {
     log.error("Unexpectedly missing user ID in clerk-create-user webhook");
     return new Response("Unexpectedly missing user ID", { status: 400 });
   }
+
   await db.user.create({
     data: {
       id: userId,
       userType: "CUSTOMER",
       customerAccount: {
-        create: {},
+        create: {
+          firstName: evt.data.first_name,
+          lastName: evt.data.last_name,
+          email: evt.data.email_addresses?.[0]?.email_address ?? null,
+          phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
+        },
       },
     },
   });
+
   return new Response("", { status: 200 });
 }

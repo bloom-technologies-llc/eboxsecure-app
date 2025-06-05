@@ -1,4 +1,4 @@
-import { Download, FileText, Image, Music, X } from "lucide-react";
+import { Eye, FileText, Image, Music, X } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 
@@ -10,30 +10,12 @@ interface FileBadgeProps {
   showRemove?: boolean;
 }
 
-function getFileIcon(type: string) {
-  if (type.startsWith("image/")) {
-    return <Image className="h-3 w-3" />;
-  }
-  if (type.startsWith("audio/")) {
-    return <Music className="h-3 w-3" />;
-  }
-  return <FileText className="h-3 w-3" />;
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-}
-
 export default function FileBadge({
   file,
   onRemove,
   showRemove = true,
 }: FileBadgeProps) {
-  const handleDownload = (e: React.MouseEvent) => {
+  const handlePreview = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     window.open(file.url, "_blank");
@@ -46,29 +28,20 @@ export default function FileBadge({
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/10 px-3 py-2 text-sm">
+    <div
+      onClick={handlePreview}
+      className="flex items-center gap-2 rounded-md border border-border bg-secondary/10 px-3 py-2 text-sm hover:cursor-pointer"
+    >
       <div className="flex items-center gap-2">
-        {getFileIcon(file.type)}
+        <FileText className="h-4 w-4" />
         <div className="flex flex-col">
           <span className="max-w-40 truncate font-medium text-foreground">
             {file.name}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {formatFileSize(file.size)}
           </span>
         </div>
       </div>
 
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDownload}
-          className="h-6 w-6 p-0"
-        >
-          <Download className="h-3 w-3" />
-        </Button>
-
         {showRemove && onRemove && (
           <Button
             variant="ghost"
