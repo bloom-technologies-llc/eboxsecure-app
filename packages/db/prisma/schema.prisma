@@ -18,6 +18,7 @@ model User {
     notifications        Notification[]
     sessions             Session[]
     UserFavoriteLocation UserFavoriteLocation[]
+    Comment              Comment[]
 }
 
 model Session {
@@ -142,13 +143,16 @@ model EmployeeNote {
 }
 
 model Comment {
-    id              String           @id @default(cuid())
-    text            String
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
-    commentType     CommentType
+    id          String      @id @default(cuid())
+    text        String
+    authorId    String
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    commentType CommentType
     // storeComments TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
-    imagePaths      String[]
+    filePaths   String[]
+
+    author          User             @relation(fields: [authorId], references: [id])
     customerComment CustomerComment?
     employeeComment EmployeeComment?
     locationComment LocationComment?
@@ -159,7 +163,7 @@ model Comment {
 model LocationComment {
     id         String   @unique
     locationId Int
-    comment    Comment  @relation(fields: [id], references: [id])
+    comment    Comment  @relation(fields: [id], references: [id], onDelete: Cascade)
     location   Location @relation(fields: [locationId], references: [id])
 }
 
@@ -167,20 +171,20 @@ model EmployeeComment {
     id                String          @unique
     employeeAccountId String
     employee          EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
-    comment           Comment         @relation(fields: [id], references: [id])
+    comment           Comment         @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model CustomerComment {
     id                String          @unique
     customerAccountId String
     customer          CustomerAccount @relation(fields: [customerAccountId], references: [id])
-    comment           Comment         @relation(fields: [id], references: [id])
+    comment           Comment         @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model OrderComment {
     id      String  @unique
     orderId Int
-    comment Comment @relation(fields: [id], references: [id])
+    comment Comment @relation(fields: [id], references: [id], onDelete: Cascade)
     order   Order   @relation(fields: [orderId], references: [id])
 }
 

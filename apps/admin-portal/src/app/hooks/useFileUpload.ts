@@ -24,7 +24,7 @@ export function useFileUpload() {
       if (res) {
         const newFiles = res.map((file) => ({
           name: file.name,
-          url: file.url,
+          url: file.ufsUrl,
           size: file.size,
           type: file.type,
         }));

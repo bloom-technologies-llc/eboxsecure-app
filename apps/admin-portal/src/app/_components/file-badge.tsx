@@ -1,4 +1,4 @@
-import { Eye, FileText, Image, Music, X } from "lucide-react";
+import { FileText, X } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 

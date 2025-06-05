@@ -13,7 +13,6 @@ import {
   Info,
   MessageCircleWarning,
   Paperclip,
-  Pencil,
   Send,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -232,19 +231,17 @@ export default function OrderDetailsClient({
                                         <p className="text-sm">
                                           Employees in this location
                                         </p>
-                                        <TooltipProvider delayDuration={100}>
-                                          <Tooltip>
-                                            <TooltipTrigger>
-                                              <Info className="h-4 w-4 cursor-help text-muted-foreground" />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>
-                                                The mentioned employee will be
-                                                notified
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <Info className="h-4 w-4 cursor-help text-muted-foreground" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>
+                                              The mentioned employee will be
+                                              notified
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
                                       </div>
                                       <div className="border"></div>
                                       {locationEmployees
@@ -281,9 +278,16 @@ export default function OrderDetailsClient({
                       ></FormField>
                       <div className="bg-secondary-background flex items-center rounded-md rounded-t-none border-t border-border px-2 py-2">
                         <div className="gap-x flex w-full">
-                          <Button variant="ghost" size="icon" type="button">
-                            <AtSign className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="ghost" size="icon" type="button">
+                                <AtSign className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Mention an employee with @ sign</p>
+                            </TooltipContent>
+                          </Tooltip>
                           <Button
                             onClick={() => {
                               uploadFileRef.current?.click();
@@ -344,21 +348,10 @@ export default function OrderDetailsClient({
           {/* Details Section Container */}
           <div className="flex w-fit flex-col gap-y-6">
             <div className="rounded-lg border border-border bg-white px-6 py-4">
-              <div className="flex flex-col gap-y-3">
-                <p className="font-medium">Shipping information</p>
-                <div className="flex items-center gap-x-2">
-                  <CircleArrowUp className="h-4 w-4" />
-                  <p className="text-gray text-sm">Shipping label created</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-white px-6 py-4">
               <div className="flex flex-col gap-y-6">
                 <div className="flex flex-col gap-y-3">
                   <div className="flex items-center">
                     <p className="w-full font-medium">Customer</p>
-                    <Pencil className="text-gray h-4 w-4" />
                   </div>
                   <p className="text-sm text-secondary">
                     {customerUser?.customer.firstName}{" "}
