@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@ebox/ui";
+import { Toaster } from "@ebox/ui/toaster";
 
 import "@/app/globals.css";
 
@@ -32,6 +33,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <TRPCReactProvider>
             <Navbar />
             {props.children}
+            <Toaster />
           </TRPCReactProvider>
           {/* </ThemeProvider> */}
         </body>

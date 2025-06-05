@@ -119,6 +119,7 @@ export const protectedCustomerProcedure = protectedProcedure.use(
         userType: true,
       },
     });
+    console.log("userType", userType);
     if (!userType || userType.userType !== "CUSTOMER") {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }

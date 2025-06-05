@@ -1,3 +1,4 @@
+import { analyticsRouter } from "./router/analytics";
 import { authRouter } from "./router/auth";
 import { customerUserRouter } from "./router/customer-user";
 import { notification } from "./router/notification";
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   orderComments: orderComments,
   notification: notification,
   customerUser: customerUserRouter,
+  analytics: analyticsRouter,
 });
 
 // export type definition of API

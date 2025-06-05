@@ -9,6 +9,7 @@
     "dev": "pnpm with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
+    "seed-analytics": "pnpm with-env tsx seed-analytics.ts",
     "start": "pnpm with-env next start",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
@@ -40,6 +41,7 @@
     "svix": "^1.31.0",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.7.1",
     "uploadthing": "^7.7.2",
     "zod": "^3.22.4"
   },
