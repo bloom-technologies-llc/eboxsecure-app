@@ -48,3 +48,5 @@ dist/
 
 # turbo
 .turbo
+
+.cache
