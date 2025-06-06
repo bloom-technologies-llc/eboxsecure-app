@@ -153,6 +153,9 @@ importers:
       '@clerk/clerk-expo':
         specifier: ^2.13.0
         version: 2.13.0(@types/react@19.0.14)(expo-auth-session@6.2.0)(expo-secure-store@14.2.3)(expo-web-browser@14.1.6)(react-dom@19.0.0)(react-native@0.79.3)(react@19.0.0)
+      '@ebox/client-api':
+        specifier: workspace:*
+        version: link:../../packages/client-api
       '@expo/metro-config':
         specifier: ^0.20.14
         version: 0.20.14
@@ -168,6 +171,12 @@ importers:
       '@react-navigation/native':
         specifier: ^7.1.6
         version: 7.1.10(react-native@0.79.3)(react@19.0.0)
+      '@trpc/client':
+        specifier: 11.0.0-next.320
+        version: 11.0.0-next.320(@trpc/server@11.0.0-next.320)
+      '@trpc/react-query':
+        specifier: 11.0.0-next.320
+        version: 11.0.0-next.320(@tanstack/react-query@5.80.6)(@trpc/client@11.0.0-next.320)(@trpc/server@11.0.0-next.320)(react-dom@19.0.0)(react@19.0.0)
       expo:
         specifier: ~53.0.10
         version: 53.0.10(@babel/core@7.27.4)(react-native-webview@13.13.5)(react-native@0.79.3)(react@19.0.0)
@@ -246,6 +255,9 @@ importers:
       react-native-webview:
         specifier: 13.13.5
         version: 13.13.5(react-native@0.79.3)(react@19.0.0)
+      superjson:
+        specifier: 2.2.1
+        version: 2.2.1
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17

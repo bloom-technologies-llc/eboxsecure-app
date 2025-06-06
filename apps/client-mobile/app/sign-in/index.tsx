@@ -12,10 +12,12 @@ export default function Page() {
 
   // Handle the submission of the sign-in form
   const onSignInPress = async () => {
+    console.log("onSignInPress");
     if (!isLoaded) return;
 
     // Start the sign-in process using the email and password provided
     try {
+      console.log("signing in");
       const signInAttempt = await signIn.create({
         identifier: emailAddress,
         password,
@@ -39,7 +41,7 @@ export default function Page() {
   };
 
   return (
-    <View>
+    <View className="text-white">
       <Text>Sign in</Text>
       <TextInput
         autoCapitalize="none"
@@ -54,7 +56,7 @@ export default function Page() {
         onChangeText={(password) => setPassword(password)}
       />
       <TouchableOpacity onPress={onSignInPress}>
-        <Text>Continue</Text>
+        <Text className="text-white">Continue</Text>
       </TouchableOpacity>
     </View>
   );

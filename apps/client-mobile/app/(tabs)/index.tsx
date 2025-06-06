@@ -1,12 +1,22 @@
-import { Platform, StyleSheet, Text } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
+import * as Linking from "expo-linking";
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { SignedIn, SignedOut } from "@clerk/clerk-expo";
+import { api } from "@/trpc/react";
+import { SignedIn, SignedOut, useClerk } from "@clerk/clerk-expo";
 
 export default function HomeScreen() {
+  const { data } = api.order.getAllOrders.useQuery();
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -17,10 +27,21 @@ export default function HomeScreen() {
         />
       }
     >
-      <ThemedView style={styles.titleContainer}>
+      <ThemedView>
         <ThemedText type="title">Welcome!</ThemedText>
         <SignedIn>
-          <Text className="text-2xl text-green-500">You're signed in!</Text>
+          <View className="flex flex-col gap-4">
+            <Text className=" text-green-500">You're signed in!</Text>
+            <Text className=" text-green-500">
+              Number of orders: {data?.length}
+            </Text>
+            {data?.map((order) => (
+              <Text key={order.id} className=" text-green-500">
+                {order.id}
+              </Text>
+            ))}
+          </View>
+          <SignOutButton />
         </SignedIn>
         <SignedOut>
           <Text className="text-2xl text-red-500">You're signed out!</Text>
@@ -84,3 +105,26 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
 });
+
+export const SignOutButton = () => {
+  // Use `useClerk()` to access the `signOut()` function
+  const { signOut } = useClerk();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Redirect to your desired page
+      Linking.openURL(Linking.createURL("/"));
+    } catch (err) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
+
+  return (
+    <TouchableOpacity onPress={handleSignOut}>
+      <Text className="text-2xl text-red-500">Sign out</Text>
+    </TouchableOpacity>
+  );
+};
