@@ -49,21 +49,7 @@ export default function RootLayout() {
                 >
                   <GestureHandlerRootView>
                     <BottomSheetModalProvider>
-                      <Stack>
-                        <Stack.Screen
-                          name="index"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="(tabs)"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="sign-in"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen name="+not-found" />
-                      </Stack>
+                      <Stack screenOptions={{ headerShown: false }} />
                     </BottomSheetModalProvider>
                   </GestureHandlerRootView>
                 </ThemeProvider>

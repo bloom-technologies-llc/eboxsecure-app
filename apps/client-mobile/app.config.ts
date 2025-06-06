@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "EboxSecure",
   slug: "ebox-client-mobile",
   scheme: "expo",
-  version: "0.3.0",
+  version: "0.3.1",
   orientation: "portrait",
   icon: "./assets/images/logos/eboxsecure-logo-ios.png",
   userInterfaceStyle: "automatic",

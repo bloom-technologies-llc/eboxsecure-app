@@ -15,7 +15,7 @@ export default function Page() {
   }
 
   if (userId) {
-    return <Redirect href="/(tabs)/explore" />;
+    return <Redirect href="/(tabs)/(notifications)" />;
   }
   return <Redirect href="/sign-in" />;
 }
