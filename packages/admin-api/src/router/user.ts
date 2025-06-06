@@ -3,9 +3,36 @@ import { EmployeeRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedEmployeeProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedAdminProcedure,
+  protectedEmployeeProcedure,
+} from "../trpc";
 
 export const userRouter = createTRPCRouter({
+  getUserType: protectedAdminProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.userId;
+    const user = await ctx.db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        userType: true,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+
+    return {
+      userType: user.userType,
+    };
+  }),
+
   createEmployee: protectedEmployeeProcedure
     .input(
       z.object({

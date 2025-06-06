@@ -7,10 +7,12 @@
   "scripts": {
     "studio": "dotenv -e ../../.env prisma studio",
     "push": "dotenv -e ../../.env prisma db push",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed-analytics": "dotenv -e ../../.env tsx seed-analytics.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.2.1"
+    "@prisma/client": "^6.2.1",
+    "tsx": "^4.7.1"
   },
   "devDependencies": {
     "@ebox/eslint-config": "workspace:*",
@@ -18,6 +20,6 @@
     "@ebox/tsconfig": "workspace:*",
     "dotenv-cli": "^7.4.1",
     "prisma": "^6.2.1",
-    "typescript": "^5.4.4"
+    "typescript": "~5.8.3"
   }
 }
