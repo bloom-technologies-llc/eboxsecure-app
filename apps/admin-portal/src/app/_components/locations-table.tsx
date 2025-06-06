@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EmployeeRole } from "@prisma/client";
-import {
-  ArrowDown,
-  ArrowUp,
-  Filter,
-  Info,
-  Search,
-  SortDesc,
-} from "lucide-react";
-import * as z from "zod";
+import { ArrowDown, ArrowUp, Filter, Search, SortDesc } from "lucide-react";
 
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
@@ -35,8 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@ebox/ui/table";
-
-import { api } from "~/trpc/react";
 
 type Type = "Agent" | "Franchise";
 type SortField = "id" | "name" | "type" | "email" | "address";
@@ -116,7 +105,6 @@ export default function LocationsTable(): JSX.Element {
   const [sortBy, setSortBy] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
-  const { toast } = useToast();
 
   const toggleSelectAll = (): void => {
     setSelectAll((prev) => !prev);
@@ -166,7 +154,7 @@ export default function LocationsTable(): JSX.Element {
     locationAddress: string,
   ) => {
     router.push(
-      `locations/location-details/${locationId}?name=${locationName}&email=${locationEmail}&type=${locationType}&address=${locationAddress}`,
+      `locations/${locationId}?name=${locationName}&email=${locationEmail}&type=${locationType}&address=${locationAddress}`,
     );
   };
 

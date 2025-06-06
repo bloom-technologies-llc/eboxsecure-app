@@ -19,6 +19,13 @@ import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { Textarea } from "@ebox/ui/textarea";
 
 import CommentCard from "~/app/_components/comment-card";
+import { env } from "~/env";
+
+const formSchema = z.object({
+  comment: z.string().min(1, {
+    message: "Comment cannot be empty.",
+  }),
+});
 
 export default function LocationDetail() {
   const searchParams = useSearchParams();
@@ -27,7 +34,6 @@ export default function LocationDetail() {
   const locationEmail = searchParams.get("email");
   const locationType = searchParams.get("type");
   const locationAddress = searchParams.get("address");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [storeHours, setStoreHours] = useState({
     monday: "9:00 AM - 5:00 PM",
     tuesday: "9:00 AM - 5:00 PM",
@@ -36,12 +42,6 @@ export default function LocationDetail() {
     friday: "9:00 AM - 5:00 PM",
     saturday: "10:00 AM - 4:00 PM",
     sunday: "Closed",
-  });
-
-  const formSchema = z.object({
-    comment: z.string().min(1, {
-      message: "Comment cannot be empty.",
-    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -183,7 +183,7 @@ export default function LocationDetail() {
                 width="100%"
                 height="300"
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_MAPS_EMBED_API_KEY}&q=${locationAddress}`}
+                src={`https://www.google.com/maps/embed/v1/place?key=${env.NEXT_PUBLIC_MAPS_EMBED_API_KEY}&q=${locationAddress}`}
                 allowFullScreen
               ></iframe>
             </div>
