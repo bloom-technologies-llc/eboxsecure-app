@@ -44,15 +44,15 @@ export default function RootLayout() {
           <TRPCReactProvider>
             <RootSiblingParent>
               <ClerkLoaded>
-                <ThemeProvider
+                {/* <ThemeProvider
                   value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-                >
-                  <GestureHandlerRootView>
-                    <BottomSheetModalProvider>
-                      <Stack screenOptions={{ headerShown: false }} />
-                    </BottomSheetModalProvider>
-                  </GestureHandlerRootView>
-                </ThemeProvider>
+                > */}
+                <GestureHandlerRootView>
+                  <BottomSheetModalProvider>
+                    <Stack screenOptions={{ headerShown: false }} />
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+                {/* </ThemeProvider> */}
               </ClerkLoaded>
             </RootSiblingParent>
           </TRPCReactProvider>
