@@ -1,5 +1,7 @@
+"use client";
+
 import { useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
 import { cn } from "@ebox/ui";
@@ -80,7 +82,7 @@ export default function CommentCard({
   highlighted,
   filePaths = [],
 }: CommentCardProps) {
-  const queryClient = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const [updatedComment, setUpdatedComment] = useState(comment);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,9 +91,8 @@ export default function CommentCard({
   const { mutate: updateOrderComment } =
     api.orderComments.updateOrderComments.useMutation({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: [["orderComments", "queryOrderComments"]],
-        });
+        // Refresh the page to show updated comments (since comments are server-rendered)
+        router.refresh();
         toast({
           description: "Your comment has been updated",
         });
@@ -101,9 +102,8 @@ export default function CommentCard({
   const { mutate: removeOrderComment } =
     api.orderComments.removeOrderComments.useMutation({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: [["orderComments", "queryOrderComments"]],
-        });
+        // Refresh the page to show updated comments (since comments are server-rendered)
+        router.refresh();
         toast({
           description: "Your comment has been removed",
         });

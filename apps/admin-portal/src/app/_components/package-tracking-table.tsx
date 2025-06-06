@@ -35,8 +35,6 @@ import {
 } from "@ebox/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@ebox/ui/tabs";
 
-import { api } from "../../trpc/react";
-
 type Status = "Open" | "Completed" | "Cancelled";
 type SortField =
   | "order_number"
@@ -60,6 +58,10 @@ type Order = {
   };
 };
 
+interface PackageTrackingTableProps {
+  orders: Order[];
+}
+
 // TODO: Decide if we want to have the order status in the schema
 const getOrderStatus = (order: Order): Status => {
   if (order.deliveredDate && order.deliveredDate < new Date()) {
@@ -76,15 +78,15 @@ const formatDate = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
-export default function PackageTrackingTable(): JSX.Element {
+export default function PackageTrackingTable({
+  orders,
+}: PackageTrackingTableProps): JSX.Element {
   const [filter, setFilter] = useState<"All" | Status>("All");
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
   const [sortBy, setSortBy] = useState<SortField>("order_number");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
-
-  const { data: orders } = api.orders.getAllOrders.useQuery();
 
   const filteredOrders = (() => {
     if (!orders) {

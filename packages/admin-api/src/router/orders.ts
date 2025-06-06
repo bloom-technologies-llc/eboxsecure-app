@@ -25,23 +25,15 @@ export const ordersRouter = createTRPCRouter({
         },
       });
     } else {
-      const employee = await ctx.db.employeeAccount.findUnique({
+      const availableOrdersBasedOnStoreLocation = await ctx.db.order.findMany({
         where: {
-          id: ctx.session.userId,
-        },
-        select: {
-          locationId: true,
-        },
-      });
-      if (!employee) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Employee account not found",
-        });
-      }
-      return await ctx.db.order.findMany({
-        where: {
-          shippedLocationId: employee.locationId,
+          shippedLocation: {
+            employeeAccounts: {
+              some: {
+                id: ctx.session.userId,
+              },
+            },
+          },
         },
         include: {
           customer: true,
@@ -51,6 +43,7 @@ export const ordersRouter = createTRPCRouter({
           createdAt: "desc",
         },
       });
+      return availableOrdersBasedOnStoreLocation;
     }
   }),
 
