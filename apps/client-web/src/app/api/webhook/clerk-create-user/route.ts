@@ -8,7 +8,8 @@ import { db } from "@ebox/db";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
-  const WEBHOOK_SECRET_NGROK = env.CLERK_CREATE_USER_WEBHOOK_SECRET_NGROK;
+  // Testing purposes
+  // const WEBHOOK_SECRET_NGROK = env.CLERK_CREATE_USER_WEBHOOK_SECRET_NGROK;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
   // Create a new Svix instance with your secret.
-  const wh = new Webhook(WEBHOOK_SECRET_NGROK);
+  const wh = new Webhook(WEBHOOK_SECRET);
 
   let evt: WebhookEvent;
 
