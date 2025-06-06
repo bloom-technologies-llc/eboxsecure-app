@@ -3,15 +3,15 @@
 import { api } from "../../../trpc/react";
 import CommentForm from "./CommentForm";
 
-interface CommentsContainerProps {
+interface CommentFormContainerProps {
   orderId: number;
   locationId: number;
 }
 
-export default function CommentsContainer({
+export default function CommentFormContainer({
   orderId,
   locationId,
-}: CommentsContainerProps) {
+}: CommentFormContainerProps) {
   const { data: locationEmployees } =
     api.orderComments.getLocationEmployees.useQuery({
       locationId: locationId,

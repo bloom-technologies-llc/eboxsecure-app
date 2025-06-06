@@ -70,7 +70,6 @@ export default function CommentForm({
   const { mutate: createOrderComment } =
     api.orderComments.createOrderComment.useMutation({
       onSuccess: () => {
-        // Refresh the page to show new comments (since comments are server-rendered)
         router.refresh();
         toast({
           description: "Your comment has been created",
@@ -91,7 +90,6 @@ export default function CommentForm({
     if (files.length > 0) {
       uploadFiles(files);
     }
-    // Reset the input so the same file can be selected again
     if (uploadFileRef.current) {
       uploadFileRef.current.value = "";
     }
@@ -119,20 +117,6 @@ export default function CommentForm({
       textareaRef.current.value = "";
     }
   };
-
-  // Show loading skeleton while location employees are being fetched
-  if (!locationEmployees) {
-    return (
-      <div className="flex flex-col space-y-4 rounded-md border border-border bg-white p-4">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-20 w-full" />
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-16" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col rounded-md border border-border bg-white">

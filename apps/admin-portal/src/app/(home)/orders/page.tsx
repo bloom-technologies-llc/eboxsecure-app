@@ -16,7 +16,6 @@ export default async function HomePage() {
       </main>
     );
   } catch (error) {
-    console.error(error);
     return (
       <main className="container h-screen w-full py-16 md:w-9/12">
         <div className="flex flex-col items-center justify-center">

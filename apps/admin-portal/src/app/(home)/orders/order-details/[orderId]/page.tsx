@@ -1,7 +1,7 @@
 // TODO: fix to allow @ebox namespace
 
 import BackButton from "../../../../_components/order/BackButton";
-import CommentsContainer from "../../../../_components/order/CommentsContainer";
+import CommentFormContainer from "../../../../_components/order/CommentFormContainer";
 import CommentsSection from "../../../../_components/order/CommentsSection";
 import CustomerDetailsCard from "../../../../_components/order/CustomerDetailsCard";
 import OrderDetailsLayout from "../../../../_components/order/OrderDetailsLayout";
@@ -24,7 +24,6 @@ export default async function OrderDetail({
   const highlightedCommentId = searchParams.highlight || null;
 
   try {
-    // Fetch all data server-side
     const [orderDetails, orderComments] = await Promise.all([
       api.orders.getOrderDetails({
         orderId: parseInt(orderId),
@@ -44,12 +43,11 @@ export default async function OrderDetail({
         detailPanels={<CustomerDetailsCard customer={orderDetails.customer} />}
       >
         <div className="flex flex-col gap-y-6">
-          <CommentsContainer
+          <CommentFormContainer
             orderId={orderDetails.id}
             locationId={orderDetails.shippedLocation.id}
           />
 
-          {/* Static comments display - server component */}
           <CommentsSection
             comments={orderComments || []}
             highlightedCommentId={highlightedCommentId}

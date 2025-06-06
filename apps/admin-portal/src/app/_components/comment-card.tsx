@@ -27,7 +27,7 @@ import FileBadge from "./file-badge";
 interface CommentCardProps {
   commentId: string;
   name: string;
-  time: Date; //TODO: change to Date after backend integration
+  time: Date;
   comment: string;
   highlighted: string | null;
   filePaths?: string[];
