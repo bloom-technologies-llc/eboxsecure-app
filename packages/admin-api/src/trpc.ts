@@ -30,8 +30,6 @@ export const createTRPCContext = (opts: {
   headers: Headers;
   session: AuthObject;
 }) => {
-  // TODO: remove console.log
-  console.log("session user id: ", opts.session.userId);
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   const applicationSource = opts.headers.get("application-source");
