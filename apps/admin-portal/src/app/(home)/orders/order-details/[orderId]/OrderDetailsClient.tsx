@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +8,6 @@ import { CommentType } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  AtSign,
   CircleArrowUp,
   Info,
   MessageCircleWarning,
@@ -23,15 +22,11 @@ import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Popover, PopoverAnchor, PopoverContent } from "@ebox/ui/popover";
 import { Textarea } from "@ebox/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@ebox/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ebox/ui/tooltip";
 
 import { useFileUpload } from "~/app/hooks/useFileUpload";
 import { useMentionTrigger } from "~/app/hooks/useMentionTrigger";
+import { groupCommentsByDate } from "~/app/utils/commentGrouping";
 import CommentCard from "../../../../_components/comment-card";
 import FileBadge from "../../../../_components/file-badge";
 import { api } from "../../../../../trpc/react";
@@ -65,8 +60,12 @@ export default function OrderDetailsClient({
     handleUserSelect,
     mentionedUsers,
     setMentionedUsers,
-  } = useMentionTrigger();
-  const { id, customer, shippedLocation } = orderDetails;
+  } = useMentionTrigger({
+    onValueChange: (value) => {
+      form.setValue("comment", value);
+    },
+  });
+  const { id, shippedLocation } = orderDetails;
   const router = useRouter();
   const orderId = id;
 
@@ -150,10 +149,6 @@ export default function OrderDetailsClient({
     }
   };
 
-  useEffect(() => {
-    console.log(locationEmployees);
-  }, [locationEmployees]);
-
   return (
     <main className="bg-pageBackground w-full">
       <div className="container w-full py-16 md:w-11/12">
@@ -232,8 +227,10 @@ export default function OrderDetailsClient({
                                           Employees in this location
                                         </p>
                                         <Tooltip>
-                                          <TooltipTrigger>
-                                            <Info className="h-4 w-4 cursor-help text-muted-foreground" />
+                                          <TooltipTrigger asChild>
+                                            <span className="cursor-help">
+                                              <Info className="h-4 w-4 text-muted-foreground" />
+                                            </span>
                                           </TooltipTrigger>
                                           <TooltipContent>
                                             <p>
@@ -279,26 +276,24 @@ export default function OrderDetailsClient({
                       <div className="bg-secondary-background flex items-center rounded-md rounded-t-none border-t border-border px-2 py-2">
                         <div className="gap-x flex w-full">
                           <Tooltip>
-                            <TooltipTrigger>
-                              <Button variant="ghost" size="icon" type="button">
-                                <AtSign className="h-4 w-4" />
+                            <TooltipTrigger asChild>
+                              <Button
+                                onClick={() => {
+                                  uploadFileRef.current?.click();
+                                }}
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                disabled={isUploading}
+                              >
+                                <Paperclip className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Mention an employee with @ sign</p>
+                              <p>Attach a file</p>
                             </TooltipContent>
                           </Tooltip>
-                          <Button
-                            onClick={() => {
-                              uploadFileRef.current?.click();
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            disabled={isUploading}
-                          >
-                            <Paperclip className="h-4 w-4" />
-                          </Button>
+
                           <input
                             ref={uploadFileRef}
                             type="file"
@@ -318,29 +313,27 @@ export default function OrderDetailsClient({
               </div>
 
               <div className="flex flex-col gap-y-4">
-                <p className="text-gray text-sm">Today</p>
-                <div className="flex flex-col gap-y-3">
-                  <div className="flex items-center gap-x-2">
-                    <MessageCircleWarning className="h-4 w-4" />
-                    <p className="text-gray text-sm">
-                      Jane Eyre changed this customer's email
-                      hello.kitty@gmail.com
-                    </p>
-                  </div>
-                  {queryOrderComments?.map((comment) => {
-                    return (
-                      <CommentCard
-                        highlighted={highlightedCommentId}
-                        key={comment.comment.id}
-                        commentId={comment.comment.id}
-                        name={comment.comment.authorId}
-                        time={comment.comment.createdAt}
-                        comment={comment.comment.text}
-                        filePaths={comment.comment.filePaths}
-                      />
-                    );
-                  })}
-                </div>
+                {queryOrderComments &&
+                  groupCommentsByDate(queryOrderComments).map(
+                    ({ dateKey, comments }) => (
+                      <div key={dateKey} className="flex flex-col gap-y-4">
+                        <p className="text-gray text-sm">{dateKey}</p>
+                        <div className="flex flex-col gap-y-3">
+                          {comments.map((comment) => (
+                            <CommentCard
+                              highlighted={highlightedCommentId}
+                              key={comment.comment.id}
+                              commentId={comment.comment.id}
+                              name={comment.comment.authorId || "Unknown"}
+                              time={comment.comment.createdAt}
+                              comment={comment.comment.text}
+                              filePaths={comment.comment.filePaths || []}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ),
+                  )}
               </div>
             </div>
           </div>

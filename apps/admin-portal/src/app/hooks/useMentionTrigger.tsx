@@ -7,7 +7,13 @@ interface MentionedUser {
   indices: [number, number]; // start and end positions in text
 }
 
-export const useMentionTrigger = () => {
+interface UseMentionTriggerProps {
+  onValueChange?: (value: string) => void;
+}
+
+export const useMentionTrigger = ({
+  onValueChange,
+}: UseMentionTriggerProps = {}) => {
   const [showMentions, setShowMentions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mentionedUsers, setMentionedUsers] = useState<MentionedUser[]>([]);
@@ -159,6 +165,12 @@ export const useMentionTrigger = () => {
       });
 
       input.value = newText;
+
+      // Update form field value if callback is provided
+      if (onValueChange) {
+        onValueChange(newText);
+      }
+
       setShowMentions(false);
       setSelectedIndex(0);
     },
