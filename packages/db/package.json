@@ -20,6 +20,6 @@
     "@ebox/tsconfig": "workspace:*",
     "dotenv-cli": "^7.4.1",
     "prisma": "^6.2.1",
-    "typescript": "^5.4.4"
+    "typescript": "~5.8.3"
   }
 }

@@ -32,9 +32,9 @@
     "@ebox/prettier-config": "workspace:*",
     "@ebox/tsconfig": "workspace:*",
     "@types/jsonwebtoken": "^9.0.6",
-    "eslint": "^9.0.0",
+    "eslint": "^9.25.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.4.4"
+    "typescript": "~5.8.3"
   },
   "prettier": "@ebox/prettier-config"
 }
