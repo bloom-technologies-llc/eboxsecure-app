@@ -4,6 +4,7 @@ import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { SignedIn, SignedOut } from "@clerk/clerk-expo";
 
 export default function HomeScreen() {
   return (
@@ -18,7 +19,12 @@ export default function HomeScreen() {
     >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
-        <Text className="text-2xl text-red-500">Hi</Text>
+        <SignedIn>
+          <Text className="text-2xl text-green-500">You're signed in!</Text>
+        </SignedIn>
+        <SignedOut>
+          <Text className="text-2xl text-red-500">You're signed out!</Text>
+        </SignedOut>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
