@@ -1,9 +1,11 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { RootSiblingParent } from "react-native-root-siblings";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import {
   DarkTheme,
   DefaultTheme,
@@ -15,6 +17,9 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 import "../global.css";
+
+import { SessionTimeoutWrapper } from "@/components/SessionTimeoutWrapper";
+import { SignInCredentialsProvider } from "@/hooks/useSignInCredentials";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -34,19 +39,39 @@ export default function RootLayout() {
       }
       tokenCache={tokenCache}
     >
-      <TRPCReactProvider>
-        <ClerkLoaded>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </ClerkLoaded>
-      </TRPCReactProvider>
+      <SessionTimeoutWrapper>
+        <SignInCredentialsProvider>
+          <TRPCReactProvider>
+            <RootSiblingParent>
+              <ClerkLoaded>
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                  <GestureHandlerRootView>
+                    <BottomSheetModalProvider>
+                      <Stack>
+                        <Stack.Screen
+                          name="index"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="sign-in"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                      </Stack>
+                    </BottomSheetModalProvider>
+                  </GestureHandlerRootView>
+                </ThemeProvider>
+              </ClerkLoaded>
+            </RootSiblingParent>
+          </TRPCReactProvider>
+        </SignInCredentialsProvider>
+      </SessionTimeoutWrapper>
     </ClerkProvider>
   );
 }
