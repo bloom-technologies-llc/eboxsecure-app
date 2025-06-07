@@ -52,6 +52,7 @@ export default function CustomerDetailsCard({
           <p className="font-medium">Eligible recipients</p>
           <div className="flex items-center gap-x-2">
             <CircleArrowUp className="h-4 w-4" />
+            {/* TODO: integrate with trusted contacts */}
             <p className="text-gray text-sm">N/A</p>
           </div>
         </div>
