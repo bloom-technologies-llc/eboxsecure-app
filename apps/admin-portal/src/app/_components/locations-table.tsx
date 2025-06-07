@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Filter, Search, SortDesc } from "lucide-react";
 
+import type { RouterOutputs } from "@ebox/admin-api";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import { Checkbox } from "@ebox/ui/checkbox";
@@ -27,81 +28,33 @@ import {
   TableRow,
 } from "@ebox/ui/table";
 
-type Type = "Agent" | "Franchise";
-type SortField = "id" | "name" | "type" | "email" | "address";
+type LocationData = RouterOutputs["locations"]["getAllLocations"][number];
+type LocationType = "AGENT" | "FRANCHISE";
+type SortField =
+  | "id"
+  | "name"
+  | "locationType"
+  | "email"
+  | "address"
+  | "storageCapacity";
 type SortDirection = "asc" | "desc";
 
-interface Location {
-  id: string;
-  name: string;
-  type: Type;
-  email: string;
-  address: string;
+interface Location extends LocationData {
   selected?: boolean;
 }
 
-export default function LocationsTable(): JSX.Element {
-  const [locations, setLocations] = useState<Location[]>([
-    {
-      id: "1000000017",
-      name: "Ebox Store Downtown",
-      type: "Agent",
-      email: "downtown@ebox.com",
-      address: "123 Main St, New York, NY 10001",
-    },
-    {
-      id: "1000000018",
-      name: "Ebox Midtown",
-      type: "Agent",
-      email: "midtown@ebox.com",
-      address: "456 5th Ave, New York, NY 10018",
-    },
-    {
-      id: "1000000019",
-      name: "Ebox Brooklyn",
-      type: "Franchise",
-      email: "brooklyn@ebox.com",
-      address: "789 Atlantic Ave, Brooklyn, NY 11217",
-    },
-    {
-      id: "1000000020",
-      name: "Ebox Queens",
-      type: "Franchise",
-      email: "queens@ebox.com",
-      address: "101 Queens Blvd, Queens, NY 11375",
-    },
-    {
-      id: "1000000021",
-      name: "Ebox Bronx",
-      type: "Agent",
-      email: "bronx@ebox.com",
-      address: "202 Grand Concourse, Bronx, NY 10451",
-    },
-    {
-      id: "1000000022",
-      name: "Ebox Staten Island",
-      type: "Franchise",
-      email: "statenisland@ebox.com",
-      address: "303 Richmond Ave, Staten Island, NY 10314",
-    },
-    {
-      id: "1000000023",
-      name: "Ebox Jersey City",
-      type: "Agent",
-      email: "jerseycity@ebox.com",
-      address: "404 Washington St, Jersey City, NJ 07302",
-    },
-    {
-      id: "1000000024",
-      name: "Ebox Hoboken",
-      type: "Franchise",
-      email: "hoboken@ebox.com",
-      address: "505 Washington St, Hoboken, NJ 07030",
-    },
-  ]);
+interface LocationsTableProps {
+  locations: LocationData[];
+}
 
+export default function LocationsTable({
+  locations: initialLocations,
+}: LocationsTableProps): React.JSX.Element {
+  const [locations, setLocations] = useState<Location[]>(
+    initialLocations.map((loc) => ({ ...loc, selected: false })),
+  );
   const [selectAll, setSelectAll] = useState<boolean>(false);
-  const [selectedTypes, setSelectedTypes] = useState<Type[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<LocationType[]>([]);
   const [sortBy, setSortBy] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
@@ -130,7 +83,10 @@ export default function LocationsTable(): JSX.Element {
     setSelectAll(newLocations.every((location) => location.selected));
   };
 
-  const handleTypeFilterChange = (type: Type, checked: boolean): void => {
+  const handleTypeFilterChange = (
+    type: LocationType,
+    checked: boolean,
+  ): void => {
     setSelectedTypes(
       checked
         ? [...selectedTypes, type]
@@ -146,22 +102,17 @@ export default function LocationsTable(): JSX.Element {
     e.preventDefault();
   };
 
-  const handleRowClick = (
-    locationId: string,
-    locationName: string,
-    locationEmail: string,
-    locationType: Type,
-    locationAddress: string,
-  ) => {
-    router.push(
-      `locations/${locationId}?name=${locationName}&email=${locationEmail}&type=${locationType}&address=${locationAddress}`,
-    );
+  const handleRowClick = (locationId: number) => {
+    router.push(`/locations/${locationId}`);
   };
 
   // Filter locations based on type filters
   const filteredLocations = locations.filter((location) => {
     // Filter by selected types
-    if (selectedTypes.length > 0 && !selectedTypes.includes(location.type)) {
+    if (
+      selectedTypes.length > 0 &&
+      !selectedTypes.includes(location.locationType)
+    ) {
       return false;
     }
 
@@ -175,15 +126,17 @@ export default function LocationsTable(): JSX.Element {
 
       switch (sortBy) {
         case "id":
-          return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
+          return direction * (a.id - b.id);
         case "name":
           return direction * a.name.localeCompare(b.name);
-        case "type":
-          return direction * a.type.localeCompare(b.type);
+        case "locationType":
+          return direction * a.locationType.localeCompare(b.locationType);
         case "email":
-          return direction * a.email.localeCompare(b.email);
+          return direction * (a.email || "").localeCompare(b.email || "");
         case "address":
           return direction * a.address.localeCompare(b.address);
+        case "storageCapacity":
+          return direction * (a.storageCapacity - b.storageCapacity);
         default:
           return 0;
       }
@@ -225,18 +178,18 @@ export default function LocationsTable(): JSX.Element {
               <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={selectedTypes.includes("Agent")}
+                checked={selectedTypes.includes("AGENT")}
                 onCheckedChange={(checked: boolean) =>
-                  handleTypeFilterChange("Agent", checked)
+                  handleTypeFilterChange("AGENT", checked)
                 }
                 onSelect={preventClose}
               >
                 Agent
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={selectedTypes.includes("Franchise")}
+                checked={selectedTypes.includes("FRANCHISE")}
                 onCheckedChange={(checked: boolean) =>
-                  handleTypeFilterChange("Franchise", checked)
+                  handleTypeFilterChange("FRANCHISE", checked)
                 }
                 onSelect={preventClose}
               >
@@ -278,9 +231,10 @@ export default function LocationsTable(): JSX.Element {
                   if (
                     value === "id" ||
                     value === "name" ||
-                    value === "type" ||
+                    value === "locationType" ||
                     value === "email" ||
-                    value === "address"
+                    value === "address" ||
+                    value === "storageCapacity"
                   ) {
                     setSortBy(value as SortField);
                   }
@@ -292,7 +246,10 @@ export default function LocationsTable(): JSX.Element {
                 <DropdownMenuRadioItem value="name" onSelect={preventClose}>
                   Store Name
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="type" onSelect={preventClose}>
+                <DropdownMenuRadioItem
+                  value="locationType"
+                  onSelect={preventClose}
+                >
                   Type
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="email" onSelect={preventClose}>
@@ -300,6 +257,12 @@ export default function LocationsTable(): JSX.Element {
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="address" onSelect={preventClose}>
                   Address
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value="storageCapacity"
+                  onSelect={preventClose}
+                >
+                  Storage Capacity
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
@@ -346,22 +309,15 @@ export default function LocationsTable(): JSX.Element {
               <TableHead>Type</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Address</TableHead>
+              <TableHead>Storage Capacity</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedLocations.map((location, index) => (
               <TableRow
                 className="cursor-pointer"
-                key={index}
-                onClick={() =>
-                  handleRowClick(
-                    location.id,
-                    location.name,
-                    location.email,
-                    location.type,
-                    location.address,
-                  )
-                }
+                key={location.id}
+                onClick={() => handleRowClick(location.id)}
               >
                 <TableCell>
                   <Checkbox
@@ -376,16 +332,17 @@ export default function LocationsTable(): JSX.Element {
                   <Badge
                     variant="secondary"
                     className={
-                      location.type === "Agent"
+                      location.locationType === "AGENT"
                         ? "bg-blue-300"
                         : "bg-yellow-300"
                     }
                   >
-                    {location.type}
+                    {location.locationType === "AGENT" ? "Agent" : "Franchise"}
                   </Badge>
                 </TableCell>
-                <TableCell>{location.email}</TableCell>
+                <TableCell>{location.email || "—"}</TableCell>
                 <TableCell>{location.address}</TableCell>
+                <TableCell>{location.storageCapacity}</TableCell>
               </TableRow>
             ))}
           </TableBody>

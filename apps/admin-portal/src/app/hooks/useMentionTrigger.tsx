@@ -127,7 +127,7 @@ export const useMentionTrigger = ({
       if (lastAtSignIndex === -1) return;
 
       // Create display text for the mention
-      const displayText = `@${user.firstName} `;
+      const displayText = `@${user.firstName || `Employee ${user.id}`} `;
 
       // Replace the @mention with the selected user
       const newText =

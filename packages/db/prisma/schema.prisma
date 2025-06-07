@@ -102,16 +102,30 @@ model Location {
     id              Int          @id @default(autoincrement())
     name            String
     address         String
+    email           String?
     storageCapacity Int          @default(500)
     createdAt       DateTime     @default(now())
     updatedAt       DateTime     @updatedAt
     locationType    LocationType
 
+    hours            LocationHours[]
     locationComments LocationComment[]
     locationNotes    LocationNote[]
     orders           Order[]
     employeeAccounts EmployeeAccount[]
     favoritedBy      UserFavoriteLocation[]
+}
+
+model LocationHours {
+    id         String   @id @default(cuid())
+    locationId Int
+    dayOfWeek  Int // 0 = Sunday, 1 = Monday, etc.
+    openTime   String? // "09:00" format, null if closed
+    closeTime  String? // "17:00" format, null if closed
+    isOpen     Boolean  @default(true)
+    location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+    @@unique([locationId, dayOfWeek])
 }
 
 model Note {
