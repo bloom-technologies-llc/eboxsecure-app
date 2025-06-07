@@ -1,5 +1,6 @@
 import { analyticsRouter } from "./router/analytics";
 import { authRouter } from "./router/auth";
+import { customersRouter } from "./router/customers";
 import { locationsRouter } from "./router/locations";
 import { notification } from "./router/notification";
 import { orderComments } from "./router/order-comments";
@@ -10,6 +11,7 @@ import { createTRPCRouter } from "./trpc";
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   orders: ordersRouter,
+  customers: customersRouter,
   locations: locationsRouter,
   user: userRouter,
   orderComments: orderComments,

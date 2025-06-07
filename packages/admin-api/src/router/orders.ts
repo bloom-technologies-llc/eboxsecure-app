@@ -4,38 +4,65 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
+const paginationSchema = z.object({
+  page: z.number().min(1).optional().default(1),
+  limit: z.number().min(1).max(100).optional().default(20),
+});
+
 export const ordersRouter = createTRPCRouter({
-  getAllOrders: protectedAdminProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.userId;
-    const userType = await ctx.db.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        userType: true,
-      },
-    });
-
-    if (!userType) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User not found",
-      });
-    }
-
-    if (userType.userType === UserType.CORPORATE) {
-      return await ctx.db.order.findMany({
-        include: {
-          customer: true,
-          shippedLocation: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    } else if (userType.userType === UserType.EMPLOYEE) {
-      const availableOrdersBasedOnStoreLocation = await ctx.db.order.findMany({
+  getAllOrders: protectedAdminProcedure
+    .input(paginationSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.userId;
+      const userType = await ctx.db.user.findUnique({
         where: {
+          id: userId,
+        },
+        select: {
+          userType: true,
+        },
+      });
+
+      if (!userType) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not found",
+        });
+      }
+
+      const skip = (input.page - 1) * input.limit;
+
+      if (userType.userType === UserType.CORPORATE) {
+        const [orders, totalCount] = await Promise.all([
+          ctx.db.order.findMany({
+            include: {
+              customer: true,
+              shippedLocation: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            skip,
+            take: input.limit,
+          }),
+          ctx.db.order.count(),
+        ]);
+
+        const totalPages = Math.ceil(totalCount / input.limit);
+        const hasNextPage = input.page < totalPages;
+
+        return {
+          orders,
+          pagination: {
+            page: input.page,
+            limit: input.limit,
+            totalCount,
+            totalPages,
+            hasNextPage,
+          },
+        };
+      } else if (userType.userType === UserType.EMPLOYEE) {
+        const whereClause = {
           shippedLocation: {
             employeeAccounts: {
               some: {
@@ -43,24 +70,44 @@ export const ordersRouter = createTRPCRouter({
               },
             },
           },
-        },
-        include: {
-          customer: true,
-          shippedLocation: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+        };
 
-      return availableOrdersBasedOnStoreLocation;
-    } else {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid user type",
-      });
-    }
-  }),
+        const [orders, totalCount] = await Promise.all([
+          ctx.db.order.findMany({
+            where: whereClause,
+            include: {
+              customer: true,
+              shippedLocation: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            skip,
+            take: input.limit,
+          }),
+          ctx.db.order.count({ where: whereClause }),
+        ]);
+
+        const totalPages = Math.ceil(totalCount / input.limit);
+        const hasNextPage = input.page < totalPages;
+
+        return {
+          orders,
+          pagination: {
+            page: input.page,
+            limit: input.limit,
+            totalCount,
+            totalPages,
+            hasNextPage,
+          },
+        };
+      } else {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid user type",
+        });
+      }
+    }),
 
   getOrderDetails: protectedAdminProcedure
     .input(

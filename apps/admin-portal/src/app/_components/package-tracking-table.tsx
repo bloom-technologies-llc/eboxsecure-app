@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronLeft,
+  ChevronRight,
   Filter,
   Info,
   Plus,
@@ -45,10 +47,18 @@ type SortField =
   | "customer_name";
 type SortDirection = "asc" | "desc";
 
-type Order = RouterOutputs["orders"]["getAllOrders"][number];
+type Order = RouterOutputs["orders"]["getAllOrders"]["orders"][number];
 
 interface PackageTrackingTableProps {
   orders: Order[];
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  };
+  onPageChange?: (page: number) => void;
 }
 
 // TODO: Decide if we want to have the order status in the schema
@@ -69,7 +79,9 @@ const formatDate = (date: Date): string => {
 
 export default function PackageTrackingTable({
   orders,
-}: PackageTrackingTableProps): JSX.Element {
+  pagination,
+  onPageChange,
+}: PackageTrackingTableProps) {
   const [filter, setFilter] = useState<"All" | Status>("All");
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
@@ -154,6 +166,12 @@ export default function PackageTrackingTable({
     router.push(`orders/order-details/${orderId}`);
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (onPageChange) {
+      onPageChange(newPage);
+    }
+  };
+
   return (
     <div className="w-full overflow-hidden rounded-lg border bg-white">
       <div className="flex items-center justify-between border-b bg-white p-2">
@@ -207,10 +225,11 @@ export default function PackageTrackingTable({
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search orders..."
               className="h-8 rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm"
             />
           </div>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -233,33 +252,21 @@ export default function PackageTrackingTable({
             >
               <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Open")}
-                onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Open", checked)
-                }
-                onSelect={preventClose}
-              >
-                Open
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Completed")}
-                onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Completed", checked)
-                }
-                onSelect={preventClose}
-              >
-                Completed
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatuses.includes("Cancelled")}
-                onCheckedChange={(checked: boolean) =>
-                  handleStatusFilterChange("Cancelled", checked)
-                }
-                onSelect={preventClose}
-              >
-                Cancelled
-              </DropdownMenuCheckboxItem>
+              {(["Open", "Completed", "Cancelled"] as Status[]).map(
+                (status) => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={selectedStatuses.includes(status)}
+                    onCheckedChange={(checked) =>
+                      handleStatusFilterChange(status, checked)
+                    }
+                    onSelect={preventClose}
+                  >
+                    {status}
+                  </DropdownMenuCheckboxItem>
+                ),
+              )}
+
               {selectedStatuses.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
@@ -275,6 +282,7 @@ export default function PackageTrackingTable({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -325,7 +333,7 @@ export default function PackageTrackingTable({
                   value="customer_name"
                   onSelect={preventClose}
                 >
-                  Customer name
+                  Customer
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
@@ -342,14 +350,14 @@ export default function PackageTrackingTable({
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowUp className="h-4 w-4" /> Ascending
+                  <ArrowUp className="h-4 w-4" /> Oldest first
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
                   value="desc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowDown className="h-4 w-4" /> Descending
+                  <ArrowDown className="h-4 w-4" /> Newest first
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
@@ -417,6 +425,46 @@ export default function PackageTrackingTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between border-t bg-white px-4 py-3">
+          <div className="flex items-center text-sm text-gray-500">
+            Showing{" "}
+            {((pagination.page - 1) * pagination.limit + 1).toLocaleString()}-
+            {Math.min(
+              pagination.page * pagination.limit,
+              pagination.totalCount,
+            ).toLocaleString()}{" "}
+            of {pagination.totalCount.toLocaleString()} orders
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={pagination.page === 1}
+              className="h-8 gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span className="text-sm text-gray-700">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={!pagination.hasNextPage}
+              className="h-8 gap-1"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

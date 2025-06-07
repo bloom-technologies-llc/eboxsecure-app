@@ -37,6 +37,7 @@ model CustomerAccount {
     phoneNumber      String?
     shippingAddress  String?
     photoLink        String? // UploadThing URL for portrait photo
+    subscription     SubscriptionType?          @default(BASIC)
     customerComments CustomerComment[]
     customerNotes    CustomerNote[]
     phoneUploadLink  OnboardingPhoneUploadLink?
@@ -293,4 +294,11 @@ enum LocationType {
 enum TrustedContactStatus {
     PENDING
     ACTIVE
+}
+
+enum SubscriptionType {
+    BASIC
+    BASIC_PLUS
+    PREMIUM
+    BUSINESS_PRO
 }
