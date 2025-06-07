@@ -21,12 +21,12 @@ const operations = [
     url: "/orders",
   },
   {
-    title: "Stores",
-    url: "#",
-  },
-  {
     title: "Employees",
     url: "/employees",
+  },
+  {
+    title: "Carriers",
+    url: "/carriers",
   },
   {
     title: "Locations",
