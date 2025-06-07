@@ -15,6 +15,7 @@ import { ZodError } from "zod";
 
 import { db } from "@ebox/db";
 
+type NonMachineAuthObject = Extract<AuthObject, { tokenType: "session_token" }>;
 /**
  * 1. CONTEXT
  *
@@ -29,7 +30,7 @@ import { db } from "@ebox/db";
  */
 export const createTRPCContext = (opts: {
   headers: Headers;
-  session: AuthObject;
+  session: NonMachineAuthObject;
 }) => {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
