@@ -64,14 +64,21 @@ export async function POST(req: Request) {
     log.error("Unexpectedly missing user ID in clerk-create-user webhook");
     return new Response("Unexpectedly missing user ID", { status: 400 });
   }
+
   await db.user.create({
     data: {
       id: userId,
       userType: "CUSTOMER",
       customerAccount: {
-        create: {},
+        create: {
+          firstName: evt.data.first_name,
+          lastName: evt.data.last_name,
+          email: evt.data.email_addresses?.[0]?.email_address ?? null,
+          phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
+        },
       },
     },
   });
+
   return new Response("", { status: 200 });
 }

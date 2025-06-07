@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
@@ -10,58 +7,18 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-enum UserType {
-    CUSTOMER
-    EMPLOYEE
-    CORPORATE
-}
-
-enum CommentType {
-    EMPLOYEE
-    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
-    LOCATION
-    CUSTOMER
-    ORDER
-}
-
-enum NoteType {
-    EMPLOYEE
-    // STORE TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
-    LOCATION
-    CUSTOMER
-}
-
-enum SessionStatus {
-    ABANDONED
-    ACTIVE
-    ENDED
-    EXPIRED
-    REMOVED
-    REPLACED
-    REVOKED
-}
-
-enum EmployeeRole {
-    MANAGER
-    ASSOCIATE
-}
-
-enum LocationType {
-    AGENT
-    FRANCHISE
-}
-
 model User {
-    id                String                 @id
-    userType          UserType
-    customerAccount   CustomerAccount?
-    employeeAccount   EmployeeAccount?
-    corporateAccount  CorporateAccount?
-    sessions          Session[]
-    createdAt         DateTime               @default(now())
-    updatedAt         DateTime               @updatedAt
-    notifications     Notification[]
-    favoriteLocations UserFavoriteLocation[]
+    id                   String                 @id
+    userType             UserType
+    createdAt            DateTime               @default(now())
+    updatedAt            DateTime               @updatedAt
+    corporateAccount     CorporateAccount?
+    customerAccount      CustomerAccount?
+    employeeAccount      EmployeeAccount?
+    notifications        Notification[]
+    sessions             Session[]
+    UserFavoriteLocation UserFavoriteLocation[]
+    Comment              Comment[]
 }
 
 model Session {
@@ -73,22 +30,26 @@ model Session {
 
 model CustomerAccount {
     id               String                     @id
-    orders           Order[]
     user             User                       @relation(fields: [id], references: [id])
-    phoneUploadLink  OnboardingPhoneUploadLink?
-    customerNotes    CustomerNote[]
+    firstName        String?
+    lastName         String?
+    email            String?
+    phoneNumber      String?
+    shippingAddress  String?
     customerComments CustomerComment[]
+    customerNotes    CustomerNote[]
+    phoneUploadLink  OnboardingPhoneUploadLink?
+    orders           Order[]
 }
 
 model EmployeeAccount {
     id               String            @id
     employeeRole     EmployeeRole
+    locationId       Int
+    user             User              @relation(fields: [id], references: [id], onDelete: Cascade)
+    location         Location          @relation(fields: [locationId], references: [id])
     employeeComments EmployeeComment[]
     employeeNotes    EmployeeNote[]
-    locationId       Int
-
-    location Location @relation(fields: [locationId], references: [id])
-    user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model CorporateAccount {
@@ -107,31 +68,29 @@ model PendingAdminAccount {
 }
 
 model OnboardingPhoneUploadLink {
-    id         String   @id @default(cuid())
-    customerId String   @unique
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+    id         String          @id @default(cuid())
+    customerId String          @unique
+    createdAt  DateTime        @default(now())
+    updatedAt  DateTime        @updatedAt
     expiresAt  DateTime
-    completed  Boolean  @default(false)
-
-    customer CustomerAccount @relation(fields: [customerId], references: [id])
+    completed  Boolean         @default(false)
+    customer   CustomerAccount @relation(fields: [customerId], references: [id])
 }
 
 model Order {
-    id                Int       @id @default(autoincrement())
+    id                Int             @id @default(autoincrement())
     customerId        String
     vendorOrderId     String
-    createdAt         DateTime  @default(now())
-    updatedAt         DateTime  @updatedAt
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime        @updatedAt
     total             Float
     shippedLocationId Int
     deliveredDate     DateTime?
     pickedUpAt        DateTime?
     processedAt       DateTime?
-
-    customer        CustomerAccount @relation(fields: [customerId], references: [id])
-    shippedLocation Location        @relation(fields: [shippedLocationId], references: [id])
-    orderComments   OrderComment[]
+    customer          CustomerAccount @relation(fields: [customerId], references: [id])
+    shippedLocation   Location        @relation(fields: [shippedLocationId], references: [id])
+    orderComments     OrderComment[]
 }
 
 model Location {
@@ -156,81 +115,77 @@ model Note {
     createdAt    DateTime
     updatedAt    DateTime
     noteType     NoteType
-    locationNote LocationNote?
-    employeeNote EmployeeNote?
-    // storeNotes TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
     customerNote CustomerNote?
+    employeeNote EmployeeNote?
+    locationNote LocationNote?
+    // storeNotes TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
 }
 
 model LocationNote {
-    id         String @unique
+    id         String   @unique
     locationId Int
-
-    note     Note     @relation(fields: [id], references: [id])
-    location Location @relation(fields: [locationId], references: [id])
+    note       Note     @relation(fields: [id], references: [id])
+    location   Location @relation(fields: [locationId], references: [id])
 }
 
 model CustomerNote {
-    id         String @unique
+    id         String          @unique
     customerId String
-
-    note     Note            @relation(fields: [id], references: [id])
-    customer CustomerAccount @relation(fields: [customerId], references: [id])
+    customer   CustomerAccount @relation(fields: [customerId], references: [id])
+    note       Note            @relation(fields: [id], references: [id])
 }
 
 model EmployeeNote {
-    id         String @unique
+    id         String          @unique
     employeeId String
-
-    note     Note            @relation(fields: [id], references: [id])
-    employee EmployeeAccount @relation(fields: [employeeId], references: [id])
+    employee   EmployeeAccount @relation(fields: [employeeId], references: [id])
+    note       Note            @relation(fields: [id], references: [id])
 }
 
 model Comment {
-    id              String           @id @default(cuid())
-    text            String
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
-    commentType     CommentType
+    id          String      @id @default(cuid())
+    text        String
+    authorId    String
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    commentType CommentType
     // storeComments TODO: ADD WHEN STORE PAGE IS IMPLEMENTED
-    imagePaths      String[]
-    locationComment LocationComment?
-    employeeComment EmployeeComment?
+    filePaths   String[]
+
+    author          User             @relation(fields: [authorId], references: [id])
     customerComment CustomerComment?
-    orderComment    OrderComment?
+    employeeComment EmployeeComment?
+    locationComment LocationComment?
     notifications   Notification[]
+    orderComment    OrderComment?
 }
 
 model LocationComment {
-    id         String @unique
+    id         String   @unique
     locationId Int
-
-    location Location @relation(fields: [locationId], references: [id])
-    comment  Comment  @relation(fields: [id], references: [id])
+    comment    Comment  @relation(fields: [id], references: [id], onDelete: Cascade)
+    location   Location @relation(fields: [locationId], references: [id])
 }
 
 model EmployeeComment {
-    id                String @unique
+    id                String          @unique
     employeeAccountId String
-
-    employee EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
-    comment  Comment         @relation(fields: [id], references: [id])
+    employee          EmployeeAccount @relation(fields: [employeeAccountId], references: [id])
+    comment           Comment         @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model CustomerComment {
-    id                String @unique
+    id                String          @unique
     customerAccountId String
-
-    customer CustomerAccount @relation(fields: [customerAccountId], references: [id])
-    comment  Comment         @relation(fields: [id], references: [id])
+    customer          CustomerAccount @relation(fields: [customerAccountId], references: [id])
+    comment           Comment         @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model OrderComment {
-    id      String @unique
+    id      String  @unique
     orderId Int
-
+    comment Comment @relation(fields: [id], references: [id], onDelete: Cascade)
     order   Order   @relation(fields: [orderId], references: [id])
-    comment Comment @relation(fields: [id], references: [id])
 }
 
 model Notification {
@@ -241,9 +196,8 @@ model Notification {
     commentId String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-
-    user    User     @relation(fields: [userId], references: [id])
-    comment Comment? @relation(fields: [commentId], references: [id])
+    comment   Comment? @relation(fields: [commentId], references: [id])
+    user      User     @relation(fields: [userId], references: [id])
 }
 
 model UserFavoriteLocation {
@@ -260,4 +214,43 @@ model UserFavoriteLocation {
     @@unique([userId, locationId])
     @@index([userId])
     @@index([locationId])
+}
+
+enum UserType {
+    CUSTOMER
+    EMPLOYEE
+    CORPORATE
+}
+
+enum CommentType {
+    EMPLOYEE
+    LOCATION
+    CUSTOMER
+    ORDER
+}
+
+enum NoteType {
+    EMPLOYEE
+    LOCATION
+    CUSTOMER
+}
+
+enum SessionStatus {
+    ABANDONED
+    ACTIVE
+    ENDED
+    EXPIRED
+    REMOVED
+    REPLACED
+    REVOKED
+}
+
+enum EmployeeRole {
+    MANAGER
+    ASSOCIATE
+}
+
+enum LocationType {
+    AGENT
+    FRANCHISE
 }

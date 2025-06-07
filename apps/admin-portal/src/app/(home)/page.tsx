@@ -1,3 +1,5 @@
+import { UserType } from "@prisma/client";
+
 import { api } from "../../trpc/server";
 import { CorporateAnalyticsDashboard } from "./_components/corporate-analytics-dashboard";
 import { EmployeeHome } from "./_components/employee-home";
@@ -8,12 +10,12 @@ export default async function Page() {
     const userTypeResult = await api.user.getUserType();
 
     // If user is an employee, show employee home page
-    if (userTypeResult.userType === "EMPLOYEE") {
+    if (userTypeResult === UserType.EMPLOYEE) {
       return <EmployeeHome />;
     }
 
     // If user is corporate, show analytics dashboard
-    if (userTypeResult.userType === "CORPORATE") {
+    if (userTypeResult === UserType.CORPORATE) {
       return <CorporateAnalyticsDashboard />;
     }
 
@@ -23,7 +25,7 @@ export default async function Page() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <div className="text-sm text-muted-foreground">
-            Unknown user type: {userTypeResult.userType}
+            Unknown user type: {userTypeResult}
           </div>
         </div>
       </div>
