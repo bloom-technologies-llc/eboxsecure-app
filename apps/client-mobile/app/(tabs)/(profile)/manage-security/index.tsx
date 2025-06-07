@@ -1,5 +1,6 @@
 import type { PhoneNumberResource } from "@clerk/types";
 import {
+  Alert,
   SafeAreaView,
   Switch,
   Text,
@@ -14,7 +15,27 @@ import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 import { Phone, Trash } from "phosphor-react-native";
 
 const ManageSecurity = () => {
-  const { userOwnsCredentials, clearCredentials } = useLocalCredentials();
+  const { userOwnsCredentials, clearCredentials, biometricType } =
+    useLocalCredentials();
+
+  const handleDisableBiometric = () => {
+    Alert.alert(
+      "Disable Biometric Authentication",
+      "Are you sure you want to disable biometric authentication? You will need to sign in with your username and password again to re-enable it.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Disable",
+          style: "destructive",
+          onPress: () => clearCredentials(),
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView>
       <BackBreadcrumb />
@@ -28,22 +49,41 @@ const ManageSecurity = () => {
       <View className="mx-4 my-4 h-px bg-gray-300" />
       <View className="flex flex-col gap-4 p-4">
         <Text className="text-lg font-semibold">Biometric Authentication</Text>
-        <View className="flex flex-row items-center gap-2">
-          <Switch
-            disabled={!userOwnsCredentials}
-            value={userOwnsCredentials ?? false}
-            onValueChange={(isEnabled) => {
-              if (!isEnabled) {
-                clearCredentials();
-              }
-            }}
-          />
-          <Text className="text-gray-500">
-            {!userOwnsCredentials
-              ? "Sign out and sign in again to enable biometric authentication"
-              : "Currently using biometric authentication"}
-          </Text>
-        </View>
+
+        {userOwnsCredentials ? (
+          <View className="flex flex-col gap-3">
+            <View className="flex flex-row items-center gap-2">
+              <Text className="text-sm font-medium text-green-600">
+                ✓ Enabled
+              </Text>
+              <Text className="text-sm text-gray-500">
+                {biometricType === "face-recognition" ? "Face ID" : "Touch ID"}{" "}
+                is set up
+              </Text>
+            </View>
+
+            <Text className="text-sm text-gray-600">
+              You can use biometric authentication to sign in quickly.
+            </Text>
+
+            <TouchableOpacity
+              onPress={handleDisableBiometric}
+              className="mt-2 self-start rounded-md border border-red-300 px-4 py-2"
+            >
+              <Text className="text-sm font-medium text-red-600">
+                Disable Biometric Authentication
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View className="flex flex-col gap-3">
+            <Text className="text-sm text-gray-500">
+              Biometric authentication is not set up. Sign out and sign in again
+              with your username and password to enable biometric
+              authentication.
+            </Text>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );

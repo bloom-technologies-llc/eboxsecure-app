@@ -3,16 +3,12 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 
 export default function Page() {
   const { signOut } = useAuth();
   const { user } = useUser();
 
-  const { clearCredentials } = useLocalCredentials();
-
   const onLogOut = async () => {
-    await clearCredentials();
     await signOut();
   };
   if (!user) {
@@ -40,7 +36,7 @@ export default function Page() {
 
       <View className="h-2 bg-[#e4e4e7]"></View>
 
-      <View className=" flex flex-row justify-between">
+      <View className=" flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
         <Link
           href="/(tabs)/(profile)/manage-security"
           className="w-full px-6 py-5"
