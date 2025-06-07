@@ -1,6 +1,8 @@
 "use client";
 
 /**
+ * TODO: Re-enable this component when Twilio integration is fixed
+ * This component is temporarily disabled but all backend logic is preserved
  * NOTE: this is a nearly exact copy of the WebcamCapture component
  */
 import { useCallback, useRef, useState } from "react";
@@ -12,6 +14,29 @@ import Webcam from "react-webcam";
 import { Button } from "@ebox/ui/button";
 
 export default function PhoneCapture() {
+  // TODO: Remove this early return when Twilio integration is fixed
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-8">
+      <div className="mx-auto max-w-md text-center">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          Mobile Upload Temporarily Unavailable
+        </h1>
+        <p className="mb-6 text-gray-600">
+          This feature is currently under maintenance. Please use a computer
+          with a webcam to complete your onboarding.
+        </p>
+        <Button
+          onClick={() => window.close()}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Close This Window
+        </Button>
+      </div>
+    </div>
+  );
+
+  // TODO: Uncomment all the code below when Twilio integration is fixed
+  /*
   const router = useRouter();
   const searchparams = useSearchParams();
   const uploadKey = searchparams.get("uploadKey");
@@ -149,4 +174,5 @@ export default function PhoneCapture() {
       )}
     </div>
   );
+  */
 }

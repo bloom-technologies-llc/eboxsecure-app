@@ -13,6 +13,7 @@ export const env = createEnv({
     JWT_SECRET_KEY: z.string(),
     CLERK_CREATE_USER_WEBHOOK_SECRET: z.string(),
     CLERK_MANAGE_SESSION_WEBHOOK_SECRET: z.string(),
+    UPLOADTHING_TOKEN: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.

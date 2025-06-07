@@ -1,6 +1,4 @@
 import type { JWTPayload } from "jose";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { jwtDecrypt } from "jose";
 import { z } from "zod";
@@ -84,8 +82,8 @@ export const authRouter = createTRPCRouter({
           return { authorized: false };
         }
 
-        // fetch portrait
-        const url = await getPortraitSignedUrl(payloadSession.userId);
+        // fetch portrait URL from database
+        const url = await getPortraitUrl(ctx, payloadSession.userId);
         return { authorized: true, url, orderId: order.id };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
@@ -94,45 +92,22 @@ export const authRouter = createTRPCRouter({
     }),
 });
 
-async function getPortraitSignedUrl(userId: string) {
-  const region = process.env.AWS_REGION;
-  if (!region) {
+async function getPortraitUrl(ctx: any, userId: string) {
+  const customerAccount = await ctx.db.customerAccount.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      photoLink: true,
+    },
+  });
+
+  if (!customerAccount?.photoLink) {
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "AWS_REGION not found.",
+      code: "NOT_FOUND",
+      message: "Portrait photo not found for this customer.",
     });
   }
 
-  const nodeEnv = process.env.VERCEL_ENV ?? process.env.NODE_ENV;
-  const bucketName =
-    nodeEnv === "production"
-      ? "prod-ebox-customer-data"
-      : "np-ebox-customer-data";
-
-  try {
-    const client = new S3Client({ region });
-    const key = `${userId}/portrait.jpg`;
-
-    const url = await getSignedUrl(
-      client,
-      new GetObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-      }),
-      { expiresIn: 3600 }, // URL valid for 1 hour
-    );
-
-    return url;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-    }
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "An unknown error occurred.",
-    });
-  }
+  return customerAccount.photoLink;
 }

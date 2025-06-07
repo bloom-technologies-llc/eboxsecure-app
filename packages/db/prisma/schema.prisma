@@ -36,6 +36,7 @@ model CustomerAccount {
     email            String?
     phoneNumber      String?
     shippingAddress  String?
+    photoLink        String? // UploadThing URL for portrait photo
     customerComments CustomerComment[]
     customerNotes    CustomerNote[]
     phoneUploadLink  OnboardingPhoneUploadLink?
