@@ -1,18 +1,10 @@
+import type { RouterOutputs } from "@ebox/admin-api";
+
 import { groupCommentsByDate } from "../../utils/commentGrouping";
 import CommentCard from "../comment-card";
 
-interface Comment {
-  comment: {
-    id: string;
-    text: string;
-    authorId: string;
-    createdAt: Date;
-    filePaths?: string[];
-  };
-}
-
 interface CommentsSectionProps {
-  comments: Comment[];
+  comments: RouterOutputs["orderComments"]["queryOrderComments"];
   highlightedCommentId?: string | null;
 }
 

@@ -1,6 +1,6 @@
 // TODO: fix to allow @ebox namespace
 
-import BackButton from "../../../../_components/order/BackButton";
+import OrderHeader from "~/app/_components/order/OrderHeader";
 import CommentFormContainer from "../../../../_components/order/CommentFormContainer";
 import CommentsSection from "../../../../_components/order/CommentsSection";
 import CustomerDetailsCard from "../../../../_components/order/CustomerDetailsCard";
@@ -33,11 +33,19 @@ export default async function OrderDetail({
       }),
     ]);
 
+    if (!orderDetails) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <h1>Order not found</h1>
+        </div>
+      );
+    }
+
     return (
       <OrderDetailsLayout
         header={
           <div className="my-6 flex items-center gap-x-2">
-            <BackButton orderId={orderDetails.id} />
+            <OrderHeader orderId={orderDetails.id} />
           </div>
         }
         detailPanels={<CustomerDetailsCard customer={orderDetails.customer} />}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { CommentType } from "@prisma/client";
 import { Bell, Trash2 } from "lucide-react";
 
+import type { RouterOutputs } from "@ebox/admin-api";
 import { cn } from "@ebox/ui";
 import { Button } from "@ebox/ui/button";
 import {
@@ -19,26 +20,14 @@ import { useToast } from "@ebox/ui/hooks/use-toast";
 
 import { api } from "~/trpc/react";
 
-interface Notification {
-  id: string;
-  message: string;
-  read: boolean;
-  comment: {
-    id: string;
-    commentType: CommentType;
-    orderComment?: {
-      order: {
-        id: number;
-      };
-    } | null;
-  } | null;
-}
+type Notification = RouterOutputs["notification"]["getNotifications"][number];
 
 const NotificationDropdown = () => {
   const router = useRouter();
-  const { data: notifications } = api.notification.getNotifications.useQuery();
   const utils = api.useUtils();
   const { toast } = useToast();
+
+  const { data: notifications } = api.notification.getNotifications.useQuery();
 
   const { mutate: markAsRead } = api.notification.markAsRead.useMutation({
     onSuccess: () => {

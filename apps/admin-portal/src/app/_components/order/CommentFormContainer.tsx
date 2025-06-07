@@ -1,6 +1,4 @@
-"use client";
-
-import { api } from "../../../trpc/react";
+import { api } from "../../../trpc/server";
 import CommentForm from "./CommentForm";
 
 interface CommentFormContainerProps {
@@ -8,19 +6,17 @@ interface CommentFormContainerProps {
   locationId: number;
 }
 
-export default function CommentFormContainer({
+export default async function CommentFormContainer({
   orderId,
   locationId,
 }: CommentFormContainerProps) {
-  const { data: locationEmployees } =
-    api.orderComments.getLocationEmployees.useQuery({
-      locationId: locationId,
-    });
+  const locationEmployees = await api.orderComments.getLocationEmployees({
+    locationId: locationId,
+  });
 
   return (
     <CommentForm
       orderId={orderId}
-      locationId={locationId}
       locationEmployees={locationEmployees || []}
     />
   );

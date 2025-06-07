@@ -4,15 +4,14 @@ import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CommentType } from "@prisma/client";
 import { Paperclip, Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import type { RouterOutputs } from "@ebox/admin-api";
 import { Button } from "@ebox/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@ebox/ui/form";
 import { useToast } from "@ebox/ui/hooks/use-toast";
-import { Skeleton } from "@ebox/ui/skeleton";
 import { Textarea } from "@ebox/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ebox/ui/tooltip";
 
@@ -24,13 +23,7 @@ import MentionDropdown from "./MentionDropdown";
 
 interface CommentFormProps {
   orderId: number;
-  locationId: number;
-  locationEmployees: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  }[];
+  locationEmployees: RouterOutputs["orderComments"]["getLocationEmployees"];
 }
 
 const formSchema = z.object({
@@ -100,7 +93,6 @@ export default function CommentForm({
 
     createOrderComment({
       text: values.comment,
-      commentType: CommentType.ORDER,
       orderId: orderId,
       authorId: user.id,
       filePaths: uploadedFiles.map((file) => file.url),

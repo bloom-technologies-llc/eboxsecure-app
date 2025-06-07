@@ -12,6 +12,7 @@ import {
   SortDesc,
 } from "lucide-react";
 
+import type { RouterOutputs } from "@ebox/admin-api";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import { Checkbox } from "@ebox/ui/checkbox";
@@ -44,19 +45,7 @@ type SortField =
   | "customer_name";
 type SortDirection = "asc" | "desc";
 
-type Order = {
-  id: number;
-  vendorOrderId: string;
-  createdAt: Date;
-  total: number;
-  deliveredDate: Date | null;
-  customer: {
-    id: string;
-  };
-  shippedLocation: {
-    name: string;
-  };
-};
+type Order = RouterOutputs["orders"]["getAllOrders"][number];
 
 interface PackageTrackingTableProps {
   orders: Order[];
@@ -353,14 +342,14 @@ export default function PackageTrackingTable({
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowUp className="h-4 w-4" /> Oldest first
+                  <ArrowUp className="h-4 w-4" /> Ascending
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
                   value="desc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowDown className="h-4 w-4" /> Newest first
+                  <ArrowDown className="h-4 w-4" /> Descending
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
