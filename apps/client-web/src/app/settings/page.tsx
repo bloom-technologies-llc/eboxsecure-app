@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Users } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 import { DropdownMenuSeparator } from "@ebox/ui/dropdown-menu";
@@ -28,6 +29,13 @@ export default function SettingsPage() {
             <Link href="/settings/authorized-pickups">
               <Button className="w-full justify-start bg-white text-start  shadow-none">
                 Authorized pickups
+              </Button>
+            </Link>
+
+            <Link href="/settings/trusted-contacts">
+              <Button className="w-full justify-start bg-white text-start shadow-none">
+                <Users className="mr-2 h-4 w-4" />
+                Trusted Contacts
               </Button>
             </Link>
 

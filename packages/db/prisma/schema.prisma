@@ -41,6 +41,10 @@ model CustomerAccount {
     customerNotes    CustomerNote[]
     phoneUploadLink  OnboardingPhoneUploadLink?
     orders           Order[]
+
+    // Trusted contact relationships
+    trustedContactsGranted  TrustedContact[] @relation("TrustedContactsGranted")
+    trustedContactsReceived TrustedContact[] @relation("TrustedContactsReceived")
 }
 
 model EmployeeAccount {
@@ -217,6 +221,22 @@ model UserFavoriteLocation {
     @@index([locationId])
 }
 
+model TrustedContact {
+    id               String               @id @default(cuid())
+    accountHolderId  String // Customer who granted access
+    trustedContactId String // Customer who received access
+    status           TrustedContactStatus @default(PENDING)
+    createdAt        DateTime             @default(now())
+    updatedAt        DateTime             @updatedAt
+
+    accountHolder  CustomerAccount @relation("TrustedContactsGranted", fields: [accountHolderId], references: [id], onDelete: Cascade)
+    trustedContact CustomerAccount @relation("TrustedContactsReceived", fields: [trustedContactId], references: [id], onDelete: Cascade)
+
+    @@unique([accountHolderId, trustedContactId])
+    @@index([accountHolderId])
+    @@index([trustedContactId])
+}
+
 enum UserType {
     CUSTOMER
     EMPLOYEE
@@ -254,4 +274,10 @@ enum EmployeeRole {
 enum LocationType {
     AGENT
     FRANCHISE
+}
+
+enum TrustedContactStatus {
+    PENDING
+    ACTIVE
+    REVOKED
 }
