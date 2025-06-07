@@ -33,6 +33,17 @@ export const notification = createTRPCRouter({
                   order: true,
                 },
               },
+              locationComment: {
+                select: {
+                  locationId: true,
+                  location: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },

@@ -25,20 +25,12 @@ const operations = [
     url: "#",
   },
   {
-    title: "Carriers",
-    url: "#",
-  },
-  {
-    title: "Agents",
-    url: "#",
-  },
-  {
     title: "Employees",
     url: "/employees",
   },
   {
     title: "Locations",
-    url: "#",
+    url: "/locations",
   },
   {
     title: "Customers",

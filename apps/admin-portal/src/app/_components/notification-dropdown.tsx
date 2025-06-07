@@ -63,6 +63,10 @@ const NotificationDropdown = () => {
       router.push(
         `/orders/order-details/${notification?.comment?.orderComment?.order.id}?highlight=${notification.comment?.id}`,
       );
+    } else if (checkNotificationType(notification) === CommentType.LOCATION) {
+      router.push(
+        `/locations/${notification?.comment?.locationComment?.locationId}?highlight=${notification.comment?.id}`,
+      );
     }
   };
 
