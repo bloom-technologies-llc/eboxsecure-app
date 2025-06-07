@@ -10,6 +10,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "seed-analytics": "pnpm with-env tsx seed-analytics.ts",
+    "seed-carriers": "pnpm with-env tsx seed-carriers.ts",
     "start": "pnpm with-env next start",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"

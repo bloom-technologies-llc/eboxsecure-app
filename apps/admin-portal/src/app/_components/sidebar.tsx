@@ -1,6 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
+import { UserType } from "@prisma/client";
 
 import {
   Sidebar,
@@ -15,26 +16,35 @@ import {
   SidebarSeparator,
 } from "@ebox/ui/sidebar";
 
-const operations = [
+import { api } from "~/trpc/react";
+
+type AdminUserType = "EMPLOYEE" | "CORPORATE";
+
+const allOperations = [
   {
     title: "Orders",
     url: "/orders",
+    allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
   },
   {
     title: "Employees",
     url: "/employees",
+    allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
   },
   {
     title: "Carriers",
     url: "/carriers",
+    allowedUserTypes: ["CORPORATE"] as AdminUserType[], // Only corporate users
   },
   {
     title: "Locations",
     url: "/locations",
+    allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
   },
   {
     title: "Customers",
     url: "/customers",
+    allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
   },
 ];
 
@@ -50,6 +60,27 @@ const finances = [
 ];
 
 const AppSidebar = () => {
+  const { data: userType, isLoading } = api.user.getUserType.useQuery();
+
+  // Filter operations based on user type
+  const visibleOperations = allOperations.filter((operation) => {
+    if (!userType || userType === UserType.CUSTOMER) return false;
+    return operation.allowedUserTypes.includes(userType as AdminUserType);
+  });
+
+  if (isLoading) {
+    return (
+      <Sidebar className="top-[--header-height] !h-[calc(100svh-var(--header-height))]">
+        <SidebarHeader />
+        <SidebarContent>
+          <div className="flex items-center justify-center p-4">
+            <span className="text-sm text-gray-500">Loading...</span>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
+
   return (
     <Sidebar className="top-[--header-height] !h-[calc(100svh-var(--header-height))]">
       <SidebarHeader />
@@ -69,7 +100,7 @@ const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Operations</SidebarGroupLabel>
           <SidebarMenu>
-            {operations.map((item) => (
+            {visibleOperations.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <a href={item.url}>
