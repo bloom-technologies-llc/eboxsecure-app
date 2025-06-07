@@ -2,6 +2,8 @@ import { analyticsRouter } from "./router/analytics";
 import { authRouter } from "./router/auth";
 import { carriersRouter } from "./router/carriers";
 import { customersRouter } from "./router/customers";
+import { employeeCommentsRouter } from "./router/employee-comments";
+import { employeesRouter } from "./router/employees";
 import { locationsRouter } from "./router/locations";
 import { notification } from "./router/notification";
 import { orderComments } from "./router/order-comments";
@@ -15,8 +17,10 @@ export const appRouter = createTRPCRouter({
   customers: customersRouter,
   locations: locationsRouter,
   carriers: carriersRouter,
+  employees: employeesRouter,
   user: userRouter,
   orderComments: orderComments,
+  employeeComments: employeeCommentsRouter,
   notification: notification,
   analytics: analyticsRouter,
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EmployeeRole } from "@prisma/client";
@@ -9,6 +9,7 @@ import {
   ArrowUp,
   Filter,
   Info,
+  Loader2,
   Plus,
   Search,
   SortDesc,
@@ -59,27 +60,9 @@ import {
 
 import { api } from "~/trpc/react";
 
-type Type = "Agent" | "Franchise";
-type SortField =
-  | "id"
-  | "name"
-  | "type"
-  | "role"
-  | "location"
-  | "email"
-  | "phone";
+type Type = "AGENT" | "FRANCHISE";
+type SortField = "name" | "type" | "role" | "location" | "email" | "createdAt";
 type SortDirection = "asc" | "desc";
-
-interface Employee {
-  id: string;
-  name: string;
-  type: Type;
-  role: EmployeeRole;
-  location: string;
-  email: string;
-  phone: string;
-  selected?: boolean;
-}
 
 const formSchema = z.object({
   emailAddress: z.string().email(),
@@ -91,89 +74,35 @@ const formSchema = z.object({
   employeeRole: z.nativeEnum(EmployeeRole),
 });
 
-export default function EmployeeTable(): JSX.Element {
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: "1000000017",
-      name: "Steven Koh",
-      type: "Agent",
-      role: EmployeeRole.MANAGER,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (732)-668-6908",
-    },
-    {
-      id: "1000000018",
-      name: "Selena pelez",
-      type: "Agent",
-      role: EmployeeRole.ASSOCIATE,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (123)-456-6908",
-    },
-    {
-      id: "1000000019",
-      name: "Alan weng",
-      type: "Franchise",
-      role: EmployeeRole.MANAGER,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (324)-542-2632",
-    },
-    {
-      id: "1000000020",
-      name: "Sigrid nunez",
-      type: "Franchise",
-      role: EmployeeRole.ASSOCIATE,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (631)-243-3264",
-    },
-    {
-      id: "1000000021",
-      name: "Ryan holiday",
-      type: "Agent",
-      role: EmployeeRole.MANAGER,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (345)-456-6443",
-    },
-    {
-      id: "1000000022",
-      name: "Charlotte bronte",
-      type: "Franchise",
-      role: EmployeeRole.ASSOCIATE,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (154)-643-5432",
-    },
-    {
-      id: "1000000023",
-      name: "Ryan S. Jhun",
-      type: "Agent",
-      role: EmployeeRole.MANAGER,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (153)-645-7855",
-    },
-    {
-      id: "1000000024",
-      name: "Heize dean",
-      type: "Franchise",
-      role: EmployeeRole.ASSOCIATE,
-      location: "Ebox Location #1",
-      email: "steve.koh@gmail.com",
-      phone: "+1 (365)-263-3642",
-    },
-  ]);
-
-  const [selectAll, setSelectAll] = useState<boolean>(false);
+export default function EmployeeTable(): React.JSX.Element {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
   const [selectedTypes, setSelectedTypes] = useState<Type[]>([]);
-  const [sortBy, setSortBy] = useState<SortField>("id");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [selectedRoles, setSelectedRoles] = useState<EmployeeRole[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortField>("createdAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectAll, setSelectAll] = useState<boolean>(false);
+  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(
+    new Set(),
+  );
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
+
+  const {
+    data: employeesData,
+    isLoading,
+    error,
+  } = api.employees.getAllEmployees.useQuery({
+    page: currentPage,
+    limit: pageSize,
+    search: searchQuery || undefined,
+    typeFilter: selectedTypes.length > 0 ? selectedTypes : undefined,
+    roleFilter: selectedRoles.length > 0 ? selectedRoles : undefined,
+    sortBy,
+    sortDirection,
+  });
 
   const createEmployee = api.user.createEmployee.useMutation({
     onSuccess: () => {
@@ -211,28 +140,31 @@ export default function EmployeeTable(): JSX.Element {
     form.reset();
   }
 
-  const toggleSelectAll = (): void => {
-    setSelectAll((prev) => !prev);
-    setEmployees((prev) =>
-      prev.map(
-        (employee): Employee => ({
-          ...employee,
-          selected: !selectAll,
-        }),
-      ),
-    );
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
-  const toggleSelect = (index: number): void => {
-    const newEmployees = [...employees];
-    newEmployees[index] = {
-      ...newEmployees[index],
-      selected: !newEmployees[index]?.selected,
-    } as Employee;
-    setEmployees(newEmployees);
+  const toggleSelectAll = (): void => {
+    const employees = employeesData?.employees || [];
+    setSelectAll((prev) => !prev);
+    if (!selectAll) {
+      setSelectedEmployees(new Set(employees.map((emp) => emp.id)));
+    } else {
+      setSelectedEmployees(new Set());
+    }
+  };
 
-    // Update selectAll state based on if all employees are selected
-    setSelectAll(newEmployees.every((employee) => employee.selected));
+  const toggleSelect = (employeeId: string): void => {
+    const newSelected = new Set(selectedEmployees);
+    if (newSelected.has(employeeId)) {
+      newSelected.delete(employeeId);
+    } else {
+      newSelected.add(employeeId);
+    }
+    setSelectedEmployees(newSelected);
+
+    // Update selectAll state
+    setSelectAll(newSelected.size === (employeesData?.employees.length || 0));
   };
 
   const handleTypeFilterChange = (type: Type, checked: boolean): void => {
@@ -241,63 +173,63 @@ export default function EmployeeTable(): JSX.Element {
         ? [...selectedTypes, type]
         : selectedTypes.filter((s) => s !== type),
     );
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handleRoleFilterChange = (
+    role: EmployeeRole,
+    checked: boolean,
+  ): void => {
+    setSelectedRoles(
+      checked
+        ? [...selectedRoles, role]
+        : selectedRoles.filter((r) => r !== role),
+    );
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const clearFilters = (): void => {
     setSelectedTypes([]);
+    setSelectedRoles([]);
+    setSearchQuery("");
+    setCurrentPage(1);
   };
 
   const preventClose = (e: Event): void => {
     e.preventDefault();
   };
 
-  const handleRowClick = (
-    employeeId: string,
-    employeeName: string,
-    employeePhone: string,
-    employeeEmail: string,
-    employeeType: Type,
-  ) => {
-    router.push(
-      `customers/customer-details/${employeeId}?name=${employeeName}&phone=${employeePhone}&email=${employeeEmail}&type=${employeeType}`,
-    );
+  const handleRowClick = (employeeId: string) => {
+    router.push(`/employees/${employeeId}`);
   };
 
-  // Filter employees based on type filters
-  const filteredEmployees = employees.filter((employee) => {
-    // Filter by selected types
-    if (selectedTypes.length > 0 && !selectedTypes.includes(employee.type)) {
-      return false;
-    }
+  const handleLocationClick = (e: React.MouseEvent, locationId: number) => {
+    e.stopPropagation(); // Prevent row click
+    router.push(`/locations/${locationId}`);
+  };
 
-    return true;
-  });
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
-  // Apply sorting
-  const sortedEmployees = [...filteredEmployees].sort(
-    (a: Employee, b: Employee) => {
-      const direction = sortDirection === "asc" ? 1 : -1;
+  if (error) {
+    return (
+      <div className="w-full overflow-hidden rounded-lg border bg-white">
+        <div className="flex h-64 items-center justify-center">
+          <div className="text-center">
+            <p className="mb-2 text-red-600">Failed to load employees</p>
+            <p className="text-sm text-gray-500">
+              {error.message || "An error occurred while fetching employees"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      switch (sortBy) {
-        case "id":
-          return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
-        case "name":
-          return direction * a.name.localeCompare(b.name);
-        case "type":
-          return direction * a.type.localeCompare(b.type);
-        case "role":
-          return direction * a.role.localeCompare(b.role);
-        case "location":
-          return direction * a.location.localeCompare(b.location);
-        case "email":
-          return direction * a.email.localeCompare(b.email);
-        case "phone":
-          return direction * a.phone.localeCompare(b.phone);
-        default:
-          return 0;
-      }
-    },
-  );
+  const employees = employeesData?.employees || [];
+  const pagination = employeesData?.pagination;
 
   return (
     <div className="w-full overflow-hidden rounded-lg border bg-white">
@@ -308,109 +240,25 @@ export default function EmployeeTable(): JSX.Element {
             <input
               type="text"
               placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="h-8 rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm"
             />
           </div>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <Plus className="h-4 w-4" />
-                Add Employee
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Employee</DialogTitle>
-                <DialogDescription>
-                  Fill in the details to add a new employee to the system.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="emailAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="Enter email address"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Enter password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="employeeRole"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Employee Role</FormLabel>
-                        <FormControl>
-                          <select
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            {...field}
-                          >
-                            <option value="MANAGER">Manager</option>
-                            <option value="ASSOCIATE">Associate</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                        form.reset();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">Add Employee</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+
+          {/* Remove Add Employee button since creation is out of scope */}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1">
                 <Filter className="h-4 w-4" />
                 Filter
-                {selectedTypes.length > 0 && (
+                {(selectedTypes.length > 0 || selectedRoles.length > 0) && (
                   <Badge
                     variant="secondary"
                     className="ml-1 rounded-full px-1 text-xs"
                   >
-                    {selectedTypes.length}
+                    {selectedTypes.length + selectedRoles.length}
                   </Badge>
                 )}
               </Button>
@@ -423,25 +271,47 @@ export default function EmployeeTable(): JSX.Element {
               <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={selectedTypes.includes("Agent")}
+                checked={selectedTypes.includes("AGENT")}
                 onCheckedChange={(checked: boolean) =>
-                  handleTypeFilterChange("Agent", checked)
+                  handleTypeFilterChange("AGENT", checked)
                 }
                 onSelect={preventClose}
               >
                 Agent
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={selectedTypes.includes("Franchise")}
+                checked={selectedTypes.includes("FRANCHISE")}
                 onCheckedChange={(checked: boolean) =>
-                  handleTypeFilterChange("Franchise", checked)
+                  handleTypeFilterChange("FRANCHISE", checked)
                 }
                 onSelect={preventClose}
               >
                 Franchise
               </DropdownMenuCheckboxItem>
 
-              {selectedTypes.length > 0 && (
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Role</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={selectedRoles.includes(EmployeeRole.MANAGER)}
+                onCheckedChange={(checked: boolean) =>
+                  handleRoleFilterChange(EmployeeRole.MANAGER, checked)
+                }
+                onSelect={preventClose}
+              >
+                Manager
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedRoles.includes(EmployeeRole.ASSOCIATE)}
+                onCheckedChange={(checked: boolean) =>
+                  handleRoleFilterChange(EmployeeRole.ASSOCIATE, checked)
+                }
+                onSelect={preventClose}
+              >
+                Associate
+              </DropdownMenuCheckboxItem>
+
+              {(selectedTypes.length > 0 || selectedRoles.length > 0) && (
                 <>
                   <DropdownMenuSeparator />
                   <Button
@@ -456,6 +326,7 @@ export default function EmployeeTable(): JSX.Element {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -473,22 +344,9 @@ export default function EmployeeTable(): JSX.Element {
               <DropdownMenuRadioGroup
                 value={sortBy}
                 onValueChange={(value: string) => {
-                  if (
-                    value === "id" ||
-                    value === "name" ||
-                    value === "type" ||
-                    value === "role" ||
-                    value === "location" ||
-                    value === "email" ||
-                    value === "phone"
-                  ) {
-                    setSortBy(value as SortField);
-                  }
+                  setSortBy(value as SortField);
                 }}
               >
-                <DropdownMenuRadioItem value="id" onSelect={preventClose}>
-                  ID
-                </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="name" onSelect={preventClose}>
                   Employee name
                 </DropdownMenuRadioItem>
@@ -504,17 +362,18 @@ export default function EmployeeTable(): JSX.Element {
                 <DropdownMenuRadioItem value="email" onSelect={preventClose}>
                   Email
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="phone" onSelect={preventClose}>
-                  Phone
+                <DropdownMenuRadioItem
+                  value="createdAt"
+                  onSelect={preventClose}
+                >
+                  Created Date
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup
                 value={sortDirection}
                 onValueChange={(value: string) => {
-                  if (value === "asc" || value === "desc") {
-                    setSortDirection(value as SortDirection);
-                  }
+                  setSortDirection(value as SortDirection);
                 }}
               >
                 <DropdownMenuRadioItem
@@ -522,14 +381,14 @@ export default function EmployeeTable(): JSX.Element {
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowUp className="h-4 w-4" /> Oldest first
+                  <ArrowUp className="h-4 w-4" /> Ascending
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
                   value="desc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowDown className="h-4 w-4" /> Newest first
+                  <ArrowDown className="h-4 w-4" /> Descending
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
@@ -537,72 +396,117 @@ export default function EmployeeTable(): JSX.Element {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 hover:bg-gray-50">
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectAll}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all employees"
-                />
-              </TableHead>
-              <TableHead>Employee name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone #</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedEmployees.map((employee, index) => (
-              <TableRow
-                className="cursor-pointer"
-                key={index}
-                onClick={() =>
-                  handleRowClick(
-                    employee.id,
-                    employee.name,
-                    employee.phone,
-                    employee.email,
-                    employee.type,
-                  )
-                }
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={employee.selected}
-                    onCheckedChange={() => toggleSelect(index)}
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label={`Select employee ${employee.id}`}
-                  />
-                </TableCell>
-                <TableCell>{employee.name}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      employee.type === "Agent"
-                        ? "bg-blue-300"
-                        : "bg-yellow-300"
-                    }
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <span className="ml-2 text-gray-500">Loading employees...</span>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 hover:bg-gray-50">
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectAll}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all employees"
+                    />
+                  </TableHead>
+                  <TableHead>Employee name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone #</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((employee) => (
+                  <TableRow
+                    className="cursor-pointer"
+                    key={employee.id}
+                    onClick={() => handleRowClick(employee.id)}
                   >
-                    {employee.type}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{employee.role}</Badge>
-                </TableCell>
-                <TableCell>{employee.location}</TableCell>
-                <TableCell>{employee.email}</TableCell>
-                <TableCell>{employee.phone}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedEmployees.has(employee.id)}
+                        onCheckedChange={() => toggleSelect(employee.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Select employee ${employee.id}`}
+                      />
+                    </TableCell>
+                    <TableCell>{employee.fullName}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          employee.location.type === "AGENT"
+                            ? "bg-blue-300"
+                            : "bg-yellow-300"
+                        }
+                      >
+                        {employee.location.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{employee.role}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        onClick={(e) =>
+                          handleLocationClick(e, employee.location.id)
+                        }
+                      >
+                        {employee.location.name}
+                      </button>
+                    </TableCell>
+                    <TableCell>{employee.email}</TableCell>
+                    <TableCell>{employee.phone}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t p-4">
+              <div className="text-sm text-gray-500">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                {Math.min(
+                  pagination.page * pagination.limit,
+                  pagination.totalCount,
+                )}{" "}
+                of {pagination.totalCount} employees
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

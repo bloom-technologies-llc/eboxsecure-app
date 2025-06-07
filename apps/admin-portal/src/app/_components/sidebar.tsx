@@ -25,26 +25,31 @@ const allOperations = [
     title: "Orders",
     url: "/orders",
     allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
+    requiresManagerRole: false,
   },
   {
     title: "Employees",
     url: "/employees",
     allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
+    requiresManagerRole: true, // Only managers and corporate can access
   },
   {
     title: "Carriers",
     url: "/carriers",
     allowedUserTypes: ["CORPORATE"] as AdminUserType[], // Only corporate users
+    requiresManagerRole: false,
   },
   {
     title: "Locations",
     url: "/locations",
     allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
+    requiresManagerRole: false,
   },
   {
     title: "Customers",
     url: "/customers",
     allowedUserTypes: ["EMPLOYEE", "CORPORATE"] as AdminUserType[],
+    requiresManagerRole: false,
   },
 ];
 
@@ -61,14 +66,31 @@ const finances = [
 
 const AppSidebar = () => {
   const { data: userType, isLoading } = api.user.getUserType.useQuery();
+  const { data: userDetails, isLoading: isLoadingDetails } =
+    api.user.getCurrentUserDetails.useQuery(undefined, {
+      enabled: userType === UserType.EMPLOYEE,
+    });
 
-  // Filter operations based on user type
+  // Filter operations based on user type and role
   const visibleOperations = allOperations.filter((operation) => {
     if (!userType || userType === UserType.CUSTOMER) return false;
-    return operation.allowedUserTypes.includes(userType as AdminUserType);
+
+    // Check if user type is allowed
+    if (!operation.allowedUserTypes.includes(userType as AdminUserType)) {
+      return false;
+    }
+
+    // For operations that require manager role, check employee role
+    if (operation.requiresManagerRole && userType === UserType.EMPLOYEE) {
+      if (!userDetails || userDetails.employeeRole !== "MANAGER") {
+        return false;
+      }
+    }
+
+    return true;
   });
 
-  if (isLoading) {
+  if (isLoading || (userType === UserType.EMPLOYEE && isLoadingDetails)) {
     return (
       <Sidebar className="top-[--header-height] !h-[calc(100svh-var(--header-height))]">
         <SidebarHeader />
