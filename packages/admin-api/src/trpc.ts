@@ -7,6 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import type { AuthObject } from "@clerk/backend";
+import { UserType } from "@prisma/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { Logger } from "next-axiom";
 import superjson from "superjson";
@@ -119,7 +120,7 @@ export const protectedEmployeeProcedure = protectedProcedure.use(
         userType: true,
       },
     });
-    if (!userType || userType.userType !== "EMPLOYEE") {
+    if (!userType || userType.userType !== UserType.EMPLOYEE) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
@@ -145,7 +146,8 @@ export const protectedAdminProcedure = protectedProcedure.use(
     });
     if (
       !userType ||
-      (userType.userType !== "CORPORATE" && userType.userType !== "EMPLOYEE")
+      (userType.userType !== UserType.CORPORATE &&
+        userType.userType !== UserType.EMPLOYEE)
     ) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -169,7 +171,7 @@ export const protectedCorporateProcedure = protectedProcedure.use(
         userType: true,
       },
     });
-    if (!userType || userType.userType !== "CORPORATE") {
+    if (!userType || userType.userType !== UserType.CORPORATE) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     return next({

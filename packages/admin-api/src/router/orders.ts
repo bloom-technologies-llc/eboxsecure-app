@@ -1,3 +1,4 @@
+import { UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -14,7 +15,15 @@ export const ordersRouter = createTRPCRouter({
         userType: true,
       },
     });
-    if (userType?.userType === "CORPORATE") {
+
+    if (!userType) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not found",
+      });
+    }
+
+    if (userType.userType === UserType.CORPORATE) {
       return await ctx.db.order.findMany({
         include: {
           customer: true,
@@ -24,7 +33,7 @@ export const ordersRouter = createTRPCRouter({
           createdAt: "desc",
         },
       });
-    } else {
+    } else if (userType.userType === UserType.EMPLOYEE) {
       const availableOrdersBasedOnStoreLocation = await ctx.db.order.findMany({
         where: {
           shippedLocation: {
@@ -43,7 +52,13 @@ export const ordersRouter = createTRPCRouter({
           createdAt: "desc",
         },
       });
+
       return availableOrdersBasedOnStoreLocation;
+    } else {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid user type",
+      });
     }
   }),
 
@@ -54,44 +69,86 @@ export const ordersRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const user = await ctx.db.employeeAccount.findUnique({
+      const userType = await ctx.db.user.findUnique({
         where: {
           id: ctx.session.userId,
         },
         select: {
-          locationId: true,
+          userType: true,
         },
       });
 
-      if (!user) {
+      if (!userType) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "User not found",
         });
       }
-      const order = await ctx.db.order.findUnique({
-        where: {
-          id: input.orderId,
-        },
-        select: {
-          id: true,
-          shippedLocationId: true,
-          customer: true,
-          shippedLocation: {
-            select: {
-              id: true,
+
+      if (userType.userType === UserType.CORPORATE) {
+        return await ctx.db.order.findUnique({
+          where: {
+            id: input.orderId,
+          },
+          select: {
+            id: true,
+            shippedLocationId: true,
+            customer: true,
+            shippedLocation: {
+              select: {
+                id: true,
+              },
             },
           },
-        },
-      });
-
-      if (order?.shippedLocationId !== user.locationId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Order cannot be accessed",
         });
+      } else if (userType.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+
+        const order = await ctx.db.order.findUnique({
+          where: {
+            id: input.orderId,
+            shippedLocationId: user.locationId,
+          },
+          select: {
+            id: true,
+            shippedLocationId: true,
+            customer: true,
+            shippedLocation: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+
+        if (!order) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User is unauthorized to access this order",
+          });
+        }
+
+        return order;
       }
 
-      return order;
+      // Fallback for unexpected user types
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid user type",
+      });
     }),
 });

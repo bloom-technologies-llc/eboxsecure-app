@@ -8,8 +8,6 @@ import { db } from "@ebox/db";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.CLERK_CREATE_USER_WEBHOOK_SECRET;
-  // Testing purposes
-  // const WEBHOOK_SECRET_NGROK = env.CLERK_CREATE_USER_WEBHOOK_SECRET_NGROK;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(

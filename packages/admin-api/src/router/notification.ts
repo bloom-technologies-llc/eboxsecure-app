@@ -1,28 +1,49 @@
+import { UserType } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
 export const notification = createTRPCRouter({
   getNotifications: protectedAdminProcedure.query(async ({ ctx }) => {
-    const notifications = await ctx.db.notification.findMany({
+    const userType = await ctx.db.user.findUnique({
       where: {
-        userId: ctx.session.userId,
+        id: ctx.session.userId,
       },
-      include: {
-        comment: {
-          select: {
-            id: true,
-            commentType: true,
-            orderComment: {
-              select: {
-                order: true,
+      select: {
+        userType: true,
+      },
+    });
+
+    if (
+      userType?.userType === UserType.CORPORATE ||
+      userType?.userType === UserType.EMPLOYEE
+    ) {
+      const notifications = await ctx.db.notification.findMany({
+        where: {
+          userId: ctx.session.userId,
+        },
+        include: {
+          comment: {
+            select: {
+              id: true,
+              commentType: true,
+              orderComment: {
+                select: {
+                  order: true,
+                },
               },
             },
           },
         },
-      },
-    });
-    return notifications;
+      });
+      return notifications;
+    } else {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User is unauthorized to access this notification",
+      });
+    }
   }),
 
   markAsRead: protectedAdminProcedure

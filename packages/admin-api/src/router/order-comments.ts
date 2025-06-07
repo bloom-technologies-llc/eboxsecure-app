@@ -1,5 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { CommentType } from "@prisma/client";
+import { CommentType, UserType } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
@@ -9,7 +10,6 @@ export const orderComments = createTRPCRouter({
     .input(
       z.object({
         text: z.string(),
-        commentType: z.nativeEnum(CommentType),
         filePaths: z.array(z.string()).optional(),
         authorId: z.string(),
         orderId: z.number(),
@@ -24,25 +24,82 @@ export const orderComments = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.comment.create({
-        data: {
-          text: input.text,
-          commentType: input.commentType,
-          filePaths: input.filePaths || [],
-          authorId: input.authorId,
-          orderComment: {
-            create: {
-              orderId: input.orderId,
-            },
-          },
-          notifications: {
-            create: input.notifications?.map((notification) => ({
-              userId: notification.userId,
-              message: notification.message,
-            })),
-          },
+      const userType = await ctx.db.user.findUnique({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          userType: true,
         },
       });
+      if (userType?.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+
+        const order = await ctx.db.order.findUnique({
+          where: {
+            id: input.orderId,
+            shippedLocationId: user.locationId,
+          },
+        });
+        if (!order) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User is unauthorized to access this order",
+          });
+        }
+        await ctx.db.comment.create({
+          data: {
+            text: input.text,
+            commentType: CommentType.ORDER,
+            filePaths: input.filePaths || [],
+            authorId: input.authorId,
+            orderComment: {
+              create: {
+                orderId: input.orderId,
+              },
+            },
+            notifications: {
+              create: input.notifications?.map((notification) => ({
+                userId: notification.userId,
+                message: notification.message,
+              })),
+            },
+          },
+        });
+      } else if (userType?.userType === UserType.CORPORATE) {
+        await ctx.db.comment.create({
+          data: {
+            text: input.text,
+            commentType: CommentType.ORDER,
+            filePaths: input.filePaths || [],
+            authorId: input.authorId,
+            orderComment: {
+              create: {
+                orderId: input.orderId,
+              },
+            },
+            notifications: {
+              create: input.notifications?.map((notification) => ({
+                userId: notification.userId,
+                message: notification.message,
+              })),
+            },
+          },
+        });
+      }
     }),
 
   updateOrderComments: protectedAdminProcedure
@@ -53,14 +110,73 @@ export const orderComments = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.comment.update({
+      const userType = await ctx.db.user.findUnique({
         where: {
-          id: input.commentId,
+          id: ctx.session.userId,
         },
-        data: {
-          text: input.text,
+        select: {
+          userType: true,
         },
       });
+
+      if (userType?.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+
+        // Verify the comment's order belongs to the employee's location
+        const comment = await ctx.db.comment.findUnique({
+          where: {
+            id: input.commentId,
+            orderComment: {
+              order: {
+                shippedLocationId: user.locationId,
+              },
+            },
+          },
+          include: {
+            orderComment: {
+              include: {
+                order: true,
+              },
+            },
+          },
+        });
+        if (!comment) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User is unauthorized to access this comment",
+          });
+        }
+        await ctx.db.comment.update({
+          where: {
+            id: input.commentId,
+          },
+          data: {
+            text: input.text,
+          },
+        });
+      } else if (userType?.userType === UserType.CORPORATE) {
+        await ctx.db.comment.update({
+          where: {
+            id: input.commentId,
+          },
+          data: {
+            text: input.text,
+          },
+        });
+      }
     }),
 
   queryOrderComments: protectedAdminProcedure
@@ -70,14 +186,58 @@ export const orderComments = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return await ctx.db.orderComment.findMany({
+      const userType = await ctx.db.user.findUnique({
         where: {
-          orderId: input.orderId,
+          id: ctx.session.userId,
         },
-        include: {
-          comment: true,
+        select: {
+          userType: true,
         },
       });
+
+      if (userType?.userType === UserType.CORPORATE) {
+        return await ctx.db.orderComment.findMany({
+          where: {
+            orderId: input.orderId,
+          },
+          include: {
+            comment: true,
+          },
+        });
+      } else if (userType?.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+        const orderComments = await ctx.db.orderComment.findMany({
+          where: {
+            orderId: input.orderId,
+            order: {
+              shippedLocationId: user.locationId,
+            },
+          },
+          include: {
+            comment: true,
+          },
+        });
+        if (!orderComments) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User is unauthorized to access this order",
+          });
+        }
+        return orderComments;
+      }
     }),
 
   removeOrderComments: protectedAdminProcedure
@@ -87,11 +247,66 @@ export const orderComments = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.comment.delete({
+      const userType = await ctx.db.user.findUnique({
         where: {
-          id: input.commentId,
+          id: ctx.session.userId,
+        },
+        select: {
+          userType: true,
         },
       });
+
+      if (userType?.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+
+        const comment = await ctx.db.comment.findUnique({
+          where: {
+            id: input.commentId,
+            orderComment: {
+              order: {
+                shippedLocationId: user.locationId,
+              },
+            },
+          },
+          include: {
+            orderComment: {
+              include: {
+                order: true,
+              },
+            },
+          },
+        });
+        if (!comment) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User is unauthorized to access this comment",
+          });
+        }
+        await ctx.db.comment.delete({
+          where: {
+            id: input.commentId,
+          },
+        });
+      } else if (userType?.userType === UserType.CORPORATE) {
+        await ctx.db.comment.delete({
+          where: {
+            id: input.commentId,
+          },
+        });
+      }
     }),
 
   getLocationEmployees: protectedAdminProcedure
@@ -102,9 +317,46 @@ export const orderComments = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const clerk = await clerkClient();
+
+      const userType = await ctx.db.user.findUnique({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          userType: true,
+        },
+      });
+
+      let locationId: number;
+
+      if (userType?.userType === UserType.EMPLOYEE) {
+        const user = await ctx.db.employeeAccount.findUnique({
+          where: {
+            id: ctx.session.userId,
+          },
+          select: {
+            locationId: true,
+          },
+        });
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not found",
+          });
+        }
+        locationId = user.locationId;
+      } else if (userType?.userType === UserType.CORPORATE) {
+        locationId = input.locationId;
+      } else {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User is unauthorized to access this location",
+        });
+      }
+
       const eligibleEmployees = await ctx.db.employeeAccount.findMany({
         where: {
-          locationId: input.locationId,
+          locationId,
         },
         select: {
           id: true,
