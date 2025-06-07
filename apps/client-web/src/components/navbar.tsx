@@ -46,6 +46,16 @@ export default function Navbar() {
               >
                 Locations
               </Link>
+              <Link
+                href="/settings"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname.startsWith("/settings")
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
+              >
+                Settings
+              </Link>
             </nav>
 
             <div className="">

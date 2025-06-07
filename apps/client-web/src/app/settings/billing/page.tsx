@@ -2,20 +2,28 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import Link from "next/link";
+import SettingsLayout from "@/components/settings-layout";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { CreditCard, Eye, Plus } from "lucide-react";
 import logo from "public/visa_logo.png";
 
+import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@ebox/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
 import { EllipsisIcon } from "@ebox/ui/icons/ellipsis";
@@ -35,6 +43,7 @@ interface Billing {
   status: string;
   total: number;
 }
+
 const columns: ColumnDef<Billing>[] = [
   {
     accessorKey: "date",
@@ -47,11 +56,14 @@ const columns: ColumnDef<Billing>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <div className="w-fit rounded-sm bg-[#f3f3f3] px-4 py-1">
-        <p className="text-gray">{row.getValue("status")}</p>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge variant={status === "Paid" ? "default" : "secondary"}>
+          {status}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "total",
@@ -66,20 +78,23 @@ const columns: ColumnDef<Billing>[] = [
       return <div className="text-right font-medium">{formatted}</div>;
     },
   },
-
   {
     id: "actions",
+    header: "Actions",
     cell: () => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant={"ghost"} className="h-8 w-8 p-0">
+            <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
               <EllipsisIcon />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View invoice</DropdownMenuItem>
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              View invoice
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -92,14 +107,14 @@ const data: Billing[] = [
     id: "728ed52f",
     date: "11/24/2024",
     sub_tier: "Diamond",
-    status: "Open",
+    status: "Paid",
     total: 22.0,
   },
   {
     id: "728ed52f",
     date: "11/24/2024",
     sub_tier: "Gold",
-    status: "Open",
+    status: "Paid",
     total: 22.0,
   },
   {
@@ -113,138 +128,113 @@ const data: Billing[] = [
     id: "728ed52f",
     date: "11/24/2024",
     sub_tier: "Bronze",
-    status: "Open",
+    status: "Paid",
     total: 22.0,
   },
 ];
 
-export default function SettingsPage() {
+export default function BillingPage() {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
   return (
-    <div className="h-screen bg-[#F3F3F3] pb-28 pt-14">
-      {/* <p className="text-2xl">Settings</p> */}
-      <div className="mx-auto flex h-full w-full rounded-md border border-[#E4E4E7] bg-white md:w-8/12">
-        <div className=" w-2.5/12 border-r border-[#E4E4E7] px-2 py-3">
-          <div className="flex flex-col gap-y-3">
-            <Link href="/settings">
-              <Button className="w-full justify-start bg-white text-start  shadow-none">
-                General
-              </Button>
-            </Link>
+    <SettingsLayout>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Billing & Payment
+            </CardTitle>
+            <CardDescription>
+              Manage your payment methods and view billing history
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
-            <Link href="/settings/notifications">
-              <Button className="w-full justify-start bg-white text-start  shadow-none">
-                Notifications
-              </Button>
-            </Link>
-
-            <Link href="/settings/authorized-pickups">
-              <Button className="w-full justify-start bg-white text-start  shadow-none">
-                Authorized pickups
-              </Button>
-            </Link>
-
-            <Link href="/settings/billing">
-              <Button className="w-full justify-start bg-[#E4EEF1] text-start text-[#00698F] shadow-none">
-                Billing
-              </Button>
-            </Link>
-
-            <Link href="/">
-              <Button className="w-full justify-start bg-white text-start  shadow-none">
-                Subscription
-              </Button>
-            </Link>
-
-            <DropdownMenuSeparator />
-
-            <Button className="w-full justify-start bg-white text-start  shadow-none">
-              <Link className="text-[#8F0000]" href="/">
-                Delete my account
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <div className="w-full flex-col">
-          <div className="border-b border-[#E4E4E7] p-4">
-            <p>Billing</p>
-            <p className="text-sm text-[#575959]">
-              Update your payment methods & subscription plans
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-y-4 p-4">
-            <p>Payment information</p>
-
-            <div className="flex gap-x-2">
-              <div className="flex w-full gap-x-4 rounded-md border border-[#E4E4E7] p-2">
-                <div className="flex gap-x-1">
-                  <Image src={logo} width={60} height={20} alt="Visa logo" />
-
-                  <div className="flex flex-col">
-                    <p className="text-sm text-[#333333]">
-                      Visa ending in 7830
-                    </p>
-                    <p className="text-sm text-[#575959]">Exp. date 6/30</p>
-                  </div>
-                </div>
-                <div className="flex gap-x-2">
-                  <Button className="h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
-                    <p>Default</p>
-                  </Button>
-                </div>
+        {/* Payment Methods */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Your saved payment methods for subscriptions
+                </CardDescription>
               </div>
-
-              <div className="flex w-full gap-x-4 rounded-md border border-[#E4E4E7] p-2">
-                <div className="flex gap-x-1">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Payment Method
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Default Payment Method */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
                   <Image src={logo} width={60} height={20} alt="Visa logo" />
-
-                  <div className="flex flex-col">
-                    <p className="text-sm text-[#333333]">
-                      Visa ending in 7830
+                  <div>
+                    <p className="font-medium">Visa ending in 7830</p>
+                    <p className="text-sm text-muted-foreground">
+                      Expires 6/30
                     </p>
-                    <p className="text-sm text-[#575959]">Exp. date 6/30</p>
                   </div>
                 </div>
-                <p className="text-sm text-[#00698F]">Set default</p>
+                <div className="flex items-center gap-2">
+                  <Badge>Default</Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <EllipsisIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive">
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <Button className="mx-4 mb-4 h-fit rounded-sm bg-[#00698F] px-2 py-1 text-sm text-white">
-            <p>Add payment method</p>
-          </Button>
-
-          <DropdownMenuSeparator />
-
-          <div className="m-4 flex flex-col gap-y-2">
-            <p className="mb-2">Transaction History</p>
-            <div className=" rounded-md border">
+        {/* Billing History */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Billing History</CardTitle>
+            <CardDescription>
+              Your recent invoices and payment history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        return (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </TableHead>
-                        );
-                      })}
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   ))}
                 </TableHeader>
                 <TableBody>
-                  {table.getRowModel().rows.length ? (
+                  {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => (
                       <TableRow
                         key={row.id}
@@ -266,16 +256,25 @@ export default function SettingsPage() {
                         colSpan={columns.length}
                         className="h-24 text-center"
                       >
-                        No results.
+                        No billing history found.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
-          </div>
-        </div>
+
+            {/* Summary */}
+            <div className="flex items-center justify-between border-t pt-4">
+              <p className="text-sm text-muted-foreground">
+                {data.length} total invoices •{" "}
+                {data.filter((b) => b.status === "Paid").length} paid •{" "}
+                {data.filter((b) => b.status === "Open").length} pending
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </SettingsLayout>
   );
 }
