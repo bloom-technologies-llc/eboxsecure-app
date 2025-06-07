@@ -12,6 +12,7 @@ import {
   SortDesc,
 } from "lucide-react";
 
+import type { RouterOutputs } from "@ebox/admin-api";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import { Checkbox } from "@ebox/ui/checkbox";
@@ -44,76 +45,93 @@ type SortField =
   | "customer_name";
 type SortDirection = "asc" | "desc";
 
-interface Package {
-  id: string;
-  trackingNumber: string;
-  date: string;
-  customer: string;
-  customerVerified?: boolean;
-  store: string;
-  storeVerified?: boolean;
-  status: Status;
-  total: string;
-  selected?: boolean;
+type Order = RouterOutputs["orders"]["getAllOrders"][number];
+
+interface PackageTrackingTableProps {
+  orders: Order[];
 }
 
-export default function PackageTrackingTable(): JSX.Element {
-  const [filter, setFilter] = useState<"All" | Status>("All");
-  const [packages, setPackages] = useState<Package[]>([
-    {
-      id: "1000000017",
-      trackingNumber: "113-6838917-0669818",
-      date: "11/03/2024",
-      customer: "David Smith",
-      customerVerified: true,
-      store: "Puppy shop",
-      storeVerified: true,
-      status: "Open",
-      total: "$22.00 USD",
-    },
-    ...Array(7)
-      .fill(null)
-      .map(
-        (): Package => ({
-          id: "1000000018",
-          trackingNumber: "113-6838917-0669818",
-          date: "11/03/2024",
-          customer: "David Smith",
-          store: "Puppy shop",
-          status: "Open",
-          total: "$22.00 USD",
-        }),
-      ),
-  ]);
+// TODO: Decide if we want to have the order status in the schema
+const getOrderStatus = (order: Order): Status => {
+  if (order.deliveredDate && order.deliveredDate < new Date()) {
+    return "Completed";
+  }
+  return "Open";
+};
 
+const formatCurrency = (amount: number): string => {
+  return `$${amount.toFixed(2)} USD`;
+};
+
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString();
+};
+
+export default function PackageTrackingTable({
+  orders,
+}: PackageTrackingTableProps): JSX.Element {
+  const [filter, setFilter] = useState<"All" | Status>("All");
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
   const [sortBy, setSortBy] = useState<SortField>("order_number");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
 
+  const filteredOrders = (() => {
+    if (!orders) {
+      return [];
+    }
+
+    if (filter === "All" && selectedStatuses.length === 0) {
+      return orders;
+    }
+
+    // If filter is "All" but status filters are selected
+    if (filter === "All" && selectedStatuses.length > 0) {
+      return orders.filter((order) =>
+        selectedStatuses.includes(getOrderStatus(order)),
+      );
+    }
+
+    // If specific filter is selected and no status filters
+    if (filter !== "All" && selectedStatuses.length === 0) {
+      return orders.filter((order) => getOrderStatus(order) === filter);
+    }
+
+    // If both specific filter and status filters are selected
+    if (filter !== "All" && selectedStatuses.length > 0) {
+      return orders.filter(
+        (order) =>
+          getOrderStatus(order) === filter &&
+          selectedStatuses.includes(getOrderStatus(order)),
+      );
+    }
+
+    return orders;
+  })();
+
+  // Apply sorting
+  const sortedOrders = [...filteredOrders].sort((a: Order, b: Order) => {
+    const direction = sortDirection === "asc" ? 1 : -1;
+
+    switch (sortBy) {
+      case "order_number":
+        return direction * (a.id - b.id);
+      case "date":
+        return direction * (a.createdAt.getTime() - b.createdAt.getTime());
+      case "status":
+        return direction * getOrderStatus(a).localeCompare(getOrderStatus(b));
+      case "total_price":
+        return direction * (a.total - b.total);
+      case "customer_name":
+        return direction * a.customer.id.localeCompare(b.customer.id);
+      default:
+        return 0;
+    }
+  });
+
   const toggleSelectAll = (): void => {
     setSelectAll((prev) => !prev);
-    setPackages((prev) =>
-      prev.map(
-        (pkg): Package => ({
-          ...pkg,
-          selected: !prev,
-        }),
-      ),
-    );
-  };
-
-  const toggleSelect = (index: number): void => {
-    const newPackages = [...packages];
-    newPackages[index] = {
-      ...newPackages[index],
-      selected: !newPackages[index]?.selected,
-    } as Package;
-    setPackages(newPackages);
-
-    // Update selectAll state based on if all packages are selected
-    setSelectAll(newPackages.every((pkg) => pkg.selected));
   };
 
   const handleStatusFilterChange = (status: Status, checked: boolean): void => {
@@ -135,48 +153,6 @@ export default function PackageTrackingTable(): JSX.Element {
   const handleRowClick = (orderId: string) => {
     router.push(`orders/order-details/${orderId}`);
   };
-
-  // Filter packages based on tab selection and status filters
-  const filteredPackages =
-    filter === "All"
-      ? selectedStatuses.length > 0
-        ? packages.filter((pkg) => selectedStatuses.includes(pkg.status))
-        : packages
-      : selectedStatuses.length > 0
-        ? packages.filter(
-            (pkg) =>
-              pkg.status === filter && selectedStatuses.includes(pkg.status),
-          )
-        : packages.filter((pkg) => pkg.status === filter);
-
-  // Apply sorting
-  const sortedPackages = [...filteredPackages].sort(
-    (a: Package, b: Package) => {
-      const direction = sortDirection === "asc" ? 1 : -1;
-
-      switch (sortBy) {
-        case "order_number":
-          return direction * (Number.parseInt(a.id) - Number.parseInt(b.id));
-        case "date":
-          return (
-            direction *
-            (new Date(a.date).getTime() - new Date(b.date).getTime())
-          );
-        case "status":
-          return direction * a.status.localeCompare(b.status);
-        case "total_price":
-          return (
-            direction *
-            (Number.parseFloat(a.total.replace("$", "")) -
-              Number.parseFloat(b.total.replace("$", "")))
-          );
-        case "customer_name":
-          return direction * a.customer.localeCompare(b.customer);
-        default:
-          return 0;
-      }
-    },
-  );
 
   return (
     <div className="w-full overflow-hidden rounded-lg border bg-white">
@@ -366,14 +342,14 @@ export default function PackageTrackingTable(): JSX.Element {
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowUp className="h-4 w-4" /> Oldest first
+                  <ArrowUp className="h-4 w-4" /> Ascending
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
                   value="desc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowDown className="h-4 w-4" /> Newest first
+                  <ArrowDown className="h-4 w-4" /> Descending
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
@@ -402,43 +378,40 @@ export default function PackageTrackingTable(): JSX.Element {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedPackages.map((pkg, index) => (
+            {sortedOrders.map((order) => (
               <TableRow
                 className="cursor-pointer"
-                key={index}
-                onClick={() => handleRowClick(pkg.id)}
+                key={order.id}
+                onClick={() => handleRowClick(order.id.toString())}
               >
                 <TableCell>
                   <Checkbox
-                    checked={pkg.selected}
-                    onCheckedChange={() => toggleSelect(index)}
+                    checked={selectAll}
+                    onCheckedChange={toggleSelectAll}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Select package ${pkg.id}`}
+                    aria-label={`Select package ${order.id}`}
                   />
                 </TableCell>
-                <TableCell>{pkg.id}</TableCell>
-                <TableCell>{pkg.trackingNumber}</TableCell>
-                <TableCell>{pkg.date}</TableCell>
+                <TableCell>{order.id}</TableCell>
+                <TableCell>{order.vendorOrderId}</TableCell>
+                <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    {pkg.customer}
-                    {pkg.customerVerified && (
-                      <Info className="h-4 w-4 text-blue-500" />
-                    )}
+                    {/* would we want to display customer name instead of id? */}
+                    {order.customer.id}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    {pkg.store}
-                    {pkg.storeVerified && (
-                      <Info className="h-4 w-4 text-blue-500" />
-                    )}
+                    {order.shippedLocation.name}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{pkg.status}</Badge>
+                  <Badge variant="secondary">{getOrderStatus(order)}</Badge>
                 </TableCell>
-                <TableCell className="text-right">{pkg.total}</TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(order.total)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

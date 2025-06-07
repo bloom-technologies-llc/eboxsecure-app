@@ -5,32 +5,39 @@ import { z } from "zod";
 
 import {
   createTRPCRouter,
-  protectedAdminProcedure,
   protectedEmployeeProcedure,
+  protectedProcedure,
 } from "../trpc";
 
 export const userRouter = createTRPCRouter({
-  getUserType: protectedAdminProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.userId;
-    const user = await ctx.db.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        userType: true,
-      },
-    });
+  getUserType: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const user = await ctx.db.user.findUnique({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          userType: true,
+        },
+      });
 
-    if (!user) {
+      if (!user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not found",
+        });
+      }
+
+      return user.userType;
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get user type",
       });
     }
-
-    return {
-      userType: user.userType,
-    };
   }),
 
   createEmployee: protectedEmployeeProcedure

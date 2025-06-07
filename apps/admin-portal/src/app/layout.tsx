@@ -18,6 +18,7 @@ import "~/app/globals.css";
 
 import { SidebarProvider, SidebarTrigger } from "@ebox/ui/sidebar";
 import { Toaster } from "@ebox/ui/toaster";
+import { TooltipProvider } from "@ebox/ui/tooltip";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -41,7 +42,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             <div className="[--header-height:calc(theme(spacing.14))]">
               <SidebarProvider className="flex flex-col">
                 <Toaster />
-                <div className="flex flex-1">{props.children}</div>
+                <TooltipProvider delayDuration={100}>
+                  <div className="flex flex-1">{props.children}</div>
+                </TooltipProvider>
               </SidebarProvider>
             </div>
           </body>

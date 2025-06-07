@@ -1,11 +1,16 @@
 import type { PhoneNumberResource } from "@clerk/types";
 import { useState } from "react";
-import { SafeAreaView, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-root-toast";
 import { useRouter } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
 import { useUser } from "@clerk/clerk-expo";
-import { Button, Form, Input, Label } from "tamagui";
 
 const AddPhone = () => {
   const { user } = useUser();
@@ -79,19 +84,24 @@ const AddPhone = () => {
         <BackBreadcrumb />
         <View className="p-4">
           <Text className="text-lg font-semibold">Verify phone number</Text>
-          <Form onSubmit={() => verifyCode()}>
-            <Label htmlFor="code">Enter code</Label>
-            <Input
-              id="code"
+          <View className="mt-4">
+            <Text className="mb-2 text-base font-medium text-gray-700">
+              Enter code
+            </Text>
+            <TextInput
+              className="mb-4 rounded-md border border-gray-300 px-3 py-2 text-base"
               placeholder="Verification code"
               onChangeText={(e) => setCode(e)}
               value={code}
               keyboardType="number-pad"
             />
-            <Form.Trigger asChild>
-              <Button chromeless>Verify</Button>
-            </Form.Trigger>
-          </Form>
+            <TouchableOpacity
+              className="rounded-md bg-blue-600 px-4 py-2"
+              onPress={() => verifyCode()}
+            >
+              <Text className="text-center font-medium text-white">Verify</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -103,19 +113,26 @@ const AddPhone = () => {
         <Text className="text-lg font-semibold">
           Add phone number to account
         </Text>
-        <Form onSubmit={async () => handleSubmit()}>
-          <Label htmlFor="phoneNumber">Add new phone number</Label>
-          <Input
-            id="phoneNumber"
+        <View className="mt-4">
+          <Text className="mb-2 text-base font-medium text-gray-700">
+            Add new phone number
+          </Text>
+          <TextInput
+            className="mb-4 rounded-md border border-gray-300 px-3 py-2 text-base"
             placeholder="Phone Number"
             onChangeText={(e) => setPhone(e)}
             value={phone}
             keyboardType="number-pad"
           />
-          <Form.Trigger asChild>
-            <Button chromeless>Add phone</Button>
-          </Form.Trigger>
-        </Form>
+          <TouchableOpacity
+            className="rounded-md bg-blue-600 px-4 py-2"
+            onPress={async () => handleSubmit()}
+          >
+            <Text className="text-center font-medium text-white">
+              Add phone
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );

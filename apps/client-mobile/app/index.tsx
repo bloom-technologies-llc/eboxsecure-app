@@ -3,7 +3,7 @@ import { Redirect } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 
 export default function Page() {
-  const { userId, isLoaded } = useAuth();
+  const { userId, isLoaded, isSignedIn } = useAuth();
 
   // Show loading while Clerk is initializing
   if (!isLoaded) {
@@ -14,7 +14,8 @@ export default function Page() {
     );
   }
 
-  if (userId) {
+  // Use isSignedIn instead of just userId for more reliable state
+  if (isSignedIn && userId) {
     return <Redirect href="/(tabs)/(notifications)" />;
   }
   return <Redirect href="/sign-in" />;

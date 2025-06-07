@@ -149,7 +149,6 @@ export default function Page() {
   }
 
   return (
-    // TODO: convert this to tamagui form
     <SafeAreaView className="flex items-center justify-around gap-8 p-6">
       <Image
         source={logo}

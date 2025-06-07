@@ -1,12 +1,17 @@
 import type { PhoneNumberResource } from "@clerk/types";
-import { SafeAreaView, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Link } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
 import { e164ToHumanReadable } from "@/utils/formatter";
 import { useUser } from "@clerk/clerk-expo";
 import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 import { Phone, Trash } from "phosphor-react-native";
-import { Button, Separator, Switch } from "tamagui";
 
 const ManageSecurity = () => {
   const { userOwnsCredentials, clearCredentials } = useLocalCredentials();
@@ -20,21 +25,19 @@ const ManageSecurity = () => {
           Add Phone
         </Link>
       </View>
-      <Separator marginVertical={16} borderWidth={1} borderColor="#E5E5E5" />
+      <View className="mx-4 my-4 h-px bg-gray-300" />
       <View className="flex flex-col gap-4 p-4">
         <Text className="text-lg font-semibold">Biometric Authentication</Text>
         <View className="flex flex-row items-center gap-2">
           <Switch
             disabled={!userOwnsCredentials}
-            checked={userOwnsCredentials ?? false}
-            onCheckedChange={(isEnabled) => {
+            value={userOwnsCredentials ?? false}
+            onValueChange={(isEnabled) => {
               if (!isEnabled) {
                 clearCredentials();
               }
             }}
-          >
-            <Switch.Thumb animation="quick" />
-          </Switch>
+          />
           <Text className="text-gray-500">
             {!userOwnsCredentials
               ? "Sign out and sign in again to enable biometric authentication"
@@ -95,32 +98,29 @@ const ManageMfaPhoneNumbers = () => {
               </View>
               <View className="flex flex-row gap-1">
                 {!phone.defaultSecondFactor && (
-                  <Button
-                    size="$2"
-                    chromeless
+                  <TouchableOpacity
+                    className="px-3 py-1"
                     onPress={() => phone.makeDefaultSecondFactor()}
                   >
-                    Make default
-                  </Button>
+                    <Text className="text-blue-600">Make default</Text>
+                  </TouchableOpacity>
                 )}
-                <Button
-                  size="$2"
-                  chromeless
+                <TouchableOpacity
+                  className="px-3 py-1"
                   onPress={() =>
                     phone.setReservedForSecondFactor({ reserved: false })
                   }
                 >
                   <Text className="text-red-500">Disable</Text>
-                </Button>
+                </TouchableOpacity>
 
                 {user.phoneNumbers.length > 1 && (
-                  <Button
-                    chromeless
-                    size="$2"
+                  <TouchableOpacity
+                    className="px-3 py-1"
                     onPress={async () => handleDestroy(phone)}
                   >
                     <Trash size="18" />
-                  </Button>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
@@ -182,22 +182,20 @@ const ManageAvailablePhoneNumbers = () => {
                 </Text>
               </View>
               <View className="flex flex-row gap-1">
-                <Button
-                  size="$2"
-                  chromeless
+                <TouchableOpacity
+                  className="px-3 py-1"
                   onPress={() => reservePhoneForMfa(phone)}
                 >
-                  Use for MFA
-                </Button>
+                  <Text className="text-blue-600">Use for MFA</Text>
+                </TouchableOpacity>
 
                 {user.phoneNumbers.length > 1 && (
-                  <Button
-                    chromeless
-                    size="$2"
+                  <TouchableOpacity
+                    className="px-3 py-1"
                     onPress={async () => handleDestroy(phone)}
                   >
                     <Trash size="18" />
-                  </Button>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
