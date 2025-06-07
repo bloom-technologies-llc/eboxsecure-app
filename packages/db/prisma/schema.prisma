@@ -279,5 +279,4 @@ enum LocationType {
 enum TrustedContactStatus {
     PENDING
     ACTIVE
-    REVOKED
 }

@@ -49,6 +49,15 @@ export default function Page() {
         </Link>
       </View>
 
+      <View className=" flex flex-row justify-between border border-t-0 border-[#e4e4e7]">
+        <Link
+          href="/(tabs)/(profile)/trusted-contacts"
+          className="w-full px-6 py-5"
+        >
+          <Text className="text-[#333333]">Trusted Contacts</Text>
+        </Link>
+      </View>
+
       <View className="h-2 bg-[#e4e4e7]"></View>
 
       <View>

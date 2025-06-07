@@ -209,22 +209,19 @@ export const trustedContactsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  // Remove trusted contact (revoke access)
+  // Remove trusted contact (delete relationship)
   removeTrustedContact: protectedCustomerProcedure
     .input(z.object({ trustedContactId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const updated = await ctx.db.trustedContact.updateMany({
+      const deleted = await ctx.db.trustedContact.deleteMany({
         where: {
           accountHolderId: ctx.session.userId,
           trustedContactId: input.trustedContactId,
           status: "ACTIVE",
         },
-        data: {
-          status: "REVOKED",
-        },
       });
 
-      if (updated.count === 0) {
+      if (deleted.count === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Active trusted contact relationship not found",

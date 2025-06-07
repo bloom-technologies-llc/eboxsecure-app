@@ -5,6 +5,7 @@ import { api } from "@/trpc/react";
 import { X } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
+import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
 
@@ -20,15 +21,26 @@ export default function AddTrustedContactModal({
   const [email, setEmail] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const utils = api.useUtils();
   const sendInvitation = api.trustedContacts.sendInvitation.useMutation({
     onSuccess: () => {
       utils.trustedContacts.getMyTrustedContacts.invalidate();
+      toast({
+        title: "Invitation sent successfully!",
+        description: `${email} has been invited to be your trusted contact.`,
+        variant: "default",
+      });
       handleClose();
     },
     onError: (error) => {
       console.error("Failed to send invitation:", error);
+      toast({
+        title: "Failed to send invitation",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
       setIsSubmitting(false);
     },
   });
@@ -142,14 +154,6 @@ export default function AddTrustedContactModal({
               </Button>
             </div>
           </>
-        )}
-
-        {sendInvitation.error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
-            <p className="text-sm text-red-700">
-              {sendInvitation.error.message}
-            </p>
-          </div>
         )}
       </div>
     </div>
