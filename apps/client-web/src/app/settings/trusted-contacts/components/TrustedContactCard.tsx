@@ -6,7 +6,19 @@ import { Trash2, User } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 
-interface TrustedContact {
+interface GrantedContact {
+  id: string;
+  accountHolderId: string;
+  trustedContactId: string;
+  status: string;
+  trustedContact: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+  };
+}
+
+interface ReceivedContact {
   id: string;
   accountHolderId: string;
   trustedContactId: string;
@@ -16,15 +28,10 @@ interface TrustedContact {
     lastName: string | null;
     email: string | null;
   };
-  trustedContact: {
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-  };
 }
 
 interface TrustedContactCardProps {
-  contact: TrustedContact;
+  contact: GrantedContact | ReceivedContact;
   type: "granted" | "received";
 }
 
@@ -58,7 +65,9 @@ export default function TrustedContactCard({
 
   // Get display information based on type
   const displayInfo =
-    type === "granted" ? contact.trustedContact : contact.accountHolder;
+    type === "granted"
+      ? (contact as GrantedContact).trustedContact
+      : (contact as ReceivedContact).accountHolder;
 
   const displayName =
     displayInfo.firstName && displayInfo.lastName

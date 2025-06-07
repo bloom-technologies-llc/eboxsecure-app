@@ -14,25 +14,14 @@ import TrustedContactCard from "./components/TrustedContactCard";
 export default function TrustedContactsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const { data: trustedContacts, isLoading: loadingContacts } =
+  const { data: trustedContactsData, isLoading: loadingContacts } =
     api.trustedContacts.getMyTrustedContacts.useQuery();
   const { data: pendingInvitations, isLoading: loadingInvitations } =
     api.trustedContacts.getPendingInvitations.useQuery();
 
-  // Filter contacts by type for display
-  const grantedContacts =
-    trustedContacts?.filter(
-      (contact) =>
-        contact.accountHolderId !== contact.trustedContactId &&
-        contact.status === "ACTIVE",
-    ) || [];
-
-  const receivedContacts =
-    trustedContacts?.filter(
-      (contact) =>
-        contact.trustedContactId !== contact.accountHolderId &&
-        contact.status === "ACTIVE",
-    ) || [];
+  // Extract arrays from API response
+  const grantedContacts = trustedContactsData?.grantedContacts || [];
+  const receivedContacts = trustedContactsData?.receivedContacts || [];
 
   return (
     <div className="h-screen bg-[#F3F3F3] pb-28 pt-14">

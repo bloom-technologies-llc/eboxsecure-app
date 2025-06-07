@@ -6,31 +6,46 @@ import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const trustedContactsRouter = createTRPCRouter({
   // Get all trusted contacts for current user (both granted and received)
-  getMyTrustedContacts: protectedCustomerProcedure.query(({ ctx }) => {
-    return ctx.db.trustedContact.findMany({
-      where: {
-        OR: [
-          { accountHolderId: ctx.session.userId },
-          { trustedContactId: ctx.session.userId },
-        ],
-      },
-      include: {
-        accountHolder: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
+  getMyTrustedContacts: protectedCustomerProcedure.query(async ({ ctx }) => {
+    const [grantedContacts, receivedContacts] = await Promise.all([
+      // Contacts where current user granted access (current user is accountHolder)
+      ctx.db.trustedContact.findMany({
+        where: {
+          accountHolderId: ctx.session.userId,
+          status: "ACTIVE",
+        },
+        include: {
+          trustedContact: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-        trustedContact: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
+      }),
+      // Contacts where current user received access (current user is trustedContact)
+      ctx.db.trustedContact.findMany({
+        where: {
+          trustedContactId: ctx.session.userId,
+          status: "ACTIVE",
+        },
+        include: {
+          accountHolder: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
+
+    return {
+      grantedContacts,
+      receivedContacts,
+    };
   }),
 
   // Send invitation to add trusted contact
@@ -99,7 +114,9 @@ export const trustedContactsRouter = createTRPCRouter({
             customerAccount: {
               create: {
                 email: input.email,
-                // Other fields will be populated when user first logs in
+                // TODO: Handle race condition where API creates user before webhook
+                // If API wins, webhook fails silently and firstName/lastName/phoneNumber remain null
+                // Consider using upsert in webhook or updating fields when user first logs in
               },
             },
           },
