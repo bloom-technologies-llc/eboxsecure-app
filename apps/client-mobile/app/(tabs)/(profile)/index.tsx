@@ -36,7 +36,7 @@ export default function Page() {
 
       <View className="h-2 bg-[#e4e4e7]"></View>
 
-      <View className=" flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
+      <View className=" flex flex-row justify-between border border-[#e4e4e7]">
         <Link
           href="/(tabs)/(profile)/manage-security"
           className="w-full px-6 py-5"
