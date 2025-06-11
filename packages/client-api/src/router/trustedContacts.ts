@@ -217,14 +217,14 @@ export const trustedContactsRouter = createTRPCRouter({
         where: {
           accountHolderId: ctx.session.userId,
           trustedContactId: input.trustedContactId,
-          status: "ACTIVE",
+          status: { in: ["ACTIVE", "PENDING"] },
         },
       });
 
       if (deleted.count === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Active trusted contact relationship not found",
+          message: "Trusted contact relationship not found",
         });
       }
 
@@ -240,6 +240,25 @@ export const trustedContactsRouter = createTRPCRouter({
       },
       include: {
         accountHolder: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }),
+
+  // Get pending invitations sent by current user (awaiting acceptance)
+  getSentPendingInvitations: protectedCustomerProcedure.query(({ ctx }) => {
+    return ctx.db.trustedContact.findMany({
+      where: {
+        accountHolderId: ctx.session.userId,
+        status: "PENDING",
+      },
+      include: {
+        trustedContact: {
           select: {
             firstName: true,
             lastName: true,

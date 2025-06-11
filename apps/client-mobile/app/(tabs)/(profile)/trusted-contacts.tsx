@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { UserIcon } from "../../../components/icons";
 import AddTrustedContactModal from "../../../components/trusted-contacts/AddTrustedContactModal";
 import InvitationCard from "../../../components/trusted-contacts/InvitationCard";
+import SentInvitationCard from "../../../components/trusted-contacts/SentInvitationCard";
 import TrustedContactCard from "../../../components/trusted-contacts/TrustedContactCard";
 import BackBreadcrumb from "../../../components/ui/BackBreadcrumb";
 import { Button } from "../../../components/ui/Button";
@@ -24,6 +25,11 @@ export default function TrustedContactsPage() {
     isLoading: loadingInvitations,
     refetch: refetchInvitations,
   } = api.trustedContacts.getPendingInvitations.useQuery();
+  const {
+    data: sentPendingInvitations,
+    isLoading: loadingSentInvitations,
+    refetch: refetchSentInvitations,
+  } = api.trustedContacts.getSentPendingInvitations.useQuery();
 
   // Extract arrays from API response
   const grantedContacts = trustedContactsData?.grantedContacts || [];
@@ -31,7 +37,11 @@ export default function TrustedContactsPage() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchContacts(), refetchInvitations()]);
+    await Promise.all([
+      refetchContacts(),
+      refetchInvitations(),
+      refetchSentInvitations(),
+    ]);
     setRefreshing(false);
   };
 
@@ -81,6 +91,24 @@ export default function TrustedContactsPage() {
             <View>
               {pendingInvitations.map((invitation) => (
                 <InvitationCard key={invitation.id} invitation={invitation} />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Sent Pending Invitations */}
+        {sentPendingInvitations && sentPendingInvitations.length > 0 && (
+          <View className="border-t border-gray-200 px-4 py-4">
+            <Text className="mb-3 text-lg font-semibold">Sent Invitations</Text>
+            <Text className="mb-4 text-sm text-gray-600">
+              These people haven't responded to your invitations yet
+            </Text>
+            <View>
+              {sentPendingInvitations.map((invitation) => (
+                <SentInvitationCard
+                  key={invitation.id}
+                  invitation={invitation}
+                />
               ))}
             </View>
           </View>

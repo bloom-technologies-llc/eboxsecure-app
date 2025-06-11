@@ -16,6 +16,7 @@ import {
 
 import AddTrustedContactModal from "./components/AddTrustedContactModal";
 import InvitationCard from "./components/InvitationCard";
+import SentInvitationCard from "./components/SentInvitationCard";
 import TrustedContactCard from "./components/TrustedContactCard";
 
 export default function TrustedContactsPage() {
@@ -25,6 +26,8 @@ export default function TrustedContactsPage() {
     api.trustedContacts.getMyTrustedContacts.useQuery();
   const { data: pendingInvitations, isLoading: loadingInvitations } =
     api.trustedContacts.getPendingInvitations.useQuery();
+  const { data: sentPendingInvitations, isLoading: loadingSentInvitations } =
+    api.trustedContacts.getSentPendingInvitations.useQuery();
 
   // Extract arrays from API response
   const grantedContacts = trustedContactsData?.grantedContacts || [];
@@ -71,6 +74,28 @@ export default function TrustedContactsPage() {
               <div className="space-y-3">
                 {pendingInvitations.map((invitation) => (
                   <InvitationCard key={invitation.id} invitation={invitation} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sent pending invitations waiting for acceptance */}
+        {sentPendingInvitations && sentPendingInvitations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Sent Invitations</CardTitle>
+              <CardDescription>
+                These people haven't responded to your invitations yet
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {sentPendingInvitations.map((invitation) => (
+                  <SentInvitationCard
+                    key={invitation.id}
+                    invitation={invitation}
+                  />
                 ))}
               </div>
             </CardContent>

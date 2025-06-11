@@ -29,8 +29,11 @@ export default function AddTrustedContactModal({
   const sendInvitation = api.trustedContacts.sendInvitation.useMutation({
     onSuccess: () => {
       utils.trustedContacts.getMyTrustedContacts.invalidate();
-      handleClose();
-      Alert.alert("Success", "Invitation sent successfully!");
+      utils.trustedContacts.getSentPendingInvitations.invalidate();
+      setEmail("");
+      setShowConfirmation(false);
+      onClose();
+      Alert.alert("Success", `Invitation sent to ${email}`);
     },
     onError: (error) => {
       console.error("Failed to send invitation:", error);

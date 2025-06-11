@@ -27,12 +27,14 @@ export default function AddTrustedContactModal({
   const sendInvitation = api.trustedContacts.sendInvitation.useMutation({
     onSuccess: () => {
       utils.trustedContacts.getMyTrustedContacts.invalidate();
+      utils.trustedContacts.getSentPendingInvitations.invalidate();
+      setEmail("");
+      setShowConfirmation(false);
+      onClose();
       toast({
-        title: "Invitation sent successfully!",
-        description: `${email} has been invited to be your trusted contact.`,
-        variant: "default",
+        title: "Invitation Sent",
+        description: `Invitation sent to ${email}`,
       });
-      handleClose();
     },
     onError: (error) => {
       console.error("Failed to send invitation:", error);
