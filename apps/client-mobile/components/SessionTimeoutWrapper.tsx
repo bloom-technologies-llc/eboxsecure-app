@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect } from "react";
+import React, { PropsWithChildren, useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 
@@ -6,33 +6,33 @@ export const SessionTimeoutWrapper: React.FC<PropsWithChildren> = ({
   children,
 }) => {
   const { isSignedIn, signOut } = useAuth();
+  const backgroundTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === "background") {
-        // Start a timer when app goes to background
-        const backgroundTime = Date.now();
+        // Record when app goes to background
+        backgroundTimeRef.current = Date.now();
+        console.log("App went to background, recording time");
+      } else if (nextAppState === "active" && backgroundTimeRef.current) {
+        // Check session validity when app becomes active
+        const currentTime = Date.now();
+        const timeInBackground = currentTime - backgroundTimeRef.current;
 
-        // When app comes back to foreground, check session duration
-        const checkSessionValidity = async () => {
-          const currentTime = Date.now();
-          const timeInBackground = currentTime - backgroundTime;
+        // 5 minutes session timeout
+        const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-          // Define your session timeout (e.g., 5 minutes = 300000 ms)
-          const SESSION_TIMEOUT = 1000 * 60; // 1 minute
+        console.log(
+          `App became active, was in background for ${Math.round(timeInBackground / 1000)} seconds`,
+        );
 
-          if (isSignedIn && timeInBackground > SESSION_TIMEOUT) {
-            // Force sign out if timeout exceeded
-            console.info("Forcing sign out due to session timeout");
-            await signOut();
-          }
-        };
+        if (isSignedIn && timeInBackground > SESSION_TIMEOUT) {
+          console.info("Forcing sign out due to session timeout");
+          await signOut();
+        }
 
-        AppState.addEventListener("change", (state) => {
-          if (state === "active") {
-            checkSessionValidity();
-          }
-        });
+        // Reset background time
+        backgroundTimeRef.current = null;
       }
     };
 
