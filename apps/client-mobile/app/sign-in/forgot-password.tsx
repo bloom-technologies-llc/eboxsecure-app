@@ -14,7 +14,7 @@ import { OtpInput } from "react-native-otp-entry";
 import Toast from "react-native-root-toast";
 import { Redirect, useRouter } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
-import { useAuth, useSignIn } from "@clerk/clerk-expo";
+import { isClerkAPIResponseError, useAuth, useSignIn } from "@clerk/clerk-expo";
 import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 
 const ForgotPasswordPage = () => {
@@ -24,6 +24,7 @@ const ForgotPasswordPage = () => {
   const [successfulCreation, setSuccessfulCreation] = useState(false);
   const [secondFactor, setSecondFactor] = useState(false);
   const [error, setError] = useState("");
+  const [isResending, setIsResending] = useState(false);
 
   const router = useRouter();
 
@@ -98,6 +99,7 @@ const ForgotPasswordPage = () => {
     if (!isLoaded) {
       return;
     }
+    setError(""); // Clear any previous errors
     try {
       const signInAttempt = await signIn.attemptSecondFactor({
         strategy: "phone_code",
@@ -116,14 +118,66 @@ const ForgotPasswordPage = () => {
         });
         setActive({ session: signInAttempt.createdSessionId });
       } else {
-        setError("Unable to reset password. Please try again later.");
+        setError("Unable to verify the code. Please try again.");
         console.error(JSON.stringify(signInAttempt, null, 2));
       }
     } catch (err) {
-      setError("Unable to reset password. Please try again later.");
+      if (isClerkAPIResponseError(err)) {
+        // Handle specific Clerk API errors
+        const clerkError = err.errors?.[0];
+        if (clerkError?.code === "form_code_incorrect") {
+          setError("Incorrect verification code. Please try again.");
+        } else if (clerkError?.code === "verification_expired") {
+          setError("Verification code has expired. Please request a new one.");
+        } else if (clerkError?.code === "verification_failed") {
+          setError(
+            "Verification failed. Please try again or request a new code.",
+          );
+        } else {
+          setError(
+            clerkError?.longMessage ||
+              clerkError?.message ||
+              "Unable to verify the code. Please try again.",
+          );
+        }
+      } else {
+        setError("Unable to verify the code. Please try again.");
+      }
       console.error(JSON.stringify(err, null, 2));
     }
   }
+
+  async function resendTwoFactorCode() {
+    if (!isLoaded) {
+      return;
+    }
+    setIsResending(true);
+    setError("");
+    try {
+      await signIn.prepareSecondFactor({ strategy: "phone_code" });
+      Toast.show("New code sent to your mobile device!", {
+        duration: 3000,
+        position: Toast.positions.TOP,
+        backgroundColor: "#e9f9ee",
+        textColor: "#000",
+      });
+    } catch (err) {
+      if (isClerkAPIResponseError(err)) {
+        const clerkError = err.errors?.[0];
+        setError(
+          clerkError?.longMessage ||
+            clerkError?.message ||
+            "Unable to resend code. Please try again later.",
+        );
+      } else {
+        setError("Unable to resend code. Please try again later.");
+      }
+      console.error(JSON.stringify(err, null, 2));
+    } finally {
+      setIsResending(false);
+    }
+  }
+
   return (
     <SafeAreaView className="mx-4 flex h-screen items-center gap-8">
       <TouchableWithoutFeedback
@@ -233,6 +287,16 @@ const ForgotPasswordPage = () => {
                 focusColor={"#015778"}
                 hideStick
               />
+              <TouchableOpacity
+                className="rounded-md bg-gray-100 px-6 py-3"
+                onPress={resendTwoFactorCode}
+                disabled={isResending}
+              >
+                <Text className="text-center text-base font-semibold text-gray-800">
+                  {isResending ? "Resending..." : "Resend code"}
+                </Text>
+              </TouchableOpacity>
+              {error && <Text className="text-red-600">{error}</Text>}
             </SafeAreaView>
           )}
         </>
