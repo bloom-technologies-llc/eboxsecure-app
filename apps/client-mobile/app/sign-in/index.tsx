@@ -112,19 +112,26 @@ export default function Page() {
   useEffect(() => {
     const signInLocal = async () => {
       if (!isLoaded) return;
+      if (isSignedIn) return; // Don't auto-sign in if already signed in
       if (hasCredentials) {
-        const signInAttempt = await authenticate();
-        if (signInAttempt.status === "complete") {
-          await setActive({ session: signInAttempt.createdSessionId });
-          router.replace("/");
-        } else if (signInAttempt.status === "needs_second_factor") {
-          await signIn.prepareSecondFactor({ strategy: "phone_code" });
-          router.push(`/sign-in/two-factor-authentication-code?useLocal=true`);
+        try {
+          const signInAttempt = await authenticate();
+          if (signInAttempt.status === "complete") {
+            await setActive({ session: signInAttempt.createdSessionId });
+            router.replace("/");
+          } else if (signInAttempt.status === "needs_second_factor") {
+            await signIn.prepareSecondFactor({ strategy: "phone_code" });
+            router.push(
+              `/sign-in/two-factor-authentication-code?useLocal=true`,
+            );
+          }
+        } catch (err) {
+          console.error("Auto sign-in failed:", err);
         }
       }
     };
-    signInLocal().catch((err) => console.error(err));
-  }, [isLoaded, hasCredentials, setActive, router]);
+    signInLocal();
+  }, [isLoaded, hasCredentials, isSignedIn]); // Removed router and setActive from dependencies
 
   // Add handler for remember email toggle
   const handleRememberEmailToggle = async (value: boolean) => {
