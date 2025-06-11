@@ -89,8 +89,9 @@ const AddPhone = () => {
               Enter code
             </Text>
             <TextInput
-              className="mb-4 rounded-md border border-gray-300 px-3 py-2 text-base"
+              className="mb-4 rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900"
               placeholder="Verification code"
+              placeholderTextColor="#6b7280"
               onChangeText={(e) => setCode(e)}
               value={code}
               keyboardType="number-pad"
@@ -118,8 +119,9 @@ const AddPhone = () => {
             Add new phone number
           </Text>
           <TextInput
-            className="mb-4 rounded-md border border-gray-300 px-3 py-2 text-base"
+            className="mb-4 rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900"
             placeholder="Phone Number"
+            placeholderTextColor="#6b7280"
             onChangeText={(e) => setPhone(e)}
             value={phone}
             keyboardType="number-pad"

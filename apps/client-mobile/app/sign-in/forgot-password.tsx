@@ -202,9 +202,10 @@ const ForgotPasswordPage = () => {
               </View>
               <View className="w-4/5">
                 <TextInput
-                  className="rounded-md border-2 border-gray-300 px-3 py-2 text-base"
+                  className="rounded-md border-2 border-gray-300 px-3 py-3 text-base text-gray-900"
                   value={email}
                   placeholder="name@example.com"
+                  placeholderTextColor="#6b7280"
                   onChangeText={(e) => setEmail(e)}
                 />
               </View>
@@ -237,11 +238,12 @@ const ForgotPasswordPage = () => {
                   Enter your new password
                 </Text>
                 <TextInput
-                  className="mb-4 rounded-md border-2 border-gray-300 px-3 py-2 text-base"
+                  className="mb-4 rounded-md border-2 border-gray-300 px-3 py-3 text-base text-gray-900"
                   secureTextEntry={true}
                   value={password}
                   onChangeText={(e) => setPassword(e)}
                   placeholder="New password"
+                  placeholderTextColor="#6b7280"
                 />
               </View>
 
@@ -250,10 +252,11 @@ const ForgotPasswordPage = () => {
                   Enter the password reset code that was sent to your email
                 </Text>
                 <TextInput
-                  className="rounded-md border-2 border-gray-300 px-3 py-2 text-base"
+                  className="rounded-md border-2 border-gray-300 px-3 py-3 text-base text-gray-900"
                   value={code}
                   onChangeText={(e) => setCode(e)}
                   placeholder="Password reset code"
+                  placeholderTextColor="#6b7280"
                 />
               </View>
 

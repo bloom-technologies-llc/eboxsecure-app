@@ -157,10 +157,11 @@ export default function Page() {
       <View className="w-full px-8">
         <Text className="mb-2 text-base font-medium text-gray-700">Email</Text>
         <RNTextInput
-          className="mb-4 rounded-md border-2 border-gray-300 px-3 py-2 text-base"
+          className="mb-4 rounded-md border-2 border-gray-300 px-3 py-3 text-base text-gray-900"
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Email..."
+          placeholderTextColor="#6b7280"
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
           returnKeyType="next"
           onSubmitEditing={() => {
@@ -183,9 +184,10 @@ export default function Page() {
         </Text>
         <RNTextInput
           ref={passwordRef}
-          className="mb-4 rounded-md border-2 border-gray-300 px-3 py-2 text-base"
+          className="mb-4 rounded-md border-2 border-gray-300 px-3 py-3 text-base text-gray-900"
           value={password}
           placeholder="Password..."
+          placeholderTextColor="#6b7280"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
           returnKeyType="done"
