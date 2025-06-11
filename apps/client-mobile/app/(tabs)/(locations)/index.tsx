@@ -144,7 +144,7 @@ export default function LocationsPage() {
 
       <View className="flex-1 p-4">
         <Text className="mb-4 text-xl font-semibold text-gray-900">
-          Favorite Locations
+          Favorite EboxSecure Locations
         </Text>
 
         {favorites?.length === 0 ? (

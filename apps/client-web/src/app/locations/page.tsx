@@ -130,7 +130,7 @@ function LocationsContent() {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <h1 className="mb-4 text-3xl font-bold">Your Locations</h1>
+        <h1 className="mb-4 text-3xl font-bold">EboxSecure Locations</h1>
 
         {/* Search Component */}
         <div className="relative">
