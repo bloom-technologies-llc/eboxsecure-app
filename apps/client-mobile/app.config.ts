@@ -30,7 +30,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.eboxsecure.eboxsecureclient",
-    versionCode: 1,
     adaptiveIcon: {
       foregroundImage: "./assets/images/logos/eboxsecure-logo.png",
       backgroundColor: "#dbeafe",
