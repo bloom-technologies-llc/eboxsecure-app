@@ -13,7 +13,7 @@ export default function TermsPage() {
     <>
       <LegalHero
         title="Terms & Conditions"
-        description="Last updated: January 1, 2024"
+        description="Last updated: June 12, 2025"
       />
       <TermsContent />
     </>
