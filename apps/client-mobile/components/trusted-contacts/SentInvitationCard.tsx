@@ -7,12 +7,13 @@ import { Button } from "../ui/Button";
 
 interface SentPendingInvitation {
   id: string;
-  trustedContactId: string;
+  trustedContactId: string | null;
   trustedContact: {
     firstName: string | null;
     lastName: string | null;
     email: string | null;
   };
+  isPendingSignup?: boolean;
 }
 
 interface SentInvitationCardProps {
@@ -42,6 +43,8 @@ export default function SentInvitationCard({
   );
 
   const handleCancel = () => {
+    if (!invitation.trustedContactId) return;
+
     const displayName =
       invitation.trustedContact.firstName && invitation.trustedContact.lastName
         ? `${invitation.trustedContact.firstName} ${invitation.trustedContact.lastName}`
@@ -61,7 +64,7 @@ export default function SentInvitationCard({
           onPress: () => {
             setIsCanceling(true);
             cancelInvitation.mutate({
-              trustedContactId: invitation.trustedContactId,
+              trustedContactId: invitation.trustedContactId!,
             });
           },
         },
@@ -74,37 +77,70 @@ export default function SentInvitationCard({
       ? `${invitation.trustedContact.firstName} ${invitation.trustedContact.lastName}`
       : invitation.trustedContact.email;
 
+  const isPendingSignup = invitation.isPendingSignup;
+
   return (
-    <View className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+    <View
+      className={`mb-3 rounded-lg border p-4 ${isPendingSignup ? "border-blue-200 bg-blue-50" : "border-orange-200 bg-orange-50"}`}
+    >
       <View className="flex-row items-center justify-between">
         <View className="flex-1 flex-row items-center">
-          <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+          <View
+            className={`mr-3 h-10 w-10 items-center justify-center rounded-full ${isPendingSignup ? "bg-blue-100" : "bg-orange-100"}`}
+          >
             <UserIcon />
           </View>
           <View className="flex-1">
-            <Text className="font-medium text-orange-900">{displayName}</Text>
-            <Text className="text-sm text-orange-700">
+            <Text
+              className={`font-medium ${isPendingSignup ? "text-blue-900" : "text-orange-900"}`}
+            >
+              {displayName}
+            </Text>
+            <Text
+              className={`text-sm ${isPendingSignup ? "text-blue-700" : "text-orange-700"}`}
+            >
               {invitation.trustedContact.email}
             </Text>
-            <Text className="text-xs text-orange-600">Invitation pending</Text>
+            <Text
+              className={`text-xs ${isPendingSignup ? "text-blue-600" : "text-orange-600"}`}
+            >
+              {isPendingSignup ? "Waiting for sign-up" : "Invitation pending"}
+            </Text>
           </View>
         </View>
 
-        <Button
-          onPress={handleCancel}
-          disabled={isCanceling}
-          variant="outline"
-          size="sm"
-        >
-          {isCanceling ? "..." : "Cancel"}
-        </Button>
+        {invitation.trustedContactId && (
+          <Button
+            onPress={handleCancel}
+            disabled={isCanceling}
+            variant="outline"
+            size="sm"
+          >
+            {isCanceling ? "..." : "Cancel"}
+          </Button>
+        )}
       </View>
 
-      <View className="mt-3 rounded-md bg-orange-100 p-3">
-        <Text className="text-sm text-orange-800">
-          <Text className="font-semibold">Waiting for response:</Text> This
-          person hasn't responded to your invitation yet. They'll be able to
-          view your orders and pick up packages once they accept.
+      <View
+        className={`mt-3 rounded-md p-3 ${isPendingSignup ? "bg-blue-100" : "bg-orange-100"}`}
+      >
+        <Text
+          className={`text-sm ${isPendingSignup ? "text-blue-800" : "text-orange-800"}`}
+        >
+          {isPendingSignup ? (
+            <>
+              <Text className="font-semibold">Waiting for sign-up:</Text> This
+              person needs to create an account first. They'll be able to view
+              your orders and pick up packages once they sign up and accept your
+              invitation.
+            </>
+          ) : (
+            <>
+              <Text className="font-semibold">Waiting for response:</Text> This
+              person hasn't responded to your invitation yet. They'll be able to
+              view your orders and pick up packages once they accept.
+            </>
+          )}
         </Text>
       </View>
     </View>

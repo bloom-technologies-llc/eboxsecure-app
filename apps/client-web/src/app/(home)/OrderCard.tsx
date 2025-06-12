@@ -17,7 +17,7 @@ export default function OrderCard({
   vendorOrderId,
   total,
   shippedLocation,
-  delivered,
+  deliveredDate,
   createdAt,
 }: RouterOutput["order"]["getAllOrders"][number]) {
   const [fetchQrCode, setFetchQrCode] = useState(false);
@@ -91,7 +91,7 @@ export default function OrderCard({
               </div>
             </div>
             <div className="my-auto flex w-1/5 flex-col gap-y-3">
-              {delivered ? (
+              {deliveredDate ? (
                 <Button
                   className="bg-[#00698F] text-white"
                   onClick={() => setFetchQrCode(true)}

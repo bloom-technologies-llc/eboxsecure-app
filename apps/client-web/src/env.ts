@@ -14,6 +14,10 @@ export const env = createEnv({
     CLERK_CREATE_USER_WEBHOOK_SECRET: z.string(),
     CLERK_MANAGE_SESSION_WEBHOOK_SECRET: z.string(),
     UPLOADTHING_TOKEN: z.string(),
+    RESEND_API_KEY: z.string(),
+    RESEND_FROM_EMAIL: z
+      .string()
+      .default("notifications@mailer.bloomtechnologies.co"),
   },
   /**
    * Specify your client-side environment variables schema here.

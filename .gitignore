@@ -89,3 +89,5 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+*-google-service-account.json

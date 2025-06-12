@@ -46,6 +46,9 @@ model CustomerAccount {
     // Trusted contact relationships
     trustedContactsGranted  TrustedContact[] @relation("TrustedContactsGranted")
     trustedContactsReceived TrustedContact[] @relation("TrustedContactsReceived")
+
+    // Pending trusted contact invitations
+    pendingTrustedContactInvitations PendingTrustedContactInvitation[]
 }
 
 model EmployeeAccount {
@@ -265,6 +268,20 @@ model TrustedContact {
     @@unique([accountHolderId, trustedContactId])
     @@index([accountHolderId])
     @@index([trustedContactId])
+}
+
+model PendingTrustedContactInvitation {
+    id              String   @id @default(cuid())
+    email           String
+    accountHolderId String
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+    processed       Boolean  @default(false)
+
+    accountHolder CustomerAccount @relation(fields: [accountHolderId], references: [id], onDelete: Cascade)
+
+    @@index([email])
+    @@index([accountHolderId])
 }
 
 enum UserType {

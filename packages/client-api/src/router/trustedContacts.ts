@@ -2,6 +2,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { emailService } from "../services/emailService";
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const trustedContactsRouter = createTRPCRouter({
@@ -70,10 +71,9 @@ export const trustedContactsRouter = createTRPCRouter({
       // Prevent self-invitation
       const currentUser = await ctx.db.customerAccount.findUnique({
         where: { id: ctx.session.userId },
-        select: { email: true },
+        select: { firstName: true, lastName: true, email: true },
       });
-      console.log("currentUser", currentUser);
-      console.log("input.email", input.email);
+
       if (currentUser?.email === input.email) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -87,79 +87,95 @@ export const trustedContactsRouter = createTRPCRouter({
         emailAddress: [input.email],
       });
 
-      let targetUserId: string;
+      const inviterName =
+        `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+        currentUser?.email ||
+        "Someone";
 
       if (existingUsers.data.length > 0) {
-        // User exists - get their ID
-        targetUserId = existingUsers.data[0]!.id;
-      } else {
-        // Create new user in Clerk with passwordless flow
-        const newUser = await clerk.users.createUser({
-          emailAddress: [input.email],
-          skipPasswordChecks: true,
-          skipPasswordRequirement: true,
+        // User exists in Clerk - they should also exist in our database
+        const targetUserId = existingUsers.data[0]!.id;
+
+        const existingDatabaseUser = await ctx.db.user.findUnique({
+          where: { id: targetUserId },
         });
-        targetUserId = newUser.id;
 
-        // TODO: Send welcome email to new user
-        // For now, rely on in-person notification from inviter
-      }
+        if (!existingDatabaseUser) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "User exists in Clerk but not in database. Please try again in a few seconds.",
+          });
+        }
 
-      // Race-safe user creation (may compete with webhook)
-      try {
-        await ctx.db.user.create({
-          data: {
-            id: targetUserId,
-            userType: "CUSTOMER",
-            customerAccount: {
-              create: {
-                email: input.email,
-                // TODO: Handle race condition where API creates user before webhook
-                // If API wins, webhook fails silently and firstName/lastName/phoneNumber remain null
-                // Consider using upsert in webhook or updating fields when user first logs in
-              },
+        // SCENARIO 1: Existing User (both Clerk and database)
+        // Check if trusted contact relationship already exists
+        const existingRelationship = await ctx.db.trustedContact.findUnique({
+          where: {
+            accountHolderId_trustedContactId: {
+              accountHolderId: ctx.session.userId,
+              trustedContactId: targetUserId,
             },
           },
         });
-      } catch (error: any) {
-        // Silently ignore duplicate key errors
-        if (error.code !== "P2002") throw error;
-      }
 
-      // Check if trusted contact relationship already exists
-      const existingRelationship = await ctx.db.trustedContact.findUnique({
-        where: {
-          accountHolderId_trustedContactId: {
+        if (existingRelationship) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "This person is already your trusted contact",
+          });
+        }
+
+        // Create trusted contact relationship
+        const trustedContact = await ctx.db.trustedContact.create({
+          data: {
             accountHolderId: ctx.session.userId,
             trustedContactId: targetUserId,
+            status: "PENDING",
           },
-        },
-      });
-
-      if (existingRelationship) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "This person is already your trusted contact",
-        });
-      }
-
-      // Create trusted contact invitation
-      return await ctx.db.trustedContact.create({
-        data: {
-          accountHolderId: ctx.session.userId,
-          trustedContactId: targetUserId,
-          status: "PENDING",
-        },
-        include: {
-          trustedContact: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
+          include: {
+            trustedContact: {
+              select: { firstName: true, lastName: true, email: true },
             },
           },
-        },
-      });
+        });
+
+        // Send notification email to existing user
+        await emailService.sendTrustedContactInvitationToExistingUser({
+          recipientEmail: input.email,
+          recipientName: trustedContact.trustedContact.firstName || null,
+          inviterName,
+          inviterEmail: currentUser?.email || "",
+          acceptInvitationUrl: `${process.env.VERCEL_URL}/settings/trusted-contacts`,
+        });
+
+        return trustedContact;
+      } else {
+        // SCENARIO 2: New User (no Clerk account)
+        // Create pending invitation record (allows multiple invitations for same email)
+        const pendingInvitation =
+          await ctx.db.pendingTrustedContactInvitation.create({
+            data: {
+              email: input.email,
+              accountHolderId: ctx.session.userId,
+            },
+          });
+
+        // Send sign-up email to new user
+        await emailService.sendTrustedContactInvitationToNewUser({
+          recipientEmail: input.email,
+          inviterName,
+          inviterEmail: currentUser?.email || "",
+          signUpUrl: `${process.env.VERCEL_URL}/sign-up`,
+        });
+
+        return {
+          id: pendingInvitation.id,
+          email: input.email,
+          status: "PENDING_SIGNUP",
+          isPendingSignup: true,
+        };
+      }
     }),
 
   // Accept trusted contact invitation
@@ -251,21 +267,48 @@ export const trustedContactsRouter = createTRPCRouter({
   }),
 
   // Get pending invitations sent by current user (awaiting acceptance)
-  getSentPendingInvitations: protectedCustomerProcedure.query(({ ctx }) => {
-    return ctx.db.trustedContact.findMany({
-      where: {
-        accountHolderId: ctx.session.userId,
-        status: "PENDING",
-      },
-      include: {
-        trustedContact: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
+  getSentPendingInvitations: protectedCustomerProcedure.query(
+    async ({ ctx }) => {
+      const [trustedContactInvitations, pendingSignupInvitations] =
+        await Promise.all([
+          // Existing trusted contact invitations
+          ctx.db.trustedContact.findMany({
+            where: {
+              accountHolderId: ctx.session.userId,
+              status: "PENDING",
+            },
+            include: {
+              trustedContact: {
+                select: { firstName: true, lastName: true, email: true },
+              },
+            },
+          }),
+
+          // Pending signup invitations
+          ctx.db.pendingTrustedContactInvitation.findMany({
+            where: {
+              accountHolderId: ctx.session.userId,
+              processed: false,
+            },
+          }),
+        ]);
+
+      // Transform pending signups to match expected format
+      const pendingSignupFormatted = pendingSignupInvitations.map(
+        (invitation) => ({
+          id: invitation.id,
+          trustedContactId: null,
+          trustedContact: {
+            firstName: null,
+            lastName: null,
+            email: invitation.email,
           },
-        },
-      },
-    });
-  }),
+          isPendingSignup: true,
+          createdAt: invitation.createdAt,
+        }),
+      );
+
+      return [...trustedContactInvitations, ...pendingSignupFormatted];
+    },
+  ),
 });
