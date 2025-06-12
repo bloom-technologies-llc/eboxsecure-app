@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getClientAppUrl } from "@/env";
 import { Check } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -105,7 +106,7 @@ export function PricingPreview() {
                     tier.mostPopular ? "" : "bg-primary/80 hover:bg-primary"
                   }`}
                 >
-                  <Link href="https://app.eboxsecure.com">{tier.cta}</Link>
+                  <Link href={getClientAppUrl()}>{tier.cta}</Link>
                 </Button>
               </div>
             </div>

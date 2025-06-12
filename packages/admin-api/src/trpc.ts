@@ -7,6 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import type { AuthObject } from "@clerk/backend";
+import { UserType } from "@prisma/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { Logger } from "next-axiom";
 import superjson from "superjson";
@@ -14,6 +15,7 @@ import { ZodError } from "zod";
 
 import { db } from "@ebox/db";
 
+type NonMachineAuthObject = Extract<AuthObject, { tokenType: "session_token" }>;
 /**
  * 1. CONTEXT
  *
@@ -28,7 +30,7 @@ import { db } from "@ebox/db";
  */
 export const createTRPCContext = (opts: {
   headers: Headers;
-  session: AuthObject;
+  session: NonMachineAuthObject;
 }) => {
   const session = opts.session;
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
@@ -96,7 +98,7 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -119,9 +121,10 @@ export const protectedEmployeeProcedure = protectedProcedure.use(
         userType: true,
       },
     });
-    if (!userType || userType.userType !== "EMPLOYEE") {
+    if (!userType || userType.userType !== UserType.EMPLOYEE) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
+
     return next({
       ctx: {
         // infers the `session` as non-nullable
@@ -144,7 +147,8 @@ export const protectedAdminProcedure = protectedProcedure.use(
     });
     if (
       !userType ||
-      (userType.userType !== "CORPORATE" && userType.userType !== "EMPLOYEE")
+      (userType.userType !== UserType.CORPORATE &&
+        userType.userType !== UserType.EMPLOYEE)
     ) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -168,7 +172,7 @@ export const protectedCorporateProcedure = protectedProcedure.use(
         userType: true,
       },
     });
-    if (!userType || userType.userType !== "CORPORATE") {
+    if (!userType || userType.userType !== UserType.CORPORATE) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     return next({

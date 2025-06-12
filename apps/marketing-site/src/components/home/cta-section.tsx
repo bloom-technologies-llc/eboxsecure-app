@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getClientAppUrl } from "@/env";
 
 import { Button } from "@ebox/ui/button";
 import { Container } from "@ebox/ui/container";
@@ -21,7 +22,7 @@ export function CTASection() {
               size="lg"
               className="bg-white text-primary hover:bg-white/90"
             >
-              <Link href="https://app.eboxsecure.com">Go to app</Link>
+              <Link href={getClientAppUrl()}>Go to app</Link>
             </Button>
             <Button
               asChild

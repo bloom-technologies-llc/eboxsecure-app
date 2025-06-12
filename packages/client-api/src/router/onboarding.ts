@@ -1,9 +1,3 @@
-import { Readable } from "stream";
-import {
-  HeadObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import twilio from "twilio";
@@ -17,15 +11,6 @@ import {
 } from "../trpc";
 
 export const onboardingRouter = createTRPCRouter({
-  uploadPortraitFromAuthedClient: protectedCustomerProcedure
-    .input(
-      z.object({
-        file: z.string(), // base64 representation
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await uploadPortraitToS3(input.file, ctx.session.userId);
-    }),
   checkUploadStatus: protectedCustomerProcedure.query(async ({ ctx }) => {
     const linkKey = await ctx.db.onboardingPhoneUploadLink.findUnique({
       where: {
@@ -101,7 +86,7 @@ export const onboardingRouter = createTRPCRouter({
   uploadPortraitFromUnauthedClient: publicProcedure
     .input(
       z.object({
-        file: z.string(), // base64 representation
+        photoLink: z.string().url(), // UploadThing URL
         uploadKey: z.string(),
       }),
     )
@@ -129,7 +114,17 @@ export const onboardingRouter = createTRPCRouter({
           message: "Upload key expired. Please try again.",
         });
       }
-      await uploadPortraitToS3(input.file, link.customerId);
+
+      // Save UploadThing URL to database
+      await ctx.db.customerAccount.update({
+        where: {
+          id: link.customerId,
+        },
+        data: {
+          photoLink: input.photoLink,
+        },
+      });
+
       await ctx.db.onboardingPhoneUploadLink.update({
         where: {
           customerId: link.customerId,
@@ -138,11 +133,22 @@ export const onboardingRouter = createTRPCRouter({
           completed: true,
         },
       });
+
+      return { success: true };
     }),
   // logged in, but potentially no user created yet from webhook
   isOnboarded: protectedProcedure.query(async ({ ctx }) => {
-    const isOnboarded = await checkIfPortraitExists(ctx.session.userId);
-    return isOnboarded;
+    const customerAccount = await ctx.db.customerAccount.findUnique({
+      where: {
+        id: ctx.session.userId,
+      },
+      select: {
+        photoLink: true,
+      },
+    });
+
+    // User is onboarded if they have a photoLink (portrait photo uploaded)
+    return !!customerAccount?.photoLink;
   }),
   isOnboardedUnauthed: publicProcedure
     .input(z.object({ uploadKey: z.string() }))
@@ -156,8 +162,18 @@ export const onboardingRouter = createTRPCRouter({
         },
       });
       if (!link) return false;
-      const isOnboarded = await checkIfPortraitExists(link.customerId);
-      return isOnboarded;
+
+      const customerAccount = await ctx.db.customerAccount.findUnique({
+        where: {
+          id: link.customerId,
+        },
+        select: {
+          photoLink: true,
+        },
+      });
+
+      // User is onboarded if they have a photoLink (portrait photo uploaded)
+      return !!customerAccount?.photoLink;
     }),
   isUploadKeyValid: publicProcedure
     .input(z.object({ uploadKey: z.string() }))
@@ -183,98 +199,3 @@ export const onboardingRouter = createTRPCRouter({
       return true;
     }),
 });
-
-function createReadStreamFromBase64(base64Data: string) {
-  // Strip off the Base64 metadata prefix, if it exists
-  const base64String = base64Data.split(",")[1];
-  if (!base64String) {
-    throw new Error("Invalid Base64 data");
-  }
-  // Convert the Base64 string to a Buffer
-  const buffer = Buffer.from(base64String, "base64");
-  // Create a readable stream from the buffer
-  const readableStream = new Readable();
-  readableStream.push(buffer);
-  readableStream.push(null); // Signal the end of the stream
-  return { readableStream, bufferLength: buffer.length };
-}
-
-async function uploadPortraitToS3(file: string, userId: string) {
-  const region = process.env.AWS_REGION;
-  if (!region) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "AWS_REGION not found.",
-    });
-  }
-  const nodeEnv = process.env.VERCEL_ENV ?? process.env.NODE_ENV;
-  const bucketName =
-    nodeEnv === "production"
-      ? "prod-ebox-customer-data"
-      : "np-ebox-customer-data";
-
-  try {
-    const client = new S3Client({ region });
-    const key = userId + "/" + "portrait.jpg";
-    const { readableStream, bufferLength } = createReadStreamFromBase64(file);
-    const uploadCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      Body: readableStream,
-      ContentLength: bufferLength,
-    });
-    await client.send(uploadCommand);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-    }
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "An unknown error occurred.",
-    });
-  }
-}
-
-async function checkIfPortraitExists(userId: string) {
-  const region = process.env.AWS_REGION;
-  if (!region) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "AWS_REGION not found.",
-    });
-  }
-
-  const nodeEnv = process.env.VERCEL_ENV ?? process.env.NODE_ENV;
-  const bucketName =
-    nodeEnv === "production"
-      ? "prod-ebox-customer-data"
-      : "np-ebox-customer-data";
-  try {
-    const client = new S3Client({ region });
-    const key = `${userId}/portrait.jpg`;
-    const headCommand = new HeadObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-    });
-
-    await client.send(headCommand);
-    return true; // File exists
-  } catch (error) {
-    if (error instanceof Error && error.name === "NotFound") {
-      return false; // File does not exist
-    }
-    if (error instanceof Error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-    }
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "An unknown error occurred.",
-    });
-  }
-}

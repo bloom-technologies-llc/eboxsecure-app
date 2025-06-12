@@ -16,6 +16,7 @@ interface AuthorizedPickupTokenPayload extends JWTPayload {
 }
 
 // TODO: write unit tests for this
+// TODO: support trusted contacts
 export const authRouter = createTRPCRouter({
   getAuthorizedPickupToken: protectedCustomerProcedure
     .input(

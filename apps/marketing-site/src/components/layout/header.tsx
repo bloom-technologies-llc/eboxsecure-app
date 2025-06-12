@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { getClientAppUrl } from "@/env";
 import { ChevronDown, Menu } from "lucide-react";
 import logo from "public/eboxsecure-logo.png";
 
@@ -166,7 +167,7 @@ export function Header() {
               <Link href="/contact">Contact Sales</Link>
             </Button>
             <Button asChild size="sm">
-              <Link href="https://app.eboxsecure.com">Go to app</Link>
+              <Link href={getClientAppUrl()}>Go to app</Link>
             </Button>
           </div>
 
@@ -262,10 +263,7 @@ export function Header() {
                     </Link>
                   </Button>
                   <Button asChild className="w-full justify-center">
-                    <Link
-                      href="https://app.eboxsecure.com"
-                      onClick={closeMobileMenu}
-                    >
+                    <Link href={getClientAppUrl()} onClick={closeMobileMenu}>
                       Go to app
                     </Link>
                   </Button>

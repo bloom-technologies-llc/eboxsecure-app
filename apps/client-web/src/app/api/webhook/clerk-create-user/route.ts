@@ -59,19 +59,87 @@ export async function POST(req: Request) {
       status: 400,
     });
   }
-  const { id: userId } = evt.data;
-  if (!userId) {
-    log.error("Unexpectedly missing user ID in clerk-create-user webhook");
-    return new Response("Unexpectedly missing user ID", { status: 400 });
+  const { id: userId, email_addresses } = evt.data;
+  const userEmail = email_addresses?.[0]?.email_address;
+
+  if (!userId || !userEmail) {
+    log.error(
+      "Unexpectedly missing user ID or email in clerk-create-user webhook",
+    );
+    return new Response("Unexpectedly missing user ID or email", {
+      status: 400,
+    });
   }
-  await db.user.create({
-    data: {
-      id: userId,
-      userType: "CUSTOMER",
-      customerAccount: {
-        create: {},
+
+  // Create user
+  try {
+    await db.user.create({
+      data: {
+        id: userId,
+        userType: "CUSTOMER",
+        customerAccount: {
+          create: {
+            firstName: evt.data.first_name,
+            lastName: evt.data.last_name,
+            email: userEmail,
+            phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
+          },
+        },
       },
-    },
-  });
+    });
+
+    // Check for pending trusted contact invitations
+    const pendingInvitations =
+      await db.pendingTrustedContactInvitation.findMany({
+        where: {
+          email: userEmail,
+          processed: false,
+        },
+      });
+
+    // Process each pending invitation
+    for (const invitation of pendingInvitations) {
+      try {
+        // Check if relationship already exists (in case of race conditions)
+        const existingRelationship = await db.trustedContact.findUnique({
+          where: {
+            accountHolderId_trustedContactId: {
+              accountHolderId: invitation.accountHolderId,
+              trustedContactId: userId,
+            },
+          },
+        });
+
+        if (!existingRelationship) {
+          // Create the trusted contact relationship
+          await db.trustedContact.create({
+            data: {
+              accountHolderId: invitation.accountHolderId,
+              trustedContactId: userId,
+              status: "PENDING",
+            },
+          });
+        }
+
+        // Mark invitation as processed
+        await db.pendingTrustedContactInvitation.update({
+          where: { id: invitation.id },
+          data: { processed: true },
+        });
+      } catch (error: any) {
+        log.error(
+          `Failed to process pending invitation ${invitation.id}:`,
+          error,
+        );
+      }
+    }
+  } catch (error: any) {
+    if (error.code !== "P2002") {
+      // Non-duplicate errors indicate a real problem
+      log.error("Failed to create user in webhook:", error);
+      return new Response("Failed to create user", { status: 500 });
+    }
+  }
+
   return new Response("", { status: 200 });
 }
