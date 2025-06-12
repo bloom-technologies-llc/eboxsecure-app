@@ -148,7 +148,7 @@ export default function AddTrustedContactModal({
                   They will receive a notification to accept this invitation.
                 </Text>
 
-                <View className="mt-auto space-y-3">
+                <View className="mt-auto gap-4 space-y-3">
                   <Button
                     onPress={() => setShowConfirmation(false)}
                     disabled={isSubmitting}
