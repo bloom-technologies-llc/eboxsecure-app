@@ -51,7 +51,7 @@ export const authRouter = createTRPCRouter({
         .setIssuedAt()
         .setIssuer(PICKUP_TOKEN_ISSUER)
         .setAudience(PICKUP_TOKEN_AUDIENCE)
-        .setExpirationTime("1h") // TODO: Make 15 mins
+        .setExpirationTime("15 mins")
         .encrypt(secret);
 
       return encryptedToken;
