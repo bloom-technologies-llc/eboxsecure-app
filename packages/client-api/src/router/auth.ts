@@ -16,7 +16,6 @@ interface AuthorizedPickupTokenPayload extends JWTPayload {
 }
 
 // TODO: write unit tests for this
-// TODO: support trusted contacts
 export const authRouter = createTRPCRouter({
   getAuthorizedPickupToken: protectedCustomerProcedure
     .input(
@@ -24,7 +23,7 @@ export const authRouter = createTRPCRouter({
         orderId: z.number().positive(),
       }),
     )
-    .query(({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       if (!process.env.JWT_SECRET_KEY) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -32,6 +31,38 @@ export const authRouter = createTRPCRouter({
             "Please add JWT_SECRET_KEY from Clerk Dashboard to environment variables",
         });
       }
+
+      const order = await ctx.db.order.findUnique({
+        where: {
+          id: input.orderId,
+          OR: [
+            // User's own orders
+            { customerId: ctx.session.userId },
+            // Orders from accounts where user is a trusted contact
+            {
+              customer: {
+                trustedContactsGranted: {
+                  some: {
+                    trustedContactId: ctx.session.userId,
+                    status: "ACTIVE",
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      if (!order) {
+        console.error(
+          `Order ID ${input.orderId} not found in database as valid order or User ID ${ctx.session.userId} is not the owner or trusted contact of this order.`,
+        );
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Order ID ${input.orderId} not found in database as valid order or User ID ${ctx.session.userId} is not the owner or trusted contact of this order.`,
+        });
+      }
+
       const secret = Buffer.from(process.env.JWT_SECRET_KEY, "base64");
       const payload: AuthorizedPickupTokenPayload = {
         sessionId: ctx.session.sessionId,
