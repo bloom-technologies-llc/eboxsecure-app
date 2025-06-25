@@ -91,6 +91,13 @@ export const authRouter = createTRPCRouter({
           return { authorized: false };
         }
 
+        if (order.pickedUpAt) {
+          console.error(
+            `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, which was already picked up.`,
+          );
+          return { authorized: false };
+        }
+
         // fetch portrait URL from database
         const url = await getPortraitUrl(ctx, payloadSession.userId);
         return { authorized: true, url, orderId: order.id };

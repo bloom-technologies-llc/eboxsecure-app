@@ -26,7 +26,7 @@ export const authRouter = createTRPCRouter({
         orderId: z.number().positive(),
       }),
     )
-    .query(({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       if (
         !PICKUP_TOKEN_JWT_SECRET_KEY ||
         !PICKUP_TOKEN_ISSUER ||
@@ -38,6 +38,31 @@ export const authRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Server misconfiguration. Please contact support.",
+        });
+      }
+
+      const order = await ctx.db.order.findUnique({
+        where: {
+          id: input.orderId,
+          customerId: ctx.session.userId,
+        },
+      });
+      if (!order) {
+        console.error(
+          `Order ID ${input.orderId} not found in database as valid order.`,
+        );
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Order ID ${input.orderId} not found in database as valid order.`,
+        });
+      }
+      if (order.pickedUpAt) {
+        console.error(
+          `user ID ${ctx.session.userId} attempted to pick up Order ID ${order.id}, which was already picked up.`,
+        );
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Order ID ${input.orderId} was already picked up.`,
         });
       }
 
