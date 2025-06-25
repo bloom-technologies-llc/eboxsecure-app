@@ -1,6 +1,7 @@
 import type { JWTPayload } from "jose";
 import { TRPCError } from "@trpc/server";
 import { jwtDecrypt } from "jose";
+import { JWTExpired } from "jose/errors";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedCorporateProcedure } from "../trpc";
@@ -29,6 +30,7 @@ export const authRouter = createTRPCRouter({
         authorized: z.boolean(),
         url: z.string().optional(),
         orderId: z.number().optional(),
+        message: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -64,14 +66,12 @@ export const authRouter = createTRPCRouter({
           },
         });
         if (!payloadSession) {
-          console.error(
+          throw new Error(
             `Session ID ${payload.sessionId} not found in database as valid session.`,
           );
-          return { authorized: false };
         }
         if (payloadSession.status !== "ACTIVE") {
-          console.error(`Session ID ${payload.sessionId} is not active.`);
-          return { authorized: false };
+          throw new Error(`Session ID ${payload.sessionId} is not active.`);
         }
         // ensure valid order ID
         const order = await ctx.db.order.findUnique({
@@ -80,22 +80,19 @@ export const authRouter = createTRPCRouter({
           },
         });
         if (!order) {
-          console.error(`Order ID ${payload.orderId} not found in database.`);
-          return { authorized: false };
+          throw new Error(`Order ID ${payload.orderId} not found in database.`);
         }
         // ensure order belongs to given session's user ID
         if (order.customerId !== payloadSession.userId) {
-          console.error(
+          throw new Error(
             `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
           );
-          return { authorized: false };
         }
 
         if (order.pickedUpAt) {
-          console.error(
+          throw new Error(
             `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, which was already picked up.`,
           );
-          return { authorized: false };
         }
 
         // fetch portrait URL from database
@@ -103,7 +100,13 @@ export const authRouter = createTRPCRouter({
         return { authorized: true, url, orderId: order.id };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
-        return { authorized: false };
+        return {
+          authorized: false,
+          message:
+            error instanceof JWTExpired
+              ? "QR Code Expired. Please create a new one and try again."
+              : "An unexpected error occurred. Please try again later.",
+        };
       }
     }),
 });
