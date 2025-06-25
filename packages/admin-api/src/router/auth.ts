@@ -27,6 +27,7 @@ export const authRouter = createTRPCRouter({
         authorized: z.boolean(),
         url: z.string().optional(),
         orderId: z.number().optional(),
+        isTrustedContact: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -74,17 +75,30 @@ export const authRouter = createTRPCRouter({
           console.error(`Order ID ${payload.orderId} not found in database.`);
           return { authorized: false };
         }
-        // ensure order belongs to given session's user ID
-        if (order.customerId !== payloadSession.userId) {
+        // ensure order belongs to given session's user ID (OR that the session's userId represent's a trusted contact for this order)
+        const trustedContact = await ctx.db.trustedContact.findUnique({
+          where: {
+            accountHolderId_trustedContactId: {
+              accountHolderId: order.customerId,
+              trustedContactId: payloadSession.userId,
+            },
+          },
+        });
+        if (order.customerId !== payloadSession.userId && !trustedContact) {
           console.error(
-            `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
+            `Given session's user ID ${payloadSession.userId} does not match and it is not a trusted contact of the order's customer ID ${order.customerId}.`,
           );
           return { authorized: false };
         }
 
         // fetch portrait URL from database
         const url = await getPortraitUrl(ctx, payloadSession.userId);
-        return { authorized: true, url, orderId: order.id };
+        return {
+          authorized: true,
+          url,
+          orderId: order.id,
+          isTrustedContact: !!trustedContact,
+        };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
         return { authorized: false };
