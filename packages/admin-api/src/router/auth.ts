@@ -75,7 +75,7 @@ export const authRouter = createTRPCRouter({
           console.error(`Order ID ${payload.orderId} not found in database.`);
           return { authorized: false };
         }
-        // ensure order belongs to given session's user ID (OR that the session's userId represent's a trusted contact for this order)
+        // ensure order belongs to given session's user ID OR that the session's userId represents a trusted contact for this order
         const trustedContact = await ctx.db.trustedContact.findUnique({
           where: {
             accountHolderId_trustedContactId: {
@@ -86,7 +86,7 @@ export const authRouter = createTRPCRouter({
         });
         if (order.customerId !== payloadSession.userId && !trustedContact) {
           console.error(
-            `Given session's user ID ${payloadSession.userId} does not match and it is not a trusted contact of the order's customer ID ${order.customerId}.`,
+            `Given session's user ID ${payloadSession.userId} does not match and it is NOT a trusted contact of the order's customer ID ${order.customerId}.`,
           );
           return { authorized: false };
         }
