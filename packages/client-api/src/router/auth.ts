@@ -5,9 +5,11 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
-const SUBJECT = "eboxsecure-authorized-pickup";
-const AUDIENCE = "ebox-client";
-const ISSUER = "eboxsecure-api";
+const {
+  PICKUP_TOKEN_JWT_SECRET_KEY,
+  PICKUP_TOKEN_ISSUER,
+  PICKUP_TOKEN_AUDIENCE,
+} = process.env;
 
 // NOTE: must match the same in admin-api/auth.ts
 interface AuthorizedPickupTokenPayload extends JWTPayload {
@@ -25,25 +27,31 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .query(({ ctx, input }) => {
-      if (!process.env.JWT_SECRET_KEY) {
+      if (
+        !PICKUP_TOKEN_JWT_SECRET_KEY ||
+        !PICKUP_TOKEN_ISSUER ||
+        !PICKUP_TOKEN_AUDIENCE
+      ) {
+        console.error(
+          "Please add PICKUP_TOKEN_JWT_SECRET_KEY, PICKUP_TOKEN_ISSUER, and PICKUP_TOKEN_AUDIENCE to environment variables",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Please add JWT_SECRET_KEY from Clerk Dashboard to environment variables",
+          message: "Server misconfiguration. Please contact support.",
         });
       }
-      const secret = Buffer.from(process.env.JWT_SECRET_KEY, "base64");
+
+      const secret = Buffer.from(PICKUP_TOKEN_JWT_SECRET_KEY, "base64");
       const payload: AuthorizedPickupTokenPayload = {
         sessionId: ctx.session.sessionId,
         orderId: input.orderId,
       };
       const encryptedToken = new EncryptJWT(payload)
         .setProtectedHeader({ alg: "dir", enc: "A128CBC-HS256" })
-        .setSubject(SUBJECT)
         .setIssuedAt()
-        .setIssuer(ISSUER)
-        .setAudience(AUDIENCE)
-        .setExpirationTime("1h")
+        .setIssuer(PICKUP_TOKEN_ISSUER)
+        .setAudience(PICKUP_TOKEN_AUDIENCE)
+        .setExpirationTime("1h") // TODO: Make 15 mins
         .encrypt(secret);
 
       return encryptedToken;

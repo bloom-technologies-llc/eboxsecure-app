@@ -5,9 +5,11 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedCorporateProcedure } from "../trpc";
 
-const SUBJECT = "eboxsecure-authorized-pickup";
-const AUDIENCE = "ebox-client";
-const ISSUER = "eboxsecure-api";
+const {
+  PICKUP_TOKEN_JWT_SECRET_KEY,
+  PICKUP_TOKEN_ISSUER,
+  PICKUP_TOKEN_AUDIENCE,
+} = process.env;
 
 interface AuthorizedPickupTokenPayload extends JWTPayload {
   sessionId: string;
@@ -30,21 +32,28 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!process.env.JWT_SECRET_KEY) {
-        throw new Error(
-          "Please add JWT_SECRET_KEY from Clerk Dashboard to environment variables",
+      if (
+        !PICKUP_TOKEN_JWT_SECRET_KEY ||
+        !PICKUP_TOKEN_ISSUER ||
+        !PICKUP_TOKEN_AUDIENCE
+      ) {
+        console.error(
+          "Please add PICKUP_TOKEN_JWT_SECRET_KEY, PICKUP_TOKEN_ISSUER, and PICKUP_TOKEN_AUDIENCE to environment variables",
         );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Server misconfiguration. Please contact support.",
+        });
       }
 
       try {
-        const secret = Buffer.from(process.env.JWT_SECRET_KEY, "base64");
+        const secret = Buffer.from(PICKUP_TOKEN_JWT_SECRET_KEY, "base64");
         const { payload } = await jwtDecrypt<AuthorizedPickupTokenPayload>(
           input.pickupToken,
           secret,
           {
-            issuer: ISSUER,
-            audience: AUDIENCE,
-            subject: SUBJECT,
+            issuer: PICKUP_TOKEN_ISSUER,
+            audience: PICKUP_TOKEN_AUDIENCE,
           },
         );
 
