@@ -26,12 +26,19 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .output(
-      z.object({
-        authorized: z.boolean(),
-        url: z.string().optional(),
-        orderId: z.number().optional(),
-        message: z.string().optional(),
-      }),
+      z.discriminatedUnion("authorized", [
+        z.object({
+          authorized: z.literal(true),
+          orderId: z.number(),
+          portraitUrl: z.string(),
+          firstName: z.string(),
+          lastName: z.string(),
+        }),
+        z.object({
+          authorized: z.literal(false),
+          message: z.string(),
+        }),
+      ]),
     )
     .mutation(async ({ ctx, input }) => {
       if (
@@ -78,6 +85,9 @@ export const authRouter = createTRPCRouter({
           where: {
             id: payload.orderId,
           },
+          include: {
+            customer: true,
+          },
         });
         if (!order) {
           throw new Error(`Order ID ${payload.orderId} not found in database.`);
@@ -95,9 +105,18 @@ export const authRouter = createTRPCRouter({
           );
         }
 
+        const { firstName, lastName } = order.customer;
+
         // fetch portrait URL from database
-        const url = await getPortraitUrl(ctx, payloadSession.userId);
-        return { authorized: true, url, orderId: order.id };
+        const portraitUrl = await getPortraitUrl(ctx, payloadSession.userId);
+
+        return {
+          authorized: true,
+          orderId: order.id,
+          portraitUrl,
+          firstName: firstName!,
+          lastName: lastName!,
+        };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
         return {
@@ -128,5 +147,5 @@ async function getPortraitUrl(ctx: any, userId: string) {
     });
   }
 
-  return customerAccount.photoLink;
+  return customerAccount.photoLink as string;
 }
