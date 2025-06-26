@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@ebox/ui/dialog";
+import { toast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
 
@@ -24,12 +25,22 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
   const [qrCodeInput, setQrCodeInput] = useState("");
   const {
     mutate: authenticatePickupToken,
+    reset,
     isPending,
     data: userInfo,
-  } = api.auth.authenticateAuthorizedPickupToken.useMutation();
+  } = api.auth.authenticateAuthorizedPickupToken.useMutation({
+    onError: (e) => {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: e.message,
+      });
+    },
+  });
 
   const handleClose = () => {
     setQrCodeInput("");
+    reset();
     onClose();
   };
 

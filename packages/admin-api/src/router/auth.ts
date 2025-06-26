@@ -56,9 +56,11 @@ export const authRouter = createTRPCRouter({
         });
       }
 
+      let decryption = undefined;
+
       try {
         const secret = Buffer.from(PICKUP_TOKEN_JWT_SECRET_KEY, "base64");
-        const { payload } = await jwtDecrypt<AuthorizedPickupTokenPayload>(
+        decryption = await jwtDecrypt<AuthorizedPickupTokenPayload>(
           input.pickupToken,
           secret,
           {
@@ -66,67 +68,93 @@ export const authRouter = createTRPCRouter({
             audience: PICKUP_TOKEN_AUDIENCE,
           },
         );
-
-        // ensure valid session ID
-        const payloadSession = await ctx.db.session.findUnique({
-          where: {
-            id: payload.sessionId,
-          },
-        });
-        if (!payloadSession) {
-          throw new Error(
-            `Session ID ${payload.sessionId} not found in database as valid session.`,
-          );
-        }
-        if (payloadSession.status !== "ACTIVE") {
-          throw new Error(`Session ID ${payload.sessionId} is not active.`);
-        }
-        // ensure valid order ID
-        const order = await ctx.db.order.findUnique({
-          where: {
-            id: payload.orderId,
-          },
-          include: {
-            customer: true,
-          },
-        });
-        if (!order) {
-          throw new Error(`Order ID ${payload.orderId} not found in database.`);
-        }
-        // ensure order belongs to given session's user ID
-        if (order.customerId !== payloadSession.userId) {
-          throw new Error(
-            `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
-          );
-        }
-
-        if (order.pickedUpAt) {
-          throw new Error(
-            `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, which was already picked up.`,
-          );
-        }
-
-        const { firstName, lastName } = order.customer;
-
-        // fetch portrait URL from database
-        const portraitUrl = await getPortraitUrl(ctx.db, payloadSession.userId);
-
-        return {
-          authorized: true,
-          orderId: order.id,
-          portraitUrl,
-          firstName: firstName!,
-          lastName: lastName!,
-        };
       } catch (error) {
         console.error(`Unable to decrypt pickupToken: ${error}`);
-        return {
-          authorized: false,
-          message:
-            error instanceof JWTExpired
-              ? "QR Code Expired. Please create a new one and try again."
-              : "An unexpected error occurred. Please try again later.",
-        };
+
+        if (error instanceof JWTExpired) {
+          return {
+            authorized: false,
+            message: "QR Code Expired. Please create a new one and try again.",
+          };
+        }
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or corrupted QR code. Please try again.",
+        });
       }
+
+      const { payload } = decryption;
+
+      // ensure valid session ID
+      const payloadSession = await ctx.db.session.findUnique({
+        where: {
+          id: payload.sessionId,
+        },
+      });
+      if (!payloadSession) {
+        console.error(
+          `Session ID ${payload.sessionId} not found in database as valid session.`,
+        );
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: `Session not found.`,
+        });
+      }
+      if (payloadSession.status !== "ACTIVE") {
+        console.error(`Session ID ${payload.sessionId} is not active.`);
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Session is not active.",
+        });
+      }
+      // ensure valid order ID
+      const order = await ctx.db.order.findUnique({
+        where: {
+          id: payload.orderId,
+        },
+        include: {
+          customer: true,
+        },
+      });
+      if (!order) {
+        console.error(`Order ID ${payload.orderId} not found in database.`);
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Order not found.",
+        });
+      }
+      // ensure order belongs to given session's user ID
+      if (order.customerId !== payloadSession.userId) {
+        console.error(
+          `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
+        );
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Session does not match order owner.",
+        });
+      }
+
+      if (order.pickedUpAt) {
+        console.error(
+          `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, which was already picked up.`,
+        );
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This order has already been picked up.",
+        });
+      }
+
+      const { firstName, lastName } = order.customer;
+
+      // fetch portrait URL from database
+      const portraitUrl = await getPortraitUrl(ctx.db, payloadSession.userId);
+
+      return {
+        authorized: true,
+        orderId: order.id,
+        portraitUrl,
+        firstName: firstName!,
+        lastName: lastName!,
+      };
     }),
 });
