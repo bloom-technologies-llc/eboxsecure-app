@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { QrCode } from "lucide-react";
+import { AlertCircle, QrCode } from "lucide-react";
 
+import { Alert, AlertDescription } from "@ebox/ui/alert";
 import { Button } from "@ebox/ui/button";
 import { Card, CardContent } from "@ebox/ui/card";
 import {
@@ -37,6 +38,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
   };
 
   const processQRCode = () => {
+    if (qrCodeInput.trim().length === 0) return;
     authenticatePickupToken({
       pickupToken: qrCodeInput,
     });
@@ -53,6 +55,26 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Loading State */}
+          {isPending && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Looking up package information...
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error State */}
+          {userInfo?.authorized === false && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="font-medium">
+                {userInfo.message}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* User Information Display */}
           {userInfo?.authorized && (
             <Card className="bg-muted/50">
@@ -73,7 +95,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
                   <div className="space-y-3 text-center">
                     <div>
                       <Label className="text-xs text-muted-foreground">
-                        Government Name
+                        Legal Name
                       </Label>
                       <p className="text-lg font-semibold">
                         {`${userInfo.firstName} ${userInfo.lastName}`}
