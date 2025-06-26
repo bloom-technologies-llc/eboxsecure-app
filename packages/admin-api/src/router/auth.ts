@@ -4,6 +4,7 @@ import { jwtDecrypt } from "jose";
 import { JWTExpired } from "jose/errors";
 import { z } from "zod";
 
+import { getPortraitUrl } from "../lib/user";
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
 const {
@@ -108,7 +109,7 @@ export const authRouter = createTRPCRouter({
         const { firstName, lastName } = order.customer;
 
         // fetch portrait URL from database
-        const portraitUrl = await getPortraitUrl(ctx, payloadSession.userId);
+        const portraitUrl = await getPortraitUrl(ctx.db, payloadSession.userId);
 
         return {
           authorized: true,
@@ -129,23 +130,3 @@ export const authRouter = createTRPCRouter({
       }
     }),
 });
-
-async function getPortraitUrl(ctx: any, userId: string) {
-  const customerAccount = await ctx.db.customerAccount.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      photoLink: true,
-    },
-  });
-
-  if (!customerAccount?.photoLink) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Portrait photo not found for this customer.",
-    });
-  }
-
-  return customerAccount.photoLink as string;
-}
