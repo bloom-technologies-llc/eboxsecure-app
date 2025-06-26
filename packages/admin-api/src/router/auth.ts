@@ -4,7 +4,7 @@ import { jwtDecrypt } from "jose";
 import { JWTExpired } from "jose/errors";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedCorporateProcedure } from "../trpc";
+import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
 const {
   PICKUP_TOKEN_JWT_SECRET_KEY,
@@ -19,7 +19,7 @@ interface AuthorizedPickupTokenPayload extends JWTPayload {
 
 // TODO: write unit tests for this
 export const authRouter = createTRPCRouter({
-  authenticateAuthorizedPickupToken: protectedCorporateProcedure
+  authenticateAuthorizedPickupToken: protectedAdminProcedure
     .input(
       z.object({
         pickupToken: z.string(),
