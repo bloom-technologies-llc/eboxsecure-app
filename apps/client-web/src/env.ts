@@ -18,6 +18,10 @@ export const env = createEnv({
     RESEND_FROM_EMAIL: z
       .string()
       .default("notifications@mailer.bloomtechnologies.co"),
+    UPSTASH_REDIS_REST_URL: z.string(),
+    UPSTASH_REDIS_REST_TOKEN: z.string(),
+    STRIPE_SECRET_KEY: z.string(),
+    STRIPE_WEBOOK_SECRET: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.

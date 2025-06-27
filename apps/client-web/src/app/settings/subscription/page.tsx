@@ -1,6 +1,9 @@
 "use client";
 
+import { redirect } from "next/navigation";
 import SettingsLayout from "@/components/settings-layout";
+// Add a server action for handling the upgrade
+import { createStripeSession } from "@/lib/create-stripe-session";
 import { Check, Crown, Zap } from "lucide-react";
 
 import { Badge } from "@ebox/ui/badge";
@@ -13,66 +16,85 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
+// Add enum for lookup keys
+enum PlanLookupKey {
+  Basic = "basic",
+  BasicPlus = "basic_pro",
+  Premium = "premium",
+  BusinessPro = "business_pro",
+}
+
 const plans = [
   {
-    name: "Bronze",
+    name: "Basic",
     price: "$9.99",
     period: "/month",
-    description: "Perfect for individuals",
+    description: "Perfect for individuals with occasional package deliveries.",
     current: false,
+    lookupKey: PlanLookupKey.Basic,
     features: [
-      "Up to 5 packages per month",
-      "Basic tracking",
-      "Email notifications",
+      "Access to 3 EboxSecure locations",
+      "2-day package holding",
+      "Maximum 5 packages",
       "Standard support",
     ],
   },
   {
-    name: "Silver",
+    name: "Basic+",
     price: "$19.99",
     period: "/month",
-    description: "Great for regular users",
+    description: "Great for regular online shoppers with more delivery needs.",
     current: false,
+    lookupKey: PlanLookupKey.BasicPlus,
     features: [
-      "Up to 15 packages per month",
-      "Advanced tracking",
-      "SMS & Email notifications",
-      "Priority support",
-      "Package insurance",
+      "Access to 25 EboxSecure locations",
+      "5-day package holding",
+      "Maximum 20 packages",
+      "Standard support",
     ],
   },
   {
-    name: "Gold",
-    price: "$39.99",
+    name: "Premium",
+    price: "$49.99",
     period: "/month",
-    description: "Ideal for families",
+    description: "Ideal for small businesses with regular deliveries.",
     current: true,
+    mostPopular: true,
+    lookupKey: PlanLookupKey.Premium,
     features: [
-      "Up to 30 packages per month",
-      "Real-time tracking",
-      "All notification types",
-      "24/7 priority support",
-      "Full package insurance",
-      "Multiple trusted contacts",
+      "Access to 75 EboxSecure locations",
+      "7-day package holding",
+      "Maximum 50 packages",
+      "Priority support",
+      "Returns handling",
+      "Discounted last-mile delivery service",
     ],
   },
   {
-    name: "Diamond",
-    price: "$79.99",
+    name: "Business Pro",
+    price: "$99.99",
     period: "/month",
-    description: "For power users",
+    description: "For businesses with high-volume delivery needs.",
     current: false,
+    lookupKey: PlanLookupKey.BusinessPro,
     features: [
-      "Unlimited packages",
-      "Premium tracking features",
-      "All notification types",
-      "Dedicated support line",
-      "Premium package insurance",
-      "Advanced security features",
-      "API access",
+      "Unlimited EboxSecure locations",
+      "10-day package holding",
+      "Maximum 200 packages",
+      "Priority support",
+      "Returns handling",
+      "Discounted last-mile delivery service",
+      "Dedicated account management",
     ],
   },
 ];
+
+async function handleUpgradeAction(formData: FormData) {
+  const lookupKey = formData.get("lookupKey") as PlanLookupKey;
+  if (!lookupKey) return;
+  const url = await createStripeSession(lookupKey);
+  if (url) redirect(url);
+}
 
 export default function SubscriptionPage() {
   return (
@@ -102,14 +124,14 @@ export default function SubscriptionPage() {
               <div className="flex items-center gap-3">
                 <Zap className="h-8 w-8 text-yellow-500" />
                 <div>
-                  <h3 className="text-lg font-semibold">Gold Plan</h3>
+                  <h3 className="text-lg font-semibold">Premium Plan</h3>
                   <p className="text-sm text-muted-foreground">
                     Next billing date: December 24, 2024
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">$39.99</p>
+                <p className="text-2xl font-bold">$49.99</p>
                 <p className="text-sm text-muted-foreground">/month</p>
               </div>
             </div>
@@ -123,7 +145,12 @@ export default function SubscriptionPage() {
               key={plan.name}
               className={`relative ${plan.current ? "border-primary" : ""}`}
             >
-              {plan.current && (
+              {plan.mostPopular && (
+                <Badge className="absolute -top-2 right-2 bg-blue-100 text-blue-800">
+                  Most popular
+                </Badge>
+              )}
+              {plan.current && !plan.mostPopular && (
                 <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 transform">
                   Current Plan
                 </Badge>
@@ -153,13 +180,21 @@ export default function SubscriptionPage() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  variant={plan.current ? "outline" : "primary"}
-                  disabled={plan.current}
-                >
-                  {plan.current ? "Current Plan" : "Upgrade"}
-                </Button>
+                <form action={handleUpgradeAction}>
+                  <input
+                    type="hidden"
+                    name="lookupKey"
+                    value={plan.lookupKey}
+                  />
+                  <Button
+                    className="w-full"
+                    variant={plan.current ? "outline" : "primary"}
+                    disabled={plan.current}
+                    type="submit"
+                  >
+                    {plan.current ? "Current Plan" : "Upgrade"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           ))}

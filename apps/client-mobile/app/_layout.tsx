@@ -6,11 +6,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 import "react-native-reanimated";
 
@@ -22,7 +18,6 @@ import { SessionTimeoutWrapper } from "@/components/SessionTimeoutWrapper";
 import { SignInCredentialsProvider } from "@/hooks/useSignInCredentials";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -39,25 +34,30 @@ export default function RootLayout() {
       }
       tokenCache={tokenCache}
     >
-      <SessionTimeoutWrapper>
-        <SignInCredentialsProvider>
-          <TRPCReactProvider>
-            <RootSiblingParent>
-              <ClerkLoaded>
-                {/* <ThemeProvider
+      <StripeProvider
+        publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+        merchantIdentifier="merchant.com.eboxsecure.eboxsecureclient"
+      >
+        <SessionTimeoutWrapper>
+          <SignInCredentialsProvider>
+            <TRPCReactProvider>
+              <RootSiblingParent>
+                <ClerkLoaded>
+                  {/* <ThemeProvider
                   value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
                 > */}
-                <GestureHandlerRootView>
-                  <BottomSheetModalProvider>
-                    <Stack screenOptions={{ headerShown: false }} />
-                  </BottomSheetModalProvider>
-                </GestureHandlerRootView>
-                {/* </ThemeProvider> */}
-              </ClerkLoaded>
-            </RootSiblingParent>
-          </TRPCReactProvider>
-        </SignInCredentialsProvider>
-      </SessionTimeoutWrapper>
+                  <GestureHandlerRootView>
+                    <BottomSheetModalProvider>
+                      <Stack screenOptions={{ headerShown: false }} />
+                    </BottomSheetModalProvider>
+                  </GestureHandlerRootView>
+                  {/* </ThemeProvider> */}
+                </ClerkLoaded>
+              </RootSiblingParent>
+            </TRPCReactProvider>
+          </SignInCredentialsProvider>
+        </SessionTimeoutWrapper>
+      </StripeProvider>
     </ClerkProvider>
   );
 }
