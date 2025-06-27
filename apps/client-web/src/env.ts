@@ -21,6 +21,10 @@ export const env = createEnv({
     PICKUP_TOKEN_JWT_SECRET_KEY: z.string(),
     PICKUP_TOKEN_AUDIENCE: z.string(),
     PICKUP_TOKEN_ISSUER: z.string(),
+    UPSTASH_REDIS_REST_URL: z.string(),
+    UPSTASH_REDIS_REST_TOKEN: z.string(),
+    STRIPE_SECRET_KEY: z.string(),
+    STRIPE_WEBOOK_SECRET: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.
