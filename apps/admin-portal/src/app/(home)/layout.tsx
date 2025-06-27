@@ -1,6 +1,6 @@
 import type { Viewport } from "next";
 
-import Navbar from "../_components/navbar/navbar";
+import Navbar from "../_components/navbar";
 import AppSidebar from "../_components/sidebar";
 
 export const viewport: Viewport = {
