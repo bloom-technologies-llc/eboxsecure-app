@@ -1,31 +1,13 @@
+"use server";
+
+import {
+  SubscriptionData,
+  SubscriptionStatus,
+  SubscriptionTier,
+} from "@/types/subscription";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { kv } from "./redis";
-import { SubscriptionData } from "./sync-customer-data";
-
-export enum SubscriptionTier {
-  BASIC = "basic",
-  BASIC_PRO = "basic_pro",
-  PREMIUM = "premium",
-  BUSINESS_PRO = "business_pro",
-}
-
-export type SubscriptionStatus = {
-  status:
-    | "active"
-    | "canceled"
-    | "past_due"
-    | "unpaid"
-    | "incomplete"
-    | "incomplete_expired"
-    | "trialing"
-    | "paused"
-    | "none";
-  plan?: SubscriptionTier;
-  currentPeriodEnd?: number;
-  cancelAtPeriodEnd?: boolean;
-  subscriptionId?: string;
-};
 
 export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus> {
   const user = await currentUser();

@@ -1,4 +1,4 @@
-import { SubscriptionTier } from "../lib/get-subscription-data";
+import { PlanAction, SubscriptionTier } from "@/types/subscription";
 
 // Define plan hierarchy (from lowest to highest)
 const PLAN_HIERARCHY = [
@@ -7,8 +7,6 @@ const PLAN_HIERARCHY = [
   SubscriptionTier.PREMIUM,
   SubscriptionTier.BUSINESS_PRO,
 ] as const;
-
-export type PlanAction = "subscribe" | "current" | "upgrade" | "downgrade";
 
 export function getPlanAction(
   currentPlan: SubscriptionTier | undefined,
