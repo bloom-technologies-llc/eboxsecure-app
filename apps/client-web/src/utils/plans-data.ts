@@ -1,4 +1,4 @@
-import { SubscriptionTier } from "../lib/get-subscription-data";
+import { SubscriptionTier } from "@/types/subscription";
 
 export const plans = [
   {

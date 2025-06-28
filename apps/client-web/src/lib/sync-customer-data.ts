@@ -1,26 +1,9 @@
 import "server-only";
 
+import { SubscriptionData } from "@/types/subscription";
 import Stripe from "stripe";
 
 import { kv } from "./redis";
-
-export type SubscriptionData = {
-  subscriptionId: string;
-  status:
-    | "active"
-    | "canceled"
-    | "past_due"
-    | "unpaid"
-    | "incomplete"
-    | "incomplete_expired"
-    | "trialing"
-    | "paused"
-    | "none";
-  priceIds: string[];
-  currentPeriodEnd: number;
-  currentPeriodStart: number;
-  cancelAtPeriodEnd: boolean;
-};
 
 export async function syncCustomerData(customerId: string) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
