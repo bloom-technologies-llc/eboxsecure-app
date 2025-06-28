@@ -4,9 +4,18 @@ import Stripe from "stripe";
 
 import { kv } from "./redis";
 
-type SubscriptionData = {
+export type SubscriptionData = {
   subscriptionId: string;
-  status: string;
+  status:
+    | "active"
+    | "canceled"
+    | "past_due"
+    | "unpaid"
+    | "incomplete"
+    | "incomplete_expired"
+    | "trialing"
+    | "paused"
+    | "none";
   priceIds: string[];
   currentPeriodEnd: number;
   currentPeriodStart: number;
@@ -37,7 +46,6 @@ export async function syncCustomerData(customerId: string) {
     subscriptionId: subscription.id,
     status: subscription.status,
     priceIds: subscription.items.data.map((item) => item.price.id),
-    // not sure why I had to dig further into the object to get these
     currentPeriodEnd: subscription.items.data[0]?.current_period_end!,
     currentPeriodStart: subscription.items.data[0]?.current_period_start!,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
