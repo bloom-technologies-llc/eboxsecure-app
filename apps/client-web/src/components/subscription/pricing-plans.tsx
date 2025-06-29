@@ -1,5 +1,5 @@
+import { handleSubscriptionFormAction } from "@/actions";
 import { getCurrentSubscriptionStatus } from "@/lib/get-subscription-data";
-import { handleUpgradeFormAction } from "@/lib/subscription-actions";
 import { plans } from "@/utils/plans-data";
 import {
   getPlanAction,
@@ -81,7 +81,7 @@ export default async function PricingPlans() {
                   </li>
                 ))}
               </ul>
-              <form action={handleUpgradeFormAction}>
+              <form action={handleSubscriptionFormAction}>
                 <input type="hidden" name="lookupKey" value={plan.lookupKey} />
                 <Button
                   className="w-full"

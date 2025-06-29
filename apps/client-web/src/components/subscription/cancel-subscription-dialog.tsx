@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { cancelSubscription } from "@/lib/subscription-actions";
+import { useRouter } from "next/navigation";
+import { cancelSubscription } from "@/actions";
 import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -12,41 +13,47 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@ebox/ui/dialog";
 
-interface CancellationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
+interface CancelSubscriptionDialogProps {
   currentPlanName: string;
   currentPeriodEnd: number;
 }
 
-export function CancellationModal({
-  isOpen,
-  onClose,
-  onSuccess,
+export function CancelSubscriptionDialog({
   currentPlanName,
   currentPeriodEnd,
-}: CancellationModalProps) {
+}: CancelSubscriptionDialogProps) {
+  const router = useRouter();
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleCancel = async () => {
     setIsCancelling(true);
     try {
       await cancelSubscription();
-      onSuccess();
-      onClose();
+
+      setIsOpen(false);
+
+      router.refresh();
     } catch (error) {
       console.error("Cancellation failed:", error);
-      // Handle error - you might want to show a toast notification here
     } finally {
       setIsCancelling(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          Cancel Plan
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -76,7 +83,11 @@ export function CancellationModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isCancelling}>
+          <Button
+            variant="outline"
+            onClick={() => setIsOpen(false)}
+            disabled={isCancelling}
+          >
             Keep Subscription
           </Button>
           <Button
