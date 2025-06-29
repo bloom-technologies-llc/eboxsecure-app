@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { reactivateSubscription } from "@/lib/subscription-actions";
+import { useRouter } from "next/navigation";
+import { reactivateSubscription } from "@/actions";
 
 import { Button } from "@ebox/ui/button";
 
 export function ReactivateButton() {
   const [reactivating, setReactivating] = useState(false);
+  const router = useRouter();
 
   const handleReactivate = async () => {
     setReactivating(true);
     try {
       await reactivateSubscription();
-      // Refresh the page to show updated subscription status
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error("Reactivation failed:", error);
     } finally {

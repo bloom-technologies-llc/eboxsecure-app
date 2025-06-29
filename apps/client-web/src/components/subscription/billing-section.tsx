@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
-import { CancelButton } from "./cancel-button";
+import { CancelSubscriptionDialog } from "./cancel-subscription-dialog";
 import { ReactivateButton } from "./reactivate-button";
 
 export default async function BillingSection() {
@@ -63,7 +63,7 @@ export default async function BillingSection() {
                   next billing cycle.
                 </p>
               </div>
-              <CancelButton
+              <CancelSubscriptionDialog
                 currentPlanName={currentPlan.name}
                 currentPeriodEnd={subscriptionStatus.currentPeriodEnd!}
               />
