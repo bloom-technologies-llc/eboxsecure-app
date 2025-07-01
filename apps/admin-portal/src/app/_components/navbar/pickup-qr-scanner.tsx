@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import { AlertCircle, QrCode } from "lucide-react";
 
 import { Alert, AlertDescription } from "@ebox/ui/alert";
@@ -27,6 +28,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
     mutate: authenticatePickupToken,
     reset,
     isPending,
+    isSuccess,
     data: userInfo,
   } = api.auth.authenticateAuthorizedPickupToken.useMutation({
     onError: (e) => {
@@ -94,9 +96,10 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
                   {/* Portrait Image */}
                   <div className="flex justify-center">
                     <div className="relative h-96 w-80 overflow-hidden rounded-lg border-2 border-border bg-muted shadow-xl">
-                      <img
+                      <Image
                         src={userInfo.portraitUrl}
                         alt={`${userInfo.firstName} ${userInfo.lastName}`}
+                        fill
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -146,7 +149,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
             <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
-            {!userInfo?.authorized ? (
+            {!isSuccess ? (
               <Button
                 onClick={processQRCode}
                 className="flex-1"
@@ -155,7 +158,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
                 Scan QR Code
               </Button>
             ) : (
-              <Button className="flex-1">Picked up by customer</Button>
+              <Button className="flex-1">Picked up by customer</Button> // TODO: Implement logic to mark order as picked up
             )}
           </div>
 

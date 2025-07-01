@@ -15,6 +15,9 @@ const config = withAxiom({
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+  images: {
+    remotePatterns: [{ hostname: process.env.IMAGE_CDN_HOST }],
+  },
 });
 
 export default config;
