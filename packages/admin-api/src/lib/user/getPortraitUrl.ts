@@ -14,5 +14,5 @@ export async function getPortraitUrl(db: PrismaClient, userId: string) {
     throw new Error("Portrait photo not found for this customer.");
   }
 
-  return customerAccount.photoLink as string;
+  return customerAccount.photoLink;
 }
