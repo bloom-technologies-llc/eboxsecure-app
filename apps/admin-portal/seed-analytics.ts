@@ -173,7 +173,11 @@ async function createCustomers(): Promise<string[]> {
           id: userId,
           userType: UserType.CUSTOMER,
           customerAccount: {
-            create: {},
+            create: {
+              firstName: "seed",
+              lastName: `customer_${i.toString().padStart(4, "0")}`,
+              email: "seed@gmail.com",
+            },
           },
         },
       });

@@ -153,8 +153,8 @@ export const authRouter = createTRPCRouter({
         authorized: true,
         orderId: order.id,
         portraitUrl,
-        firstName: firstName!,
-        lastName: lastName!,
+        firstName,
+        lastName,
       };
     }),
 });
