@@ -18,6 +18,9 @@ export const env = createEnv({
     RESEND_FROM_EMAIL: z
       .string()
       .default("notifications@mailer.bloomtechnologies.co"),
+    PICKUP_TOKEN_JWT_SECRET_KEY: z.string(),
+    PICKUP_TOKEN_AUDIENCE: z.string(),
+    PICKUP_TOKEN_ISSUER: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.

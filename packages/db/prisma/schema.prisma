@@ -31,9 +31,9 @@ model Session {
 model CustomerAccount {
     id               String                     @id
     user             User                       @relation(fields: [id], references: [id])
-    firstName        String?
-    lastName         String?
-    email            String?
+    firstName        String
+    lastName         String
+    email            String
     phoneNumber      String?
     shippingAddress  String?
     photoLink        String? // UploadThing URL for portrait photo
