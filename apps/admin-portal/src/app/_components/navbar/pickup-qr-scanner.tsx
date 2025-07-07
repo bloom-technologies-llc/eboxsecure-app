@@ -27,8 +27,8 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
   const {
     mutate: authenticatePickupToken,
     reset,
-    isPending,
-    isSuccess,
+    isPending: scanningQrCode,
+    isSuccess: successfullyScannedQrCode,
     data: userInfo,
   } = api.auth.authenticateAuthorizedPickupToken.useMutation({
     onError: (e) => {
@@ -39,6 +39,27 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
       });
     },
   });
+
+  const { mutate: processOrderPickup, isPending: processingPickUp } =
+    api.orders.markOrderAsPickedUp.useMutation({
+      onError: (e) => {
+        toast({
+          variant: "destructive",
+          title: "Operation Unsuccessful!",
+          description: e.message,
+        });
+      },
+      onSuccess: () => {
+        if (userInfo?.authorized !== true) return;
+        const orderId = userInfo.orderId;
+        toast({
+          variant: "success",
+          title: "Order successfully picked up!",
+          description: `Order ${orderId} has been marked as picked up.`,
+        });
+        handleClose();
+      },
+    });
 
   const handleClose = () => {
     setQrCodeInput("");
@@ -57,6 +78,15 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
     });
   };
 
+  const processPickup = () => {
+    if (userInfo?.authorized !== true) return;
+    const { orderId, customerId } = userInfo;
+    processOrderPickup({
+      orderId,
+      customerId,
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
@@ -69,7 +99,7 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
 
         <div className="space-y-4">
           {/* Loading State */}
-          {isPending && (
+          {scanningQrCode && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -149,16 +179,22 @@ export function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
             <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
-            {!isSuccess ? (
+            {!successfullyScannedQrCode ? (
               <Button
                 onClick={processQRCode}
                 className="flex-1"
-                disabled={isPending || !qrCodeInput}
+                disabled={scanningQrCode || !qrCodeInput}
               >
                 Scan QR Code
               </Button>
             ) : (
-              <Button className="flex-1">Picked up by customer</Button> // TODO: Implement logic to mark order as picked up
+              <Button
+                className="flex-1"
+                onClick={processPickup}
+                disabled={processingPickUp}
+              >
+                Picked up by customer
+              </Button> // TODO: Implement logic to mark order as picked up
             )}
           </div>
 
