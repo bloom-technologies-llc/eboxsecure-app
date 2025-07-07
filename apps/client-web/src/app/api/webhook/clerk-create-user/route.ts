@@ -59,16 +59,19 @@ export async function POST(req: Request) {
       status: 400,
     });
   }
-  const { id: userId, email_addresses } = evt.data;
+  const { id: userId, email_addresses, first_name, last_name } = evt.data;
   const userEmail = email_addresses?.[0]?.email_address;
 
-  if (!userId || !userEmail) {
+  if (!userId || !userEmail || !first_name || !last_name) {
     log.error(
-      "Unexpectedly missing user ID or email in clerk-create-user webhook",
+      "Unexpectedly missing user ID, email, first name, or last name in clerk-create-user webhook",
     );
-    return new Response("Unexpectedly missing user ID or email", {
-      status: 400,
-    });
+    return new Response(
+      "Unexpectedly missing user ID, email, first name, or last name",
+      {
+        status: 400,
+      },
+    );
   }
 
   // Create user
@@ -79,8 +82,8 @@ export async function POST(req: Request) {
         userType: "CUSTOMER",
         customerAccount: {
           create: {
-            firstName: evt.data.first_name,
-            lastName: evt.data.last_name,
+            firstName: first_name!,
+            lastName: last_name!,
             email: userEmail,
             phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
           },
