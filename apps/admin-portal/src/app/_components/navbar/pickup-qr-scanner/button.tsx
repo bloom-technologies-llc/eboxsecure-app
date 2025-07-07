@@ -5,7 +5,7 @@ import { QrCode } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 
-import { PickupQRScanner } from "./pickup-qr-scanner";
+import { PickupQRScanner } from "./scanner";
 
 export function PickupQRScannerButton() {
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
