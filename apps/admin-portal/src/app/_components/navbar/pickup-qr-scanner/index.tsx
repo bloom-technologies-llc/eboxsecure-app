@@ -1,3 +1,3 @@
-import { PickupQRScannerButton } from "./button";
+import PickupQRScannerButton from "./scan-qr-button";
 
 export { PickupQRScannerButton };
