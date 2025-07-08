@@ -82,8 +82,8 @@ export async function POST(req: Request) {
         userType: "CUSTOMER",
         customerAccount: {
           create: {
-            firstName: first_name!,
-            lastName: last_name!,
+            firstName: first_name,
+            lastName: last_name,
             email: userEmail,
             phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
           },
