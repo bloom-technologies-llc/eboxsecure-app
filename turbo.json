@@ -38,6 +38,13 @@
     },
     "//#clean": {
       "cache": false
+    },
+    "//#test": {
+      "outputs": ["coverage/**"]
+    },
+    "//#test:watch": {
+      "cache": false,
+      "persistent": true
     }
   },
   "globalEnv": ["DATABASE_URL", "AUTH_REDIRECT_PROXY_URL"]

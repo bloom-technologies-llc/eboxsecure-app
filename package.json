@@ -21,6 +21,7 @@
     "typecheck": "turbo typecheck",
     "ui-add": "pnpm -F ui ui-add",
     "test": "vitest",
+    "test:watch": "vitest --watch",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
