@@ -7,18 +7,11 @@ import { z } from "zod";
 import { getPortraitUrl } from "../lib/user";
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
-const {
-  PICKUP_TOKEN_JWT_SECRET_KEY,
-  PICKUP_TOKEN_ISSUER,
-  PICKUP_TOKEN_AUDIENCE,
-} = process.env;
-
 interface AuthorizedPickupTokenPayload extends JWTPayload {
   sessionId: string;
   orderId: number;
 }
 
-// TODO: write unit tests for this
 export const authRouter = createTRPCRouter({
   authenticateAuthorizedPickupToken: protectedAdminProcedure
     .input(
@@ -42,6 +35,12 @@ export const authRouter = createTRPCRouter({
       ]),
     )
     .mutation(async ({ ctx, input }) => {
+      const {
+        PICKUP_TOKEN_JWT_SECRET_KEY,
+        PICKUP_TOKEN_ISSUER,
+        PICKUP_TOKEN_AUDIENCE,
+      } = process.env;
+
       if (
         !PICKUP_TOKEN_JWT_SECRET_KEY ||
         !PICKUP_TOKEN_ISSUER ||
@@ -146,13 +145,21 @@ export const authRouter = createTRPCRouter({
 
       const { firstName, lastName } = order.customer;
 
-      // fetch portrait URL from database
-      const portraitUrl = await getPortraitUrl(ctx.db, payloadSession.userId);
+      if (!order.customer.photoLink) {
+        console.error(
+          `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, but doesn't have portrait URL.`,
+        );
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "User must upload a portrait before he or she can pick up a package.",
+        });
+      }
 
       return {
         authorized: true,
         orderId: order.id,
-        portraitUrl,
+        portraitUrl: order.customer.photoLink,
         firstName,
         lastName,
       };
