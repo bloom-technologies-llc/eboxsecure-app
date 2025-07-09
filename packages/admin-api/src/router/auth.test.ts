@@ -616,6 +616,7 @@ describe("auth router", () => {
       ).resolves.toEqual({
         authorized: true,
         orderId: 1,
+        customerId: "mock-user-id",
         firstName: "John",
         lastName: "Smith",
         portraitUrl: "www.cdn.com/image",
