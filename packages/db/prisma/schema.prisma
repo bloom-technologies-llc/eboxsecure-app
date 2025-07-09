@@ -41,7 +41,12 @@ model CustomerAccount {
     customerComments CustomerComment[]
     customerNotes    CustomerNote[]
     phoneUploadLink  OnboardingPhoneUploadLink?
-    orders           Order[]
+
+    // Orders the customer placed
+    orders Order[] @relation("OrderCustomer")
+
+    // Orders the customer picked up (may be different from the placer)
+    ordersPickedUp Order[] @relation("OrderPickedUpBy")
 
     // Trusted contact relationships
     trustedContactsGranted  TrustedContact[] @relation("TrustedContactsGranted")
@@ -87,21 +92,24 @@ model OnboardingPhoneUploadLink {
 }
 
 model Order {
-    id                Int             @id @default(autoincrement())
+    id                Int       @id @default(autoincrement())
     customerId        String
     vendorOrderId     String
-    createdAt         DateTime        @default(now())
-    updatedAt         DateTime        @updatedAt
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
     total             Float
     shippedLocationId Int
     deliveredDate     DateTime?
     pickedUpAt        DateTime?
+    pickedUpById      String?
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
-    customer          CustomerAccount @relation(fields: [customerId], references: [id])
-    shippedLocation   Location        @relation(fields: [shippedLocationId], references: [id])
-    carrier           Carrier?        @relation(fields: [carrierId], references: [id])
-    orderComments     OrderComment[]
+
+    pickedUpBy      CustomerAccount? @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
+    customer        CustomerAccount  @relation("OrderCustomer", fields: [customerId], references: [id])
+    shippedLocation Location         @relation(fields: [shippedLocationId], references: [id])
+    carrier         Carrier?         @relation(fields: [carrierId], references: [id])
+    orderComments   OrderComment[]
 }
 
 model Carrier {

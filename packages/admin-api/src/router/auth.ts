@@ -24,6 +24,7 @@ export const authRouter = createTRPCRouter({
         z.object({
           authorized: z.literal(true),
           orderId: z.number(),
+          customerId: z.string(),
           portraitUrl: z.string(),
           firstName: z.string(),
           lastName: z.string(),
@@ -159,6 +160,7 @@ export const authRouter = createTRPCRouter({
       return {
         authorized: true,
         orderId: order.id,
+        customerId: order.customerId,
         portraitUrl: order.customer.photoLink,
         firstName,
         lastName,
