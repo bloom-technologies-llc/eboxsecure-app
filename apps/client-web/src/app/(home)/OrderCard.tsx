@@ -27,8 +27,8 @@ export default function OrderCard({
     { orderId: id },
     {
       enabled: fetchQrCode && !alreadyPickedUp,
-      refetchInterval: 1000 * 60 * 5,
-    }, // expires after 5 minutes
+      refetchInterval: 1000 * 60 * 15,
+    }, // expires after 15 minutes
   );
 
   return (

@@ -43,7 +43,7 @@ const OrderCard = ({ order }: { order: OrderView }) => {
               </Text>
             )}
             {deliveredDate && !pickedUpAt ? (
-              <QRModal />
+              <QRModal orderId={order.id} />
             ) : pickedUpAt ? (
               <Text className="text-xs text-green-600">Already Picked Up</Text>
             ) : null}
