@@ -5,19 +5,12 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
-const {
-  PICKUP_TOKEN_JWT_SECRET_KEY,
-  PICKUP_TOKEN_ISSUER,
-  PICKUP_TOKEN_AUDIENCE,
-} = process.env;
-
 // NOTE: must match the same in admin-api/auth.ts
-interface AuthorizedPickupTokenPayload extends JWTPayload {
+export interface AuthorizedPickupTokenPayload extends JWTPayload {
   sessionId: string;
   orderId: number;
 }
 
-// TODO: write unit tests for this
 // TODO: support trusted contacts
 export const authRouter = createTRPCRouter({
   getAuthorizedPickupToken: protectedCustomerProcedure
@@ -27,6 +20,12 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const {
+        PICKUP_TOKEN_JWT_SECRET_KEY,
+        PICKUP_TOKEN_ISSUER,
+        PICKUP_TOKEN_AUDIENCE,
+      } = process.env;
+
       if (
         !PICKUP_TOKEN_JWT_SECRET_KEY ||
         !PICKUP_TOKEN_ISSUER ||
@@ -79,6 +78,6 @@ export const authRouter = createTRPCRouter({
         .setExpirationTime("15 mins")
         .encrypt(secret);
 
-      return encryptedToken;
+      return await encryptedToken;
     }),
 });
