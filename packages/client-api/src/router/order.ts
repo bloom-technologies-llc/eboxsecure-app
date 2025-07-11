@@ -5,12 +5,12 @@ import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const orderRouter = createTRPCRouter({
   getAllOrders: protectedCustomerProcedure.query(async ({ ctx }) => {
-    return await ctx.db.order.findMany({
+    const orders = await ctx.db.order.findMany({
       where: {
         OR: [
           // User's own orders
           { customerId: ctx.session.userId },
-          // Orders from accounts where user is a trusted contact
+          // TODO: update trusted contact logic
           {
             customer: {
               trustedContactsGranted: {
@@ -38,7 +38,17 @@ export const orderRouter = createTRPCRouter({
           },
         },
       },
+      orderBy: [
+        {
+          pickedUpAt: {
+            sort: "desc",
+            nulls: "first",
+          },
+        },
+      ],
     });
+
+    return orders;
   }),
   get: protectedCustomerProcedure
     .input(
@@ -53,7 +63,7 @@ export const orderRouter = createTRPCRouter({
           OR: [
             // User's own orders
             { customerId: ctx.session.userId },
-            // Orders from accounts where user is a trusted contact
+            // TODO: update trusted contact logic
             {
               customer: {
                 trustedContactsGranted: {

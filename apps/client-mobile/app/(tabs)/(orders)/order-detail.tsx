@@ -71,6 +71,7 @@ export default function Page() {
         </View>
 
         {/* Order Summary */}
+        {/* TODO: Remove hardcoding and display real product information */}
         <View className="my-4 border border-[#e4e4e7] p-4">
           <View className="flex flex-row items-center gap-x-3">
             <View className="h-24 w-24 rounded-lg bg-slate-300" />
