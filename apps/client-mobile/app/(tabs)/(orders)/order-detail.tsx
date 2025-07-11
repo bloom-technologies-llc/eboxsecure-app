@@ -34,81 +34,40 @@ export default function Page() {
       <View className="my-12 flex gap-y-4 bg-white">
         {/* timeseries status */}
         <View className="flex-row">
-          <View className="flex-1">
-            <View className="items-center">
-              <View className="flex-row items-center">
-                <View className="invisible h-px flex-1 bg-slate-500 "></View>
-
-                <View className="z-10 h-5 w-5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-100 ring-0 ring-white">
-                  <View className="z-11 h-2.5 w-2.5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-300 ring-0 ring-white" />
+          {[
+            { label: "Ordered", active: true },
+            { label: "Processed", active: !!order?.processedAt },
+            { label: "Delivered", active: !!order?.deliveredDate },
+            { label: "Picked up", active: !!order?.pickedUpAt },
+          ].map((step, idx, arr) => {
+            const isLast = idx === arr.length - 1;
+            return (
+              <View key={step.label} className="flex-1">
+                <View className="items-center">
+                  <View className="flex-row items-center">
+                    <View
+                      className={`${idx === 0 ? "invisible" : ""} h-px flex-1 ${step.active ? "bg-blue-500" : "bg-slate-300"}`}
+                    />
+                    <View
+                      className={`z-10 h-5 w-5 shrink-0 flex-row items-center justify-center rounded-full ${step.active ? "bg-blue-100" : "bg-slate-200"} ring-0 ring-white`}
+                    >
+                      <View
+                        className={`z-11 h-2.5 w-2.5 shrink-0 flex-row items-center justify-center rounded-full ${step.active ? "bg-blue-500" : "bg-slate-400"} ring-0 ring-white`}
+                      />
+                    </View>
+                    <View
+                      className={`${isLast ? "invisible" : ""} h-px flex-1 ${arr[idx + 1]?.active ? "bg-blue-500" : "bg-slate-300"}`}
+                    />
+                  </View>
                 </View>
-                <View className="h-px flex-1 bg-slate-500"></View>
-              </View>
-            </View>
-
-            <View className="mt-3 items-center">
-              <Text className="text-sm font-semibold text-gray-900 ">
-                Ordered
-              </Text>
-            </View>
-          </View>
-
-          <View className=" flex-1">
-            <View className="items-center">
-              <View className="flex-row items-center">
-                <View className="h-px flex-1 bg-slate-500"></View>
-
-                <View className="z-10 h-5 w-5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-100 ring-0 ring-white">
-                  <View className="z-11 h-2.5 w-2.5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-300 ring-0 ring-white" />
+                <View className="mt-3 items-center">
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {step.label}
+                  </Text>
                 </View>
-                <View className="h-px flex-1 bg-slate-500 "></View>
               </View>
-            </View>
-
-            <View className="mt-3 items-center">
-              <Text className="text-sm font-semibold text-gray-900 ">
-                Shipped
-              </Text>
-            </View>
-          </View>
-
-          <View className=" flex-1">
-            <View className="items-center">
-              <View className="flex-row items-center">
-                <View className="h-px flex-1 bg-slate-500 "></View>
-
-                <View className="z-10 h-5 w-5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-100 ring-0 ring-white">
-                  <View className="z-11 h-2.5 w-2.5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-300 ring-0 ring-white" />
-                </View>
-                <View className="h-px flex-1 bg-slate-500"></View>
-              </View>
-            </View>
-
-            <View className="mt-3 items-center">
-              <Text className="text-sm font-semibold text-gray-900 ">
-                Delivered
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-1">
-            <View className="items-center">
-              <View className="flex-row items-center">
-                <View className="h-px flex-1 bg-slate-500"></View>
-
-                <View className="z-10 h-5 w-5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-100 ring-0 ring-white">
-                  <View className="z-11 h-2.5 w-2.5 shrink-0 flex-row items-center justify-center rounded-full bg-blue-300 ring-0 ring-white" />
-                </View>
-
-                <View className="invisible h-px flex-1 bg-slate-500"></View>
-              </View>
-            </View>
-            <View className="mt-3 items-center">
-              <Text className="text-sm font-semibold text-gray-900 ">
-                Picked up
-              </Text>
-            </View>
-          </View>
+            );
+          })}
         </View>
 
         {/* Order Summary */}
@@ -139,12 +98,20 @@ export default function Page() {
           ) : order ? (
             <View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
-                <Text className="text-[#333333]">Email</Text>
+                <Text className="text-[#333333]">Order ID #</Text>
+                <Text className="text-[#333333]">{order.id}</Text>
+              </View>
+              <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
+                <Text className="text-[#333333]">Total $</Text>
+                <Text className="text-[#333333]">{order.total}</Text>
+              </View>
+              <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
+                <Text className="text-[#333333]">Customer Email</Text>
                 <Text className="text-[#333333]">{order.customer.email}</Text>
               </View>
 
               <View className="flex flex-row justify-between border border-t-0 border-[#e4e4e7] px-6 py-5">
-                <Text className="text-[#333333]">Phone</Text>
+                <Text className="text-[#333333]">Customer Phone Number</Text>
                 <Text className="text-[#333333]">
                   {order.customer.phoneNumber}
                 </Text>
