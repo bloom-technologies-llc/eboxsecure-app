@@ -1,16 +1,36 @@
 import React, { useCallback, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { api } from "@/trpc/react";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import QRCode from "react-qr-code";
 
-const QRModal = () => {
-  // ref
+type QRModalProps = {
+  orderId: number;
+};
+
+const QRModal = ({ orderId }: QRModalProps) => {
+  const {
+    data: qrCode,
+    isLoading,
+    error,
+  } = api.auth.getAuthorizedPickupToken.useQuery(
+    { orderId },
+    {
+      enabled: Boolean(orderId),
+      refetchInterval: 1000 * 60 * 15, // refresh every 15 minutes
+    },
+  );
+
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  // variables
   const snapPoints = useMemo(() => ["25%", "55%"], []);
 
-  // callbacks
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -19,7 +39,6 @@ const QRModal = () => {
     bottomSheetModalRef.current?.dismiss();
   }, []);
 
-  // renders
   return (
     <View
       style={{ alignSelf: "flex-start" }}
@@ -28,39 +47,45 @@ const QRModal = () => {
       <Pressable onPress={handlePresentModalPress}>
         <Text>View QR code</Text>
       </Pressable>
+
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={1}
         snapPoints={snapPoints}
         style={styles.container}
       >
-        <BottomSheetView>
-          <View
-            style={{ justifyContent: "center" }}
-            className="mx-6 flex h-full justify-center gap-y-9"
-          >
-            <View className="flex gap-y-5">
-              <View className="mx-auto h-60 w-8/12">
-                <Image
-                  style={{ width: "100%", flex: 1 }}
-                  // couldnt get image to load in so...
-                  source="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/440px-QR_code_for_mobile_English_Wikipedia.svg.png"
-                  contentFit="cover"
-                />
-              </View>
-              <Text className="text-center text-xl">Scan QR code</Text>
-              <Text className="text-center text-[#575959]">
-                Once you arrive at your EBOX location, show the agent your code
-                to pickup your package
+        <BottomSheetView
+          style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24 }}
+        >
+          <View className="items-center gap-y-5">
+            {isLoading && <ActivityIndicator size="large" color="#333" />}
+            {error && (
+              <Text className="text-center text-red-600">
+                Error loading QR code. Please try again.
               </Text>
-            </View>
-            <Pressable
-              onPress={handleCloseModal}
-              className="rounded-md bg-[#333] p-3"
-            >
-              <Text className="text-center text-white">Close</Text>
-            </Pressable>
+            )}
+            {!isLoading && !error && qrCode ? (
+              <>
+                <QRCode value={qrCode} size={280} />
+                <Text className="text-center text-xl">Scan QR code</Text>
+                <Text className="text-center text-[#575959]">
+                  Once you arrive at your EBOX location, show the agent your
+                  code to pickup your package
+                </Text>
+              </>
+            ) : null}
+            {!isLoading && !error && !qrCode && (
+              <Text className="text-center text-[#575959]">
+                QR code not available at this time.
+              </Text>
+            )}
           </View>
+          <Pressable
+            onPress={handleCloseModal}
+            className="mt-8 rounded-md bg-[#333] p-3"
+          >
+            <Text className="text-center text-white">Close</Text>
+          </Pressable>
         </BottomSheetView>
       </BottomSheetModal>
     </View>
@@ -76,7 +101,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.64,
     shadowRadius: 11.14,
-
     elevation: 17,
   },
 });
