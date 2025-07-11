@@ -15,7 +15,7 @@ import { ZodError } from "zod";
 
 import { db } from "@ebox/db";
 
-type NonMachineAuthObject = Extract<AuthObject, { tokenType: "session_token" }>;
+export type NonMachineAuthObject = Extract<AuthObject, { tokenType: "session_token" }>;
 /**
  * 1. CONTEXT
  *

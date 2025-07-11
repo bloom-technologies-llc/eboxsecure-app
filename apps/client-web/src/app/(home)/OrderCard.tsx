@@ -19,12 +19,18 @@ export default function OrderCard({
   shippedLocation,
   deliveredDate,
   createdAt,
+  pickedUpAt,
 }: RouterOutput["order"]["getAllOrders"][number]) {
   const [fetchQrCode, setFetchQrCode] = useState(false);
+  const alreadyPickedUp = Boolean(pickedUpAt);
   const { data: qrCode } = api.auth.getAuthorizedPickupToken.useQuery(
     { orderId: id },
-    { enabled: fetchQrCode, refetchInterval: 1000 * 60 * 5 }, // expires after 5 minutes
+    {
+      enabled: fetchQrCode && !alreadyPickedUp,
+      refetchInterval: 1000 * 60 * 15,
+    }, // expires after 15 minutes
   );
+
   return (
     <>
       {qrCode && fetchQrCode && (
@@ -95,8 +101,9 @@ export default function OrderCard({
                 <Button
                   className="bg-[#00698F] text-white"
                   onClick={() => setFetchQrCode(true)}
+                  disabled={alreadyPickedUp}
                 >
-                  View QR Code
+                  {alreadyPickedUp ? `Picked Up` : `View QR Code`}
                 </Button>
               ) : (
                 <Button className="bg-[#00698F] text-white">
