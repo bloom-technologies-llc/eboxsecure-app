@@ -26,7 +26,7 @@ const OrderCard = ({ order }: { order: OrderView }) => {
   const { pickedUpAt, deliveredDate, shippedLocation } = order;
 
   return (
-    <Link href={"/(tabs)/(orders)/order-detail"} asChild>
+    <Link href={`/(tabs)/(orders)/order-detail?id=${order.id}`} asChild>
       <Pressable className="w-full border border-b-0 border-[#e4e4e7] bg-white p-4">
         <View className="flex flex-row items-center gap-x-4">
           <View className="h-24 w-24 rounded-lg bg-slate-300" />
