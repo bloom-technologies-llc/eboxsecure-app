@@ -24,7 +24,7 @@ export default function Page() {
   } = api.auth.getAuthorizedPickupToken.useQuery(
     { orderId },
     {
-      enabled: Boolean(orderId),
+      enabled: Boolean(order && !order.pickedUpAt),
       refetchInterval: 1000 * 60 * 15,
     },
   );
@@ -102,8 +102,8 @@ export default function Page() {
                 <Text className="text-[#333333]">{order.id}</Text>
               </View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
-                <Text className="text-[#333333]">Total $</Text>
-                <Text className="text-[#333333]">{order.total}</Text>
+                <Text className="text-[#333333]">Total Price</Text>
+                <Text className="text-[#333333]">${order.total}</Text>
               </View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
                 <Text className="text-[#333333]">Customer Email</Text>
@@ -130,7 +130,17 @@ export default function Page() {
         {/* QR Code Section */}
         <View className="mx-6 flex justify-center">
           <View className="flex gap-y-2">
-            {loadingQrCode ? (
+            {order?.pickedUpAt ? (
+              <View className="items-center">
+                <Text className="text-center text-xl font-semibold text-[#333]">
+                  Order already picked up
+                </Text>
+                <Text className="text-center text-[#575959]">
+                  This order has been picked up and no longer requires a QR
+                  code.
+                </Text>
+              </View>
+            ) : loadingQrCode ? (
               <ActivityIndicator className="my-4" />
             ) : qrCodeError ? (
               <Text className="text-center text-red-500">
