@@ -173,6 +173,7 @@ export const authRouter = createTRPCRouter({
         portraitUrl: order.customer.photoLink,
         firstName,
         lastName,
+        isTrustedContact: Boolean(trustedContact),
       };
     }),
 });
