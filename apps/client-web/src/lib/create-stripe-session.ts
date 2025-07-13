@@ -47,7 +47,7 @@ export async function createStripeSession(
     customer: stripeCustomerId,
     line_items: [{ price: price!.id, quantity: 1 }],
     mode: "subscription",
-    success_url: "https://bca9-24-47-182-131.ngrok-free.app/success",
+    success_url: "https://758bf86740a4.ngrok-free.app/success",
   });
 
   if (!session.url) {

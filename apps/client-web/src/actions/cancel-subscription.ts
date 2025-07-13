@@ -29,6 +29,7 @@ export async function cancelSubscription() {
     cancel_at_period_end: true,
   });
 
+  // calling this instead of letting webhook handle it for ui update, pls lmk if bad practice
   const customerId = user.privateMetadata.stripeCustomerId as string;
   if (customerId) {
     await syncCustomerData(customerId);
