@@ -54,6 +54,7 @@ model CustomerAccount {
 
     // Pending trusted contact invitations
     pendingTrustedContactInvitations PendingTrustedContactInvitation[]
+    MeterEvent                       MeterEvent[]
 
     // Orders sharing relationships
     sharedOrdersGranted  OrderSharedAccess[] @relation("SharedOrdersGranted")
@@ -108,13 +109,29 @@ model Order {
     pickedUpById      String?
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
+    meteredAt         DateTime?
+    meterEventId      String?         @unique
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
     shippedLocation   Location            @relation(fields: [shippedLocationId], references: [id])
     carrier           Carrier?            @relation(fields: [carrierId], references: [id])
     orderComments     OrderComment[]
+    meterEvent        MeterEvent?
     OrderSharedAccess OrderSharedAccess[]
+
+}
+
+model MeterEvent {
+    id            String          @id @default(cuid())
+    eventType     MeterEventType
+    value         Int
+    customerId    String
+    createdAt     DateTime        @default(now())
+    stripeEventId String?         @unique
+    orderId       Int?            @unique
+    customer      CustomerAccount @relation(fields: [customerId], references: [id])
+    order         Order?          @relation(fields: [orderId], references: [id])
 }
 
 model Carrier {
@@ -363,4 +380,9 @@ enum SubscriptionType {
     BASIC_PLUS
     PREMIUM
     BUSINESS_PRO
+}
+
+enum MeterEventType {
+    PACKAGE_HOLDING
+    PACKAGE_ALLOWANCE
 }
