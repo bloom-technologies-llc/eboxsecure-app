@@ -1,9 +1,9 @@
 "use server";
 
 import {
+  Plan,
   SubscriptionData,
   SubscriptionStatus,
-  SubscriptionTier,
 } from "@/types/subscription";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -33,7 +33,7 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
 
   // Map price IDs to plan names
   const planString = mapPriceIdsToPlan(subscriptionData.priceIds);
-  const plan = planString ? stringToSubscriptionTier(planString) : undefined;
+  const plan = planString ? stringToPlan(planString) : undefined;
 
   return {
     status: subscriptionData.status,
@@ -44,15 +44,13 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
   };
 }
 
-// Convert string plan name to SubscriptionTier enum
-function stringToSubscriptionTier(
-  planString: string,
-): SubscriptionTier | undefined {
-  const mapping: Record<string, SubscriptionTier> = {
-    BASIC: SubscriptionTier.BASIC,
-    BASIC_PLUS: SubscriptionTier.BASIC_PLUS,
-    PREMIUM: SubscriptionTier.PREMIUM,
-    BUSINESS_PRO: SubscriptionTier.BUSINESS_PRO,
+// Convert string plan name to Plan enum
+function stringToPlan(planString: string): Plan | undefined {
+  const mapping: Record<string, Plan> = {
+    BASIC: Plan.BASIC,
+    BASIC_PLUS: Plan.BASIC_PLUS,
+    PREMIUM: Plan.PREMIUM,
+    BUSINESS_PRO: Plan.BUSINESS_PRO,
   };
   return mapping[planString];
 }

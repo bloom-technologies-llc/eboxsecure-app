@@ -41,4 +41,6 @@ export {
   getSubscriptionLimits,
   priceIdToPlanMap,
   mapPriceIdsToPlan,
-} from "./utils/subscription-limits";
+  Plan,
+  TIER_SUBSCRIPTIONS,
+} from "./utils/subscription-utils";

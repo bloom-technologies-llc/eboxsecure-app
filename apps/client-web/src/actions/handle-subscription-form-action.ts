@@ -1,12 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { SubscriptionTier } from "@/types/subscription";
+import { Plan } from "@/types/subscription";
 
 import { handleSubscription } from "./handle-subscription";
 
-function isValidSubscriptionTier(value: string): value is SubscriptionTier {
-  return Object.values(SubscriptionTier).includes(value as SubscriptionTier);
+function isValidPlan(value: string): value is Plan {
+  return Object.values(Plan).includes(value as Plan);
 }
 
 export async function handleSubscriptionFormAction(formData: FormData) {
@@ -15,7 +15,7 @@ export async function handleSubscriptionFormAction(formData: FormData) {
     throw new Error("No lookup key provided");
   }
 
-  if (!isValidSubscriptionTier(lookupKey)) {
+  if (!isValidPlan(lookupKey)) {
     throw new Error("Invalid subscription tier provided");
   }
 

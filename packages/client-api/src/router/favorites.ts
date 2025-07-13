@@ -5,7 +5,7 @@ import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 import {
   canUserAddMoreFavorites,
   getSubscriptionLimits,
-} from "../utils/subscription-limits";
+} from "../utils/subscription-utils";
 
 export const favoritesRouter = createTRPCRouter({
   // Get all user's favorite locations

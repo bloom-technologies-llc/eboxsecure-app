@@ -21,6 +21,30 @@ export const priceIdToPlanMap: Record<string, string> = {
   price_1RkSoHPFcJwvZfVCZbw7oV6y: "BUSINESS_PRO",
 };
 
+// Subscription plan enum - matches client-web types
+export enum Plan {
+  BASIC = "basic",
+  BASIC_PLUS = "basic_plus",
+  PREMIUM = "premium",
+  BUSINESS_PRO = "business_pro",
+}
+
+// Mapping of plans to all their associated subscription lookup keys (main + metering)
+export const TIER_SUBSCRIPTIONS: Record<Plan, string[]> = {
+  [Plan.BASIC]: ["basic", "basic_holding", "basic_allowance"],
+  [Plan.BASIC_PLUS]: [
+    "basic_plus",
+    "basic_plus_holding",
+    "basic_plus_allowance",
+  ],
+  [Plan.PREMIUM]: ["premium", "premium_holding", "premium_allowance"],
+  [Plan.BUSINESS_PRO]: [
+    "business_pro",
+    "business_pro_holding",
+    "business_pro_allowance",
+  ],
+};
+
 // Location limits per subscription tier
 const LOCATION_LIMITS = {
   BASIC: 3,
@@ -45,10 +69,20 @@ export function mapPriceIdsToPlan(priceIds: string[]): string | null {
 export async function hasValidSubscription(): Promise<boolean> {
   const user = await currentUser();
 
-  if (!user) return false;
+  if (!user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "User not authenticated",
+    });
+  }
 
   const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
-  if (!stripeCustomerId) return false;
+  if (!stripeCustomerId) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "No Stripe customer ID found for user",
+    });
+  }
 
   const subscriptionData = await kv.get<SubscriptionData>(
     `stripe:customer:${stripeCustomerId}`,

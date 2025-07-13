@@ -1,4 +1,4 @@
-export enum SubscriptionTier {
+export enum Plan {
   BASIC = "basic",
   BASIC_PLUS = "basic_plus",
   PREMIUM = "premium",
@@ -16,7 +16,7 @@ export type SubscriptionStatus = {
     | "trialing"
     | "paused"
     | "none";
-  plan?: SubscriptionTier;
+  plan?: Plan;
   currentPeriodEnd?: number;
   cancelAtPeriodEnd?: boolean;
   subscriptionId?: string;

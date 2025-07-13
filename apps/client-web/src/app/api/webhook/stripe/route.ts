@@ -22,6 +22,14 @@ const allowedEvents: Stripe.Event.Type[] = [
   "payment_intent.succeeded",
   "payment_intent.payment_failed",
   "payment_intent.canceled",
+  // Customer portal events
+  "customer.updated",
+  "payment_method.attached",
+  "payment_method.detached",
+  "customer.tax_id.created",
+  "customer.tax_id.updated",
+  "customer.tax_id.deleted",
+  "billing_portal.session.created",
 ];
 
 export async function POST(req: Request) {

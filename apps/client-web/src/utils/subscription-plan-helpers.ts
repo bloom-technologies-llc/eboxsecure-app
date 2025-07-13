@@ -1,16 +1,16 @@
-import { PlanAction, SubscriptionTier } from "@/types/subscription";
+import { Plan, PlanAction } from "@/types/subscription";
 
 // Define plan hierarchy (from lowest to highest)
 const PLAN_HIERARCHY = [
-  SubscriptionTier.BASIC,
-  SubscriptionTier.BASIC_PLUS,
-  SubscriptionTier.PREMIUM,
-  SubscriptionTier.BUSINESS_PRO,
+  Plan.BASIC,
+  Plan.BASIC_PLUS,
+  Plan.PREMIUM,
+  Plan.BUSINESS_PRO,
 ] as const;
 
 export function getPlanAction(
-  currentPlan: SubscriptionTier | undefined,
-  targetPlan: SubscriptionTier,
+  currentPlan: Plan | undefined,
+  targetPlan: Plan,
 ): PlanAction {
   if (!currentPlan) {
     return "subscribe";

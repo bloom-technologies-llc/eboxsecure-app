@@ -92,6 +92,12 @@ export default async function PricingPlans() {
                   {actionText}
                 </Button>
               </form>
+              {actionText === "Upgrade" && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  You'll be charged a prorated amount for the remaining billing
+                  period
+                </p>
+              )}
             </CardContent>
           </Card>
         );

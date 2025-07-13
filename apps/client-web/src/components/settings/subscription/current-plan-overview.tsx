@@ -35,7 +35,6 @@ export default async function CurrentPlanOverview() {
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Zap className="h-8 w-8 text-yellow-500" />
             <div>
               <h3 className="text-lg font-semibold">{currentPlan.name} Plan</h3>
               <p className="text-sm text-muted-foreground">
