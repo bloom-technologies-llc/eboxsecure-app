@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
+import { createBillingPortalSession } from "@/actions/create-billing-portal-session";
 import SettingsLayout from "@/components/settings/settings-layout";
 import {
   flexRender,
@@ -166,42 +167,20 @@ export default function BillingPage() {
                   Your saved payment methods for subscriptions
                 </CardDescription>
               </div>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Payment Method
-              </Button>
+              <form action={createBillingPortalSession}>
+                <Button type="submit">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Manage Payment Methods
+                </Button>
+              </form>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {/* Default Payment Method */}
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                  <Image src={logo} width={60} height={20} alt="Visa logo" />
-                  <div>
-                    <p className="font-medium">Visa ending in 7830</p>
-                    <p className="text-sm text-muted-foreground">
-                      Expires 6/30
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge>Default</Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <EllipsisIcon />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Click "Manage Payment Methods" to add, edit, or remove your
+                payment methods through our secure billing portal.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -209,67 +188,25 @@ export default function BillingPage() {
         {/* Billing History */}
         <Card>
           <CardHeader>
-            <CardTitle>Billing History</CardTitle>
-            <CardDescription>
-              Your recent invoices and payment history
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>
+                  Your recent invoices and payment history
+                </CardDescription>
+              </div>
+              <form action={createBillingPortalSession}>
+                <Button variant="outline" type="submit">
+                  View All Invoices
+                </Button>
+              </form>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center"
-                      >
-                        No billing history found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Summary */}
-            <div className="flex items-center justify-between border-t pt-4">
+            <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {data.length} total invoices •{" "}
-                {data.filter((b) => b.status === "Paid").length} paid •{" "}
-                {data.filter((b) => b.status === "Open").length} pending
+                Access your complete billing history and download invoices
+                through our secure billing portal.
               </p>
             </div>
           </CardContent>

@@ -1,3 +1,4 @@
+import { createBillingPortalSession } from "@/actions/create-billing-portal-session";
 import { getCurrentSubscriptionStatus } from "@/lib/get-subscription-data";
 import { plans } from "@/utils/plans-data";
 
@@ -48,7 +49,11 @@ export default async function BillingSection() {
           {subscriptionStatus?.cancelAtPeriodEnd ? (
             <ReactivateButton />
           ) : (
-            <Button variant="outline">Manage Billing</Button>
+            <form action={createBillingPortalSession}>
+              <Button variant="outline" type="submit">
+                Manage Billing
+              </Button>
+            </form>
           )}
         </div>
 

@@ -1,4 +1,4 @@
-import { SubscriptionTier } from "@/types/subscription";
+import { Plan } from "@/types/subscription";
 
 export const plans = [
   {
@@ -6,7 +6,7 @@ export const plans = [
     price: "$9.99",
     period: "/month",
     description: "Perfect for individuals with occasional package deliveries.",
-    lookupKey: SubscriptionTier.BASIC,
+    lookupKey: Plan.BASIC,
     features: [
       "Access to 3 EboxSecure locations",
       "2-day package holding",
@@ -19,7 +19,7 @@ export const plans = [
     price: "$19.99",
     period: "/month",
     description: "Great for regular online shoppers with more delivery needs.",
-    lookupKey: SubscriptionTier.BASIC_PLUS,
+    lookupKey: Plan.BASIC_PLUS,
     features: [
       "Access to 25 EboxSecure locations",
       "5-day package holding",
@@ -33,7 +33,7 @@ export const plans = [
     period: "/month",
     description: "Ideal for small businesses with regular deliveries.",
     mostPopular: true,
-    lookupKey: SubscriptionTier.PREMIUM,
+    lookupKey: Plan.PREMIUM,
     features: [
       "Access to 75 EboxSecure locations",
       "7-day package holding",
@@ -48,7 +48,7 @@ export const plans = [
     price: "$99.99",
     period: "/month",
     description: "For businesses with high-volume delivery needs.",
-    lookupKey: SubscriptionTier.BUSINESS_PRO,
+    lookupKey: Plan.BUSINESS_PRO,
     features: [
       "Unlimited EboxSecure locations",
       "10-day package holding",

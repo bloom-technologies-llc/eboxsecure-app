@@ -1,32 +1,14 @@
 "use server";
 
-import { SubscriptionTier } from "@/types/subscription";
+import { Plan } from "@/types/subscription";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import Stripe from "stripe";
 
+import { TIER_SUBSCRIPTIONS } from "@ebox/client-api";
+
 import { kv } from "./redis";
 
-// Mapping of tiers to their associated metering subscriptions
-const TIER_SUBSCRIPTIONS: Record<SubscriptionTier, string[]> = {
-  [SubscriptionTier.BASIC]: ["basic", "basic_holding", "basic_allowance"],
-  [SubscriptionTier.BASIC_PLUS]: [
-    "basic_plus",
-    "basic_plus_holding",
-    "basic_plus_allowance",
-  ],
-  [SubscriptionTier.PREMIUM]: [
-    "premium",
-    "premium_holding",
-    "premium_allowance",
-  ],
-  [SubscriptionTier.BUSINESS_PRO]: [
-    "business_pro",
-    "business_pro_holding",
-    "business_pro_allowance",
-  ],
-};
-
-export async function createStripeSession(lookupKey: SubscriptionTier) {
+export async function createStripeSession(lookupKey: Plan) {
   const user = await currentUser();
 
   if (!user) {

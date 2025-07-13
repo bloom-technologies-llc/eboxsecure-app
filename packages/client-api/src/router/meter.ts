@@ -4,7 +4,7 @@ import { z } from "zod";
 import { kv } from "@ebox/redis-client";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
-import { mapPriceIdsToPlan } from "../utils/subscription-limits";
+import { mapPriceIdsToPlan } from "../utils/subscription-utils";
 
 // Type for subscription data from KV store
 interface SubscriptionData {
