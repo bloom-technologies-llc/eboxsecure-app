@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SettingsLayout from "@/components/settings-layout";
+import SettingsLayout from "@/components/settings/settings-layout";
 import { Lock, Mail, Phone, Save, User } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";

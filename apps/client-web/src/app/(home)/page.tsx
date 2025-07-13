@@ -1,4 +1,4 @@
-import TestMeterEvent from "@/components/test-meter-event";
+import TestOrderAndMeter from "@/components/test-order-and-meter";
 import { api } from "@/trpc/server";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ebox/ui/tabs";
@@ -11,7 +11,6 @@ export default async function HomePage() {
     <main className="container h-screen w-full py-16 md:w-9/12">
       <div className="flex flex-col items-center justify-center">
         <div className="w-full">
-          <div></div>
           <h2 className="mb-3 text-left text-2xl">Your orders</h2>
           <Tabs defaultValue="active" className="w-full">
             <TabsList>
@@ -28,8 +27,10 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-8">
-          <h2 className="mb-3 text-left text-2xl">Test Meter Events</h2>
-          <TestMeterEvent />
+          <h2 className="mb-3 text-left text-2xl">
+            Test Order Creation & Meter Event
+          </h2>
+          <TestOrderAndMeter />
         </div>
       </div>
     </main>

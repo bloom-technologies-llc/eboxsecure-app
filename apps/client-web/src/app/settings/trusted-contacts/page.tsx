@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SettingsLayout from "@/components/settings-layout";
+import SettingsLayout from "@/components/settings/settings-layout";
 import { api } from "@/trpc/react";
 import { Plus, Users } from "lucide-react";
 

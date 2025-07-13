@@ -49,6 +49,7 @@ model CustomerAccount {
 
     // Pending trusted contact invitations
     pendingTrustedContactInvitations PendingTrustedContactInvitation[]
+    MeterEvent                       MeterEvent[]
 }
 
 model EmployeeAccount {
@@ -104,6 +105,19 @@ model Order {
     shippedLocation   Location        @relation(fields: [shippedLocationId], references: [id])
     carrier           Carrier?        @relation(fields: [carrierId], references: [id])
     orderComments     OrderComment[]
+    meterEvent        MeterEvent?
+}
+
+model MeterEvent {
+    id            String          @id @default(cuid())
+    eventType     MeterEventType
+    value         Int
+    customerId    String
+    createdAt     DateTime        @default(now())
+    stripeEventId String?         @unique
+    orderId       Int?            @unique
+    customer      CustomerAccount @relation(fields: [customerId], references: [id])
+    order         Order?          @relation(fields: [orderId], references: [id])
 }
 
 model Carrier {
@@ -335,4 +349,9 @@ enum SubscriptionType {
     BASIC_PLUS
     PREMIUM
     BUSINESS_PRO
+}
+
+enum MeterEventType {
+    PACKAGE_HOLDING
+    PACKAGE_ALLOWANCE
 }

@@ -1,6 +1,6 @@
 export enum SubscriptionTier {
   BASIC = "basic",
-  BASIC_PRO = "basic_pro",
+  BASIC_PRO = "basic_plus",
   PREMIUM = "premium",
   BUSINESS_PRO = "business_pro",
 }
