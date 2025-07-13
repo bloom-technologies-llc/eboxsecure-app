@@ -1,3 +1,4 @@
+import TestMeterEvent from "@/components/test-meter-event";
 import { api } from "@/trpc/server";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ebox/ui/tabs";
@@ -24,6 +25,11 @@ export default async function HomePage() {
             </TabsContent>
             <TabsContent value="delivered">Delivered</TabsContent>
           </Tabs>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="mb-3 text-left text-2xl">Test Meter Events</h2>
+          <TestMeterEvent />
         </div>
       </div>
     </main>
