@@ -1,25 +1,32 @@
 "use server";
 
+import { SubscriptionTier } from "@/types/subscription";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import Stripe from "stripe";
 
 import { kv } from "./redis";
 
 // Mapping of tiers to their associated metering subscriptions
-const TIER_SUBSCRIPTIONS = {
-  basic: ["basic", "basic_holding", "basic_allowance"],
-  basic_plus: ["basic_plus", "basic_plus_holding", "basic_plus_allowance"],
-  premium: ["premium", "premium_holding", "premium_allowance"],
-  business_pro: [
+const TIER_SUBSCRIPTIONS: Record<SubscriptionTier, string[]> = {
+  [SubscriptionTier.BASIC]: ["basic", "basic_holding", "basic_allowance"],
+  [SubscriptionTier.BASIC_PLUS]: [
+    "basic_plus",
+    "basic_plus_holding",
+    "basic_plus_allowance",
+  ],
+  [SubscriptionTier.PREMIUM]: [
+    "premium",
+    "premium_holding",
+    "premium_allowance",
+  ],
+  [SubscriptionTier.BUSINESS_PRO]: [
     "business_pro",
     "business_pro_holding",
     "business_pro_allowance",
   ],
 };
 
-export async function createStripeSession(
-  lookupKey: "basic" | "basic_plus" | "premium" | "business_pro",
-) {
+export async function createStripeSession(lookupKey: SubscriptionTier) {
   const user = await currentUser();
 
   if (!user) {
@@ -79,7 +86,7 @@ export async function createStripeSession(
     customer: stripeCustomerId,
     line_items: lineItems,
     mode: "subscription",
-    success_url: "https://758bf86740a4.ngrok-free.app/success",
+    success_url: `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/success`,
   });
 
   if (!session.url) {

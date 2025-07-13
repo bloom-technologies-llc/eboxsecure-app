@@ -1,11 +1,12 @@
 "use server";
 
+import { SubscriptionTier } from "@/types/subscription";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { createStripeSession } from "../lib/create-stripe-session";
 import { getCurrentSubscriptionStatus } from "../lib/get-subscription-data";
 
-export async function handleSubscription(lookupKey: string) {
+export async function handleSubscription(lookupKey: SubscriptionTier) {
   const user = await currentUser();
   if (!user) {
     throw new Error("User not authenticated");
@@ -23,5 +24,5 @@ export async function handleSubscription(lookupKey: string) {
     throw new Error("You are already subscribed to this plan");
   }
 
-  return await createStripeSession(lookupKey as any);
+  return await createStripeSession(lookupKey);
 }

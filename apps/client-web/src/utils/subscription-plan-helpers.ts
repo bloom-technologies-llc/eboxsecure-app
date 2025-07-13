@@ -3,7 +3,7 @@ import { PlanAction, SubscriptionTier } from "@/types/subscription";
 // Define plan hierarchy (from lowest to highest)
 const PLAN_HIERARCHY = [
   SubscriptionTier.BASIC,
-  SubscriptionTier.BASIC_PRO,
+  SubscriptionTier.BASIC_PLUS,
   SubscriptionTier.PREMIUM,
   SubscriptionTier.BUSINESS_PRO,
 ] as const;

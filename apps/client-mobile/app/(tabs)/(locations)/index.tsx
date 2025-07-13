@@ -39,6 +39,9 @@ export default function LocationsPage() {
     { enabled: searchQuery.length >= 2 },
   );
 
+  const { data: favoritesLimits, refetch: refetchLimits } =
+    api.favorites.getFavoritesLimits.useQuery();
+
   // API Mutations
   const addFavoriteMutation = api.favorites.addFavorite.useMutation({
     onMutate: (variables) => {
@@ -46,6 +49,7 @@ export default function LocationsPage() {
     },
     onSuccess: () => {
       refetchFavorites();
+      refetchLimits();
       showToast("Location added to favorites!");
     },
     onError: (error) => {
@@ -59,6 +63,7 @@ export default function LocationsPage() {
   const removeFavoriteMutation = api.favorites.removeFavorite.useMutation({
     onSuccess: () => {
       refetchFavorites();
+      refetchLimits();
       showToast("Location removed from favorites");
     },
     onError: (error) => {
@@ -139,13 +144,23 @@ export default function LocationsPage() {
           onAddFavorite={handleAddFavorite}
           onResultPress={handleResultPress}
           isAddingFavorite={!!addingFavoriteId}
+          canAddMoreFavorites={favoritesLimits?.canAdd ?? true}
         />
       </View>
 
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-xl font-semibold text-gray-900">
-          Favorite EboxSecure Locations
-        </Text>
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-xl font-semibold text-gray-900">
+            Favorite EboxSecure Locations
+          </Text>
+          {favoritesLimits && (
+            <Text className="text-sm text-gray-500">
+              {favoritesLimits.isUnlimited
+                ? "Unlimited locations"
+                : `${favoritesLimits.current} of ${favoritesLimits.limit} locations`}
+            </Text>
+          )}
+        </View>
 
         {favorites?.length === 0 ? (
           <View className="flex-1 items-center justify-center">

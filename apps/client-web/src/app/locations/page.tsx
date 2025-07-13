@@ -47,12 +47,15 @@ function LocationsContent() {
     { query: searchQuery },
     { enabled: searchQuery.length >= 2 },
   );
+  const { data: favoritesLimits, refetch: refetchLimits } =
+    api.favorites.getFavoritesLimits.useQuery();
 
   const addFavoriteMutation = api.favorites.addFavorite.useMutation({
     onSuccess: () => {
       setShowAddModal(false);
       setLocationToAdd(null);
       refetchFavorites();
+      refetchLimits();
       toast({
         title: "Success",
         description: "Location added to favorites!",
@@ -70,6 +73,7 @@ function LocationsContent() {
   const removeMutation = api.favorites.removeFavorite.useMutation({
     onSuccess: () => {
       refetchFavorites();
+      refetchLimits();
       toast({
         title: "Success",
         description: "Location removed from favorites",
@@ -165,9 +169,16 @@ function LocationsContent() {
                     <Button
                       size="sm"
                       variant={location.isFavorited ? "secondary" : "outline"}
-                      disabled={location.isFavorited}
+                      disabled={
+                        location.isFavorited || !favoritesLimits?.canAdd
+                      }
                       onClick={(event) => handleAddFavorite(location.id, event)}
                       className="ml-3 flex-shrink-0"
+                      title={
+                        !favoritesLimits?.canAdd && !location.isFavorited
+                          ? `You've reached your limit of ${favoritesLimits?.limit} favorite locations`
+                          : undefined
+                      }
                     >
                       <Heart className="mr-1 h-3 w-3" />
                       {location.isFavorited ? "Favorited" : "Add"}
@@ -181,7 +192,20 @@ function LocationsContent() {
       </div>
 
       <div className="grid gap-4">
-        <h2 className="text-xl font-semibold">Favorite Locations</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Favorite Locations</h2>
+          {favoritesLimits && (
+            <div className="text-sm text-muted-foreground">
+              {favoritesLimits.isUnlimited ? (
+                <span>Unlimited locations</span>
+              ) : (
+                <span>
+                  {favoritesLimits.current} of {favoritesLimits.limit} locations
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         {favorites?.length === 0 ? (
           <p className="text-muted-foreground">
             No favorite locations yet. Search and add some above!
@@ -276,6 +300,19 @@ function LocationsContent() {
               <p className="text-sm text-muted-foreground">
                 {locationDetails.address}
               </p>
+              {!favoritesLimits?.canAdd && (
+                <div className="mt-3 rounded-md border border-orange-200 bg-orange-50 p-3">
+                  <p className="text-sm text-orange-800">
+                    You've reached your limit of {favoritesLimits?.limit}{" "}
+                    favorite locations.
+                    <br />
+                    <Link href="/settings" className="font-medium underline">
+                      Upgrade your plan
+                    </Link>{" "}
+                    to add more favorites.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -288,7 +325,9 @@ function LocationsContent() {
                 locationDetails &&
                 addFavoriteMutation.mutate({ locationId: locationDetails.id })
               }
-              disabled={addFavoriteMutation.isPending}
+              disabled={
+                addFavoriteMutation.isPending || !favoritesLimits?.canAdd
+              }
             >
               {addFavoriteMutation.isPending ? "Adding..." : "Add to Favorites"}
             </Button>

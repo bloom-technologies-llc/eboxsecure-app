@@ -8,6 +8,7 @@ interface FavoriteButtonProps {
   isLoading: boolean;
   onToggle: () => void;
   variant?: "default" | "small";
+  disabled?: boolean;
 }
 
 export function FavoriteButton({
@@ -15,6 +16,7 @@ export function FavoriteButton({
   isLoading,
   onToggle,
   variant = "default",
+  disabled = false,
 }: FavoriteButtonProps) {
   const size = variant === "small" ? "sm" : "default";
 
@@ -22,7 +24,7 @@ export function FavoriteButton({
     <Button
       size={size}
       variant={isFavorited ? "secondary" : "outline"}
-      disabled={isFavorited}
+      disabled={disabled || isFavorited}
       onPress={onToggle}
       loading={isLoading}
     >
