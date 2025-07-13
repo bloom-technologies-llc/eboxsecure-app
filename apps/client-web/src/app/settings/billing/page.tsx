@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import SettingsLayout from "@/components/settings-layout";
+import SettingsLayout from "@/components/settings/settings-layout";
 import {
   flexRender,
   getCoreRowModel,

@@ -34,5 +34,6 @@ export async function syncCustomerData(customerId: string) {
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
   await kv.set(`stripe:customer:${customerId}`, subData);
+  console.log("Synced customer data", subData);
   return subData;
 }

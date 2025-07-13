@@ -43,8 +43,8 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
 function mapPriceIdsToPlan(priceIds: string[]): SubscriptionTier | undefined {
   // Mapping of actual Stripe price IDs to subscription tiers
   const priceIdToPlanMap: Record<string, SubscriptionTier> = {
-    price_1Re6nPPFcJwvZfVCIGbcwpCU: SubscriptionTier.BASIC,
-    price_1Re6nPPFcJwvZfVC8pyDTQ6D: SubscriptionTier.BASIC_PRO,
+    price_1RjSVSPFcJwvZfVCZKFrGzCs: SubscriptionTier.BASIC,
+    price_1RjSfGPFcJwvZfVCJIFwPPWK: SubscriptionTier.BASIC_PRO,
     price_1Reh3nPFcJwvZfVCaw9leF9A: SubscriptionTier.PREMIUM,
     price_1Reh51PFcJwvZfVCUGj9UBbv: SubscriptionTier.BUSINESS_PRO,
   };

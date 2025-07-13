@@ -1,8 +1,8 @@
-import SettingsLayout from "@/components/settings-layout";
-import BillingSection from "@/components/subscription/billing-section";
-import CancellationBanner from "@/components/subscription/cancellation-banner";
-import CurrentPlanOverview from "@/components/subscription/current-plan-overview";
-import PricingPlans from "@/components/subscription/pricing-plans";
+import SettingsLayout from "@/components/settings/settings-layout";
+import BillingSection from "@/components/settings/subscription/billing-section";
+import CancellationBanner from "@/components/settings/subscription/cancellation-banner";
+import CurrentPlanOverview from "@/components/settings/subscription/current-plan-overview";
+import PricingPlans from "@/components/settings/subscription/pricing-plans";
 import { Crown } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
