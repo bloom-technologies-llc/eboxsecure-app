@@ -172,6 +172,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       await expect(
@@ -217,6 +219,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       const token = await caller.auth.getAuthorizedPickupToken(input);
