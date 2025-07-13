@@ -19,7 +19,7 @@ export const plans = [
     price: "$19.99",
     period: "/month",
     description: "Great for regular online shoppers with more delivery needs.",
-    lookupKey: SubscriptionTier.BASIC_PRO,
+    lookupKey: SubscriptionTier.BASIC_PLUS,
     features: [
       "Access to 25 EboxSecure locations",
       "5-day package holding",

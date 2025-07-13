@@ -2,6 +2,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
+import {
+  canUserAddMoreFavorites,
+  getSubscriptionLimits,
+} from "../utils/subscription-limits";
 
 export const favoritesRouter = createTRPCRouter({
   // Get all user's favorite locations
@@ -59,11 +63,26 @@ export const favoritesRouter = createTRPCRouter({
         });
       }
 
-      // Check if this will be the user's first favorite (make it primary)
+      // Get current favorites count
       const userFavoritesCount = await ctx.db.userFavoriteLocation.count({
         where: { userId: ctx.session.userId },
       });
 
+      // Check subscription limits
+      const { canAdd, limit } =
+        await canUserAddMoreFavorites(userFavoritesCount);
+
+      if (!canAdd) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            limit === -1
+              ? "Unable to add more favorites at this time"
+              : `You have reached the maximum number of favorite locations (${limit}) for your subscription plan. Please upgrade to add more favorites.`,
+        });
+      }
+
+      // Check if this will be the user's first favorite (make it primary)
       const isPrimary = userFavoritesCount === 0;
 
       return ctx.db.userFavoriteLocation.create({
@@ -240,4 +259,28 @@ export const favoritesRouter = createTRPCRouter({
         isPrimary: favorite?.isPrimary || false,
       };
     }),
+
+  // Get user's favorites count and subscription limits
+  getFavoritesLimits: protectedCustomerProcedure.query(async ({ ctx }) => {
+    const [favoritesCount, subscriptionLimits] = await Promise.all([
+      ctx.db.userFavoriteLocation.count({
+        where: { userId: ctx.session.userId },
+      }),
+      getSubscriptionLimits(),
+    ]);
+
+    const { canAdd, limit, remaining } = await canUserAddMoreFavorites(
+      favoritesCount,
+      subscriptionLimits.subscriptionTier,
+    );
+
+    return {
+      current: favoritesCount,
+      limit,
+      remaining,
+      canAdd,
+      subscriptionTier: subscriptionLimits.subscriptionTier,
+      isUnlimited: subscriptionLimits.isUnlimited,
+    };
+  }),
 });

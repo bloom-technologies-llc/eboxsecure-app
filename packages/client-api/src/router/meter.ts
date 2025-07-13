@@ -4,6 +4,7 @@ import { z } from "zod";
 import { kv } from "@ebox/redis-client";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
+import { mapPriceIdsToPlan } from "../utils/subscription-limits";
 
 // Type for subscription data from KV store
 interface SubscriptionData {
@@ -13,23 +14,6 @@ interface SubscriptionData {
   currentPeriodStart?: number;
   cancelAtPeriodEnd?: boolean;
   subscriptionId?: string;
-}
-
-// Mapping of actual Stripe price IDs to subscription tiers
-const priceIdToPlanMap: Record<string, string> = {
-  price_1RjSVSPFcJwvZfVCZKFrGzCs: "BASIC",
-  price_1RjSfGPFcJwvZfVCJIFwPPWK: "BASIC_PLUS",
-  price_1Reh3nPFcJwvZfVCaw9leF9A: "PREMIUM",
-  price_1Reh51PFcJwvZfVCUGj9UBbv: "BUSINESS_PRO",
-};
-
-function mapPriceIdsToPlan(priceIds: string[]): string | null {
-  for (const priceId of priceIds) {
-    if (priceIdToPlanMap[priceId]) {
-      return priceIdToPlanMap[priceId];
-    }
-  }
-  return null; // No matching price ID found
 }
 
 export const meterRouter = createTRPCRouter({

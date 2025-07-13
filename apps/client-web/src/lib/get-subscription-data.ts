@@ -7,6 +7,8 @@ import {
 } from "@/types/subscription";
 import { currentUser } from "@clerk/nextjs/server";
 
+import { mapPriceIdsToPlan } from "@ebox/client-api";
+
 import { kv } from "./redis";
 
 export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus> {
@@ -19,6 +21,7 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
     return { status: "none" };
   }
 
+  //TODO: use package
   const customerId = user.privateMetadata.stripeCustomerId as string;
   const subscriptionData = await kv.get<SubscriptionData>(
     `stripe:customer:${customerId}`,
@@ -29,7 +32,8 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
   }
 
   // Map price IDs to plan names
-  const plan = mapPriceIdsToPlan(subscriptionData.priceIds);
+  const planString = mapPriceIdsToPlan(subscriptionData.priceIds);
+  const plan = planString ? stringToSubscriptionTier(planString) : undefined;
 
   return {
     status: subscriptionData.status,
@@ -40,20 +44,15 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
   };
 }
 
-function mapPriceIdsToPlan(priceIds: string[]): SubscriptionTier | undefined {
-  // Mapping of actual Stripe price IDs to subscription tiers
-  const priceIdToPlanMap: Record<string, SubscriptionTier> = {
-    price_1RjSVSPFcJwvZfVCZKFrGzCs: SubscriptionTier.BASIC,
-    price_1RjSfGPFcJwvZfVCJIFwPPWK: SubscriptionTier.BASIC_PRO,
-    price_1Reh3nPFcJwvZfVCaw9leF9A: SubscriptionTier.PREMIUM,
-    price_1Reh51PFcJwvZfVCUGj9UBbv: SubscriptionTier.BUSINESS_PRO,
+// Convert string plan name to SubscriptionTier enum
+function stringToSubscriptionTier(
+  planString: string,
+): SubscriptionTier | undefined {
+  const mapping: Record<string, SubscriptionTier> = {
+    BASIC: SubscriptionTier.BASIC,
+    BASIC_PLUS: SubscriptionTier.BASIC_PLUS,
+    PREMIUM: SubscriptionTier.PREMIUM,
+    BUSINESS_PRO: SubscriptionTier.BUSINESS_PRO,
   };
-
-  for (const priceId of priceIds) {
-    if (priceIdToPlanMap[priceId]) {
-      return priceIdToPlanMap[priceId];
-    }
-  }
-
-  return undefined;
+  return mapping[planString];
 }

@@ -31,3 +31,14 @@ type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export { createTRPCContext, appRouter, createCaller };
 export type { AppRouter, RouterInput, RouterOutput };
+
+// Export subscription utilities
+export {
+  hasValidSubscription,
+  getUserSubscriptionTier,
+  getLocationLimit,
+  canUserAddMoreFavorites,
+  getSubscriptionLimits,
+  priceIdToPlanMap,
+  mapPriceIdsToPlan,
+} from "./utils/subscription-limits";
