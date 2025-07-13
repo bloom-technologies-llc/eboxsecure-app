@@ -54,6 +54,10 @@ model CustomerAccount {
 
     // Pending trusted contact invitations
     pendingTrustedContactInvitations PendingTrustedContactInvitation[]
+
+    // Orders sharing relationships
+    sharedOrdersGranted  OrderSharedAccess[] @relation("SharedOrdersGranted")
+    sharedOrdersReceived OrderSharedAccess[] @relation("SharedOrdersReceived")
 }
 
 model EmployeeAccount {
@@ -105,11 +109,12 @@ model Order {
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
 
-    pickedUpBy      CustomerAccount? @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
-    customer        CustomerAccount  @relation("OrderCustomer", fields: [customerId], references: [id])
-    shippedLocation Location         @relation(fields: [shippedLocationId], references: [id])
-    carrier         Carrier?         @relation(fields: [carrierId], references: [id])
-    orderComments   OrderComment[]
+    pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
+    customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
+    shippedLocation   Location            @relation(fields: [shippedLocationId], references: [id])
+    carrier           Carrier?            @relation(fields: [carrierId], references: [id])
+    orderComments     OrderComment[]
+    OrderSharedAccess OrderSharedAccess[]
 }
 
 model Carrier {
@@ -290,6 +295,23 @@ model PendingTrustedContactInvitation {
 
     @@index([email])
     @@index([accountHolderId])
+}
+
+model OrderSharedAccess {
+    id           String   @id @default(cuid())
+    orderId      Int
+    sharedWithId String // The trusted contact who was granted access
+    grantedById  String // The customer who owns the order
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    sharedWith CustomerAccount @relation("SharedOrdersReceived", fields: [sharedWithId], references: [id], onDelete: Cascade)
+    grantedBy  CustomerAccount @relation("SharedOrdersGranted", fields: [grantedById], references: [id], onDelete: Cascade)
+
+    @@unique([orderId, sharedWithId])
+    @@index([sharedWithId])
+    @@index([grantedById])
 }
 
 enum UserType {
