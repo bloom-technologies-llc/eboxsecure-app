@@ -124,18 +124,24 @@ export const authRouter = createTRPCRouter({
           message: "Order not found.",
         });
       }
-      // ensure order belongs to given session's user ID OR that the session's userId represents a trusted contact for this order
-      const trustedContact = await ctx.db.trustedContact.findUnique({
+      // ensure order belongs to given session's user ID OR that the session's userId represents a trusted contact that was shared this order with
+      const isOwner = order.customerId === payloadSession.userId;
+
+      const orderShareRecord = await ctx.db.orderSharedAccess.findFirst({
         where: {
-          accountHolderId_trustedContactId: {
-            accountHolderId: order.customerId,
-            trustedContactId: payloadSession.userId,
-          },
+          orderId: order.id,
+          sharedWithId: payloadSession.userId,
+        },
+        include: {
+          sharedWith: true,
         },
       });
-      if (order.customerId !== payloadSession.userId && !trustedContact) {
+
+      const isShared = Boolean(orderShareRecord);
+
+      if (!isOwner && !isShared) {
         console.error(
-          `Given session's user ID ${payloadSession.userId} does not match and it is NOT a trusted contact of the order's customer ID ${order.customerId}.`,
+          `Given session's user ID ${payloadSession.userId} does not match the order's customer ID ${order.customerId} and it is NOT a trusted contact with shared access to order ${order.id}.`,
         );
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -153,9 +159,11 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const { firstName, lastName } = order.customer;
+      const { id, firstName, lastName, photoLink } = isOwner
+        ? order.customer
+        : orderShareRecord!.sharedWith;
 
-      if (!order.customer.photoLink) {
+      if (!photoLink) {
         console.error(
           `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, but doesn't have portrait URL.`,
         );
@@ -169,11 +177,11 @@ export const authRouter = createTRPCRouter({
       return {
         authorized: true,
         orderId: order.id,
-        customerId: order.customerId,
-        portraitUrl: order.customer.photoLink,
+        customerId: id,
+        portraitUrl: photoLink,
         firstName,
         lastName,
-        isTrustedContact: Boolean(trustedContact),
+        isTrustedContact: isShared,
       };
     }),
 });
