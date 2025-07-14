@@ -46,14 +46,11 @@ export const authRouter = createTRPCRouter({
           OR: [
             // User's own orders
             { customerId: ctx.session.userId },
-            // Orders from accounts where user is a trusted contact
+            // Order is shared with trusted contact of owner
             {
-              customer: {
-                trustedContactsGranted: {
-                  some: {
-                    trustedContactId: ctx.session.userId,
-                    status: "ACTIVE",
-                  },
+              OrderSharedAccess: {
+                some: {
+                  sharedWithId: ctx.session.userId,
                 },
               },
             },

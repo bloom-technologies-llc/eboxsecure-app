@@ -159,9 +159,12 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const { id, firstName, lastName, photoLink } = isOwner
-        ? order.customer
-        : orderShareRecord!.sharedWith;
+      const {
+        id: customerId,
+        firstName,
+        lastName,
+        photoLink,
+      } = isOwner ? order.customer : orderShareRecord!.sharedWith;
 
       if (!photoLink) {
         console.error(
@@ -177,7 +180,7 @@ export const authRouter = createTRPCRouter({
       return {
         authorized: true,
         orderId: order.id,
-        customerId: id,
+        customerId,
         portraitUrl: photoLink,
         firstName,
         lastName,
