@@ -249,22 +249,44 @@ export const trustedContactsRouter = createTRPCRouter({
   removeTrustedContact: protectedCustomerProcedure
     .input(z.object({ trustedContactId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const deleted = await ctx.db.trustedContact.deleteMany({
+      const { userId } = ctx.session;
+
+      const trustedContact = await ctx.db.trustedContact.findUnique({
         where: {
-          accountHolderId: ctx.session.userId,
-          trustedContactId: input.trustedContactId,
-          status: { in: ["ACTIVE", "PENDING"] },
+          accountHolderId_trustedContactId: {
+            accountHolderId: userId,
+            trustedContactId: input.trustedContactId,
+          },
         },
       });
-
-      if (deleted.count === 0) {
+      if (!trustedContact) {
+        console.error(
+          `No trusted contact record existes between granter user ID ${userId} and trusted contact user ID ${input.trustedContactId}.`,
+        );
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Trusted contact relationship not found",
+          code: "CONFLICT",
+          message: "Trusted Contact not found.",
         });
       }
-
-      return { success: true };
+      await ctx.db.$transaction([
+        ctx.db.trustedContact.delete({
+          where: {
+            accountHolderId_trustedContactId: {
+              accountHolderId: userId,
+              trustedContactId: input.trustedContactId,
+            },
+          },
+        }),
+        ctx.db.orderSharedAccess.deleteMany({
+          where: {
+            grantedById: userId,
+            sharedWithId: input.trustedContactId,
+          },
+        }),
+      ]);
+      return {
+        success: true,
+      };
     }),
 
   // Get pending invitations for current user (to accept/decline)

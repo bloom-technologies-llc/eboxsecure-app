@@ -114,7 +114,7 @@ export default function TrustedContactCard({
             <p className="mb-6 text-gray-600">
               Are you sure you want to remove <strong>{displayName}</strong> as
               a trusted contact? They will no longer be able to view your orders
-              or pick up packages.
+              or pick up packages you shared with them.
             </p>
 
             <div className="flex justify-end space-x-2">
