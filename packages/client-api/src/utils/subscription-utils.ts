@@ -78,10 +78,7 @@ export async function hasValidSubscription(): Promise<boolean> {
 
   const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
   if (!stripeCustomerId) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: "No Stripe customer ID found for user",
-    });
+    return false;
   }
 
   const subscriptionData = await kv.get<SubscriptionData>(
@@ -116,7 +113,8 @@ export async function getUserSubscriptionTier(): Promise<string> {
   if (!stripeCustomerId) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "No Stripe customer ID found for user",
+      message:
+        "No Stripe customer ID found. Please set up your subscription first.",
     });
   }
 
