@@ -1,8 +1,16 @@
 import { useState } from "react";
 import { api } from "@/trpc/react";
-import { Check, Search, Users } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Loader2,
+  RefreshCw,
+  Search,
+  Users,
+} from "lucide-react";
 
 import { RouterOutput } from "@ebox/client-api";
+import { Alert, AlertDescription } from "@ebox/ui/alert";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import { Checkbox } from "@ebox/ui/checkbox";
@@ -169,6 +177,10 @@ export default function ShareOrderDialog({
     return `${firstName} ${lastName}`;
   };
 
+  const loading = loadingOrderShareRecords || loadingTrustedContacts;
+
+  const error = trustedContactError || orderShareRecordsError;
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-lg">
@@ -232,101 +244,135 @@ export default function ShareOrderDialog({
             </div>
           </div>
 
-          {/* Contacts List */}
-          <div className="max-h-96 space-y-2 overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">
-                Trusted Contacts ({filteredContacts.length})
-              </Label>
-              <Badge variant="outline" className="text-xs">
-                {(orderShareRecords ?? []).length} shared
-              </Badge>
+          {loading && (
+            <div className="flex flex-col items-center justify-center space-y-3 py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <p className="text-sm text-gray-500">
+                Loading contacts and sharing information...
+              </p>
             </div>
+          )}
 
-            {filteredContacts.length > 0 ? (
-              <div className="space-y-2">
-                {filteredContacts.map((contact) => {
-                  const { trustedContactId } = contact;
-                  const isShared = isContactShared(trustedContactId);
-                  const sharedInfo = getSharedContactInfo(trustedContactId);
+          {/* Contacts List */}
+          {!loading && (
+            <>
+              <div className="max-h-96 space-y-2 overflow-y-auto">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Trusted Contacts ({filteredContacts.length})
+                  </Label>
+                  <Badge variant="outline" className="text-xs">
+                    {(orderShareRecords ?? []).length} shared
+                  </Badge>
+                </div>
 
-                  return (
-                    <div
-                      key={contact.id}
-                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
-                        isShared
-                          ? "border-blue-200 bg-blue-50"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          checked={isShared}
-                          onCheckedChange={(checked) =>
-                            handleToggleShare(Boolean(checked), contact)
-                          }
-                          disabled={sharingOrder ?? revokingOrder}
-                          className="data-[state=checked]:border-[#00698F] data-[state=checked]:bg-[#00698F]"
-                        />
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">
-                              {contact.trustedContact.firstName +
-                                " " +
-                                contact.trustedContact.lastName}
-                            </p>
-                            {isShared && sharedInfo && (
-                              <Badge className="text-xs">Shared</Badge>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        Failed to load trusted contacts or sharing information
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-2 bg-transparent"
+                      >
+                        <RefreshCw className="mr-1 h-3 w-3" />
+                        Retry
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {filteredContacts.length > 0 ? (
+                  <div className="space-y-2">
+                    {filteredContacts.map((contact) => {
+                      const { trustedContactId } = contact;
+                      const isShared = isContactShared(trustedContactId);
+                      const sharedInfo = getSharedContactInfo(trustedContactId);
+
+                      return (
+                        <div
+                          key={contact.id}
+                          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
+                            isShared
+                              ? "border-blue-200 bg-blue-50"
+                              : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              checked={isShared}
+                              onCheckedChange={(checked) =>
+                                handleToggleShare(Boolean(checked), contact)
+                              }
+                              disabled={sharingOrder ?? revokingOrder}
+                              className="data-[state=checked]:border-[#00698F] data-[state=checked]:bg-[#00698F]"
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium">
+                                  {contact.trustedContact.firstName +
+                                    " " +
+                                    contact.trustedContact.lastName}
+                                </p>
+                                {isShared && sharedInfo && (
+                                  <Badge className="text-xs">Shared</Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {contact.trustedContact.email}
+                              </p>
+                              {contact.trustedContact.phoneNumber && (
+                                <p className="text-xs text-gray-400">
+                                  {contact.trustedContact.phoneNumber}
+                                </p>
+                              )}
+                              {isShared && sharedInfo && (
+                                <p className="text-xs text-blue-600">
+                                  Shared{" "}
+                                  {sharedInfo.createdAt.toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {isShared ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <div className="h-4 w-4" />
                             )}
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {contact.trustedContact.email}
-                          </p>
-                          {contact.trustedContact.phoneNumber && (
-                            <p className="text-xs text-gray-400">
-                              {contact.trustedContact.phoneNumber}
-                            </p>
-                          )}
-                          {isShared && sharedInfo && (
-                            <p className="text-xs text-blue-600">
-                              Shared {sharedInfo.createdAt.toLocaleDateString()}
-                            </p>
-                          )}
                         </div>
-                      </div>
-                      <div className="flex items-center">
-                        {isShared ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <div className="h-4 w-4" />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-gray-500">
+                    <Users className="mx-auto mb-2 h-8 w-8 text-gray-300" />
+                    <p className="text-sm">No trusted contacts found</p>
+                    <p className="text-xs">
+                      {searchTerm
+                        ? "Try adjusting your search"
+                        : "Add trusted contacts in your account settings"}
+                    </p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="py-8 text-center text-gray-500">
-                <Users className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-                <p className="text-sm">No trusted contacts found</p>
-                <p className="text-xs">
-                  {searchTerm
-                    ? "Try adjusting your search"
-                    : "Add trusted contacts in your account settings"}
-                </p>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
         <Separator />
-
         <div className="flex items-center justify-between pt-4">
-          <div className="text-sm text-gray-500">
-            {(orderShareRecords ?? []).length} contact
-            {(orderShareRecords ?? []).length !== 1 ? "s" : ""} can pick up this
-            order
-          </div>
+          {!loading && !error && (
+            <div className="text-sm text-gray-500">
+              {(orderShareRecords ?? []).length} contact
+              {(orderShareRecords ?? []).length !== 1 ? "s" : ""} can pick up
+              this order
+            </div>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               Close
