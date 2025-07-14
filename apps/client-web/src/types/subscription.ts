@@ -18,6 +18,7 @@ export type SubscriptionStatus = {
     | "none";
   plan?: Plan;
   currentPeriodEnd?: number;
+  currentPeriodStart?: number;
   cancelAtPeriodEnd?: boolean;
   subscriptionId?: string;
 };

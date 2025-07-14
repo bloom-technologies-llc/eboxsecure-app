@@ -16,12 +16,12 @@ export async function createBillingPortalSession() {
   const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
 
   if (!stripeCustomerId) {
-    throw new Error("Stripe customer ID not found");
+    redirect("/payment");
   }
 
   const session = await stripe.billingPortal.sessions.create({
     customer: stripeCustomerId,
-    return_url: `${process.env.NEXT_PUBLIC_URL || "https://758bf86740a4.ngrok-free.app"}/settings/subscription`,
+    return_url: `${process.env.NEXT_PUBLIC_URL || `${process.env.NEXT_NGROK_URL}`}/settings/subscription`,
   });
 
   if (!session.url) {

@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
-import { checkValidSubscription } from "@/lib/subscription-utils";
 import { api } from "@/trpc/server";
+
+import { hasValidSubscription } from "@ebox/client-api";
 
 import PortraitPhotoUpload from "./PortraitPhotoUpload";
 
 export default async function Page() {
   // Check subscription status first
-  const hasValidSubscription = await checkValidSubscription();
+  const userHasValidSubscription = await hasValidSubscription();
 
-  if (!hasValidSubscription) {
+  if (!userHasValidSubscription) {
     redirect("/payment");
   }
 

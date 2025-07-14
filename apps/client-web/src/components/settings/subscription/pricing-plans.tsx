@@ -18,6 +18,9 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
+import { DowngradeConfirmationDialog } from "./downgrade-confirmation-dialog";
+import { UpgradeConfirmationDialog } from "./upgrade-confirmation-dialog";
+
 export default async function PricingPlans() {
   const subscriptionStatus = await getCurrentSubscriptionStatus();
 
@@ -81,21 +84,73 @@ export default async function PricingPlans() {
                   </li>
                 ))}
               </ul>
-              <form action={handleSubscriptionFormAction}>
-                <input type="hidden" name="lookupKey" value={plan.lookupKey} />
-                <Button
-                  className="w-full"
-                  variant={actionVariant}
-                  disabled={isCurrentPlan}
-                  type="submit"
+              {planAction === "downgrade" ? (
+                <DowngradeConfirmationDialog
+                  targetPlan={{
+                    name: plan.name,
+                    price: plan.price,
+                    lookupKey: plan.lookupKey,
+                  }}
+                  currentPlan={{
+                    name: currentPlan?.name || "",
+                    price: currentPlan?.price || "",
+                  }}
+                  currentPeriodEnd={subscriptionStatus?.currentPeriodEnd || 0}
                 >
-                  {actionText}
-                </Button>
-              </form>
+                  <Button
+                    className="w-full"
+                    variant={actionVariant}
+                    disabled={isCurrentPlan}
+                  >
+                    {actionText}
+                  </Button>
+                </DowngradeConfirmationDialog>
+              ) : planAction === "upgrade" ? (
+                <UpgradeConfirmationDialog
+                  targetPlan={{
+                    name: plan.name,
+                    price: plan.price,
+                    lookupKey: plan.lookupKey,
+                  }}
+                  currentPlan={{
+                    name: currentPlan?.name || "",
+                    price: currentPlan?.price || "",
+                  }}
+                >
+                  <Button
+                    className="w-full"
+                    variant={actionVariant}
+                    disabled={isCurrentPlan}
+                  >
+                    {actionText}
+                  </Button>
+                </UpgradeConfirmationDialog>
+              ) : (
+                <form action={handleSubscriptionFormAction}>
+                  <input
+                    type="hidden"
+                    name="lookupKey"
+                    value={plan.lookupKey}
+                  />
+                  <Button
+                    className="w-full"
+                    variant={actionVariant}
+                    disabled={isCurrentPlan}
+                    type="submit"
+                  >
+                    {actionText}
+                  </Button>
+                </form>
+              )}
               {actionText === "Upgrade" && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   You'll be charged a prorated amount for the remaining billing
                   period
+                </p>
+              )}
+              {actionText === "Downgrade" && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Downgrade will take effect on your next billing cycle
                 </p>
               )}
             </CardContent>
