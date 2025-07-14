@@ -49,6 +49,26 @@ export const trustedContactsRouter = createTRPCRouter({
     };
   }),
 
+  getGrantedContacts: protectedCustomerProcedure.query(async ({ ctx }) => {
+    return await ctx.db.trustedContact.findMany({
+      where: {
+        accountHolderId: ctx.session.userId,
+        status: "ACTIVE",
+      },
+      include: {
+        trustedContact: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+          },
+        },
+      },
+    });
+  }),
+
   // Send invitation to add trusted contact
   sendInvitation: protectedCustomerProcedure
     .input(z.object({ email: z.string().email() }))

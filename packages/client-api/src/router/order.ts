@@ -45,7 +45,10 @@ export const orderRouter = createTRPCRouter({
       ],
     });
 
-    return orders;
+    return orders.map((order) => ({
+      ...order,
+      directlyOwned: order.customerId === ctx.session.userId,
+    }));
   }),
   get: protectedCustomerProcedure
     .input(
@@ -85,6 +88,26 @@ export const orderRouter = createTRPCRouter({
               address: true,
             },
           },
+        },
+      });
+    }),
+  getShareAccesses: protectedCustomerProcedure
+    .input(
+      z.object({
+        orderId: z.number().nonnegative(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { orderId } = input;
+      return await ctx.db.orderSharedAccess.findMany({
+        where: {
+          orderId,
+          grantedById: ctx.session.userId,
+        },
+        select: {
+          orderId: true,
+          sharedWithId: true,
+          createdAt: true,
         },
       });
     }),
