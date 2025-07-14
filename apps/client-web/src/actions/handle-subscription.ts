@@ -6,6 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { createStripeSession } from "../lib/create-stripe-session";
 import { getCurrentSubscriptionStatus } from "../lib/get-subscription-data";
 import { getPlanAction } from "../utils/subscription-plan-helpers";
+import { downgradeSubscription } from "./downgrade-subscription";
 import { upgradeSubscription } from "./upgrade-subscription";
 
 export async function handleSubscription(lookupKey: Plan) {
@@ -28,14 +29,25 @@ export async function handleSubscription(lookupKey: Plan) {
 
   // Determine if this is an upgrade, downgrade, or new subscription
   const planAction = getPlanAction(currentStatus.plan, lookupKey);
+  console.log("\n\n\n Plan action: ", planAction, "\n\n\n");
 
-  // Handle upgrades with prorated billing
+  // Handle upgrades with prorated checkout session
   if (planAction === "upgrade") {
-    const result = await upgradeSubscription(lookupKey);
-    // Return success URL instead of redirect URL for upgrades
-    return `${process.env.NEXT_PUBLIC_URL || "https://758bf86740a4.ngrok-free.app"}/success`;
+    return await upgradeSubscription(lookupKey);
   }
 
-  // For new subscriptions and downgrades, use the existing checkout flow
+  // Handle downgrades by scheduling them for next billing cycle
+  if (planAction === "downgrade") {
+    console.log("\n\n\n Downgrading subscription \n\n\n");
+    const result = await downgradeSubscription(lookupKey);
+
+    // Return a special identifier for downgrades to trigger confirmation dialog
+    return {
+      type: "downgrade_scheduled",
+      data: result,
+    };
+  }
+
+  // For new subscriptions, use the existing checkout flow
   return await createStripeSession(lookupKey);
 }

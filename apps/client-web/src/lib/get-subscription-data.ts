@@ -21,7 +21,6 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
     return { status: "none" };
   }
 
-  //TODO: use package
   const customerId = user.privateMetadata.stripeCustomerId as string;
   const subscriptionData = await kv.get<SubscriptionData>(
     `stripe:customer:${customerId}`,
@@ -39,6 +38,7 @@ export async function getCurrentSubscriptionStatus(): Promise<SubscriptionStatus
     status: subscriptionData.status,
     plan,
     currentPeriodEnd: subscriptionData.currentPeriodEnd,
+    currentPeriodStart: subscriptionData.currentPeriodStart,
     cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
     subscriptionId: subscriptionData.subscriptionId,
   };

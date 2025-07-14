@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { handleSubscriptionFormAction } from "@/actions/handle-subscription-form-action";
-import { checkValidSubscription } from "@/lib/subscription-utils";
 import { plans } from "@/utils/plans-data";
+import { TRPCError } from "@trpc/server";
 import { CreditCard } from "lucide-react";
 
+import { hasValidSubscription } from "@ebox/client-api";
 import { Button } from "@ebox/ui/button";
 import {
   Card,
@@ -15,9 +16,21 @@ import {
 
 export default async function PaymentPage() {
   // Check if user already has an active subscription
-  const hasValidSubscription = await checkValidSubscription();
+  // Don't use checkValidSubscription() here as it redirects to /payment on error
+  let userHasValidSubscription = false;
+  try {
+    userHasValidSubscription = await hasValidSubscription();
+  } catch (error) {
+    // If error is about missing Stripe customer ID, that's fine - they're on the payment page
+    if (error instanceof TRPCError && error.message === "REDIRECT_TO_PAYMENT") {
+      userHasValidSubscription = false;
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 
-  if (hasValidSubscription) {
+  if (userHasValidSubscription) {
     redirect("/onboarding");
   }
 

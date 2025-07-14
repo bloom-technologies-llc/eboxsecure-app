@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { checkValidSubscription } from "@/lib/subscription-utils";
 import { api } from "@/trpc/server";
+
+import { hasValidSubscription } from "@ebox/client-api";
 
 export default async function Layout({
   children,
@@ -8,9 +9,9 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   // Check subscription status first
-  const hasValidSubscription = await checkValidSubscription();
+  const userHasValidSubscription = await hasValidSubscription();
 
-  if (!hasValidSubscription) {
+  if (!userHasValidSubscription) {
     redirect("/payment");
   }
 

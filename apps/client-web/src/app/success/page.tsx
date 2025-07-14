@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
-import { checkValidSubscription } from "@/lib/subscription-utils";
+
+import { hasValidSubscription } from "@ebox/client-api";
 
 export default async function SuccessPage() {
   // Check if user has an active subscription after successful payment
-  const hasValidSubscription = await checkValidSubscription();
+  const userHasValidSubscription = await hasValidSubscription();
 
-  if (hasValidSubscription) {
+  if (userHasValidSubscription) {
     redirect("/onboarding");
   }
 
