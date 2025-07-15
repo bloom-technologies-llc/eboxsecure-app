@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { upgradeSubscription } from "@/actions/upgrade-subscription";
 import { Plan } from "@/types/subscription";
-import { AlertTriangle, ChevronUp, CreditCard, DollarSign } from "lucide-react";
+import { ChevronUp, CreditCard } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 import {
@@ -30,17 +30,6 @@ interface UpgradeConfirmationDialogProps {
   children: React.ReactNode;
 }
 
-interface UpgradePreview {
-  success: boolean;
-  type: "upgrade_preview";
-  message: string;
-  proratedAmount: number;
-  proratedAmountInDollars: number;
-  proration_date: number;
-  invoicePreview: any;
-  subscriptionItems: any[];
-}
-
 export function UpgradeConfirmationDialog({
   targetPlan,
   currentPlan,
@@ -49,37 +38,13 @@ export function UpgradeConfirmationDialog({
   const router = useRouter();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [preview, setPreview] = useState<UpgradePreview | null>(null);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-
-  // Load preview when dialog opens
-  useEffect(() => {
-    if (isOpen && !preview) {
-      loadPreview();
-    }
-  }, [isOpen, preview]);
-
-  const loadPreview = async () => {
-    setIsLoadingPreview(true);
-    try {
-      const result = await upgradeSubscription(targetPlan.lookupKey, false);
-      if (result.type === "upgrade_preview") {
-        setPreview(result as UpgradePreview);
-      }
-    } catch (error) {
-      console.error("Failed to load upgrade preview:", error);
-    } finally {
-      setIsLoadingPreview(false);
-    }
-  };
 
   const handleUpgrade = async () => {
     setIsUpgrading(true);
     try {
-      const result = await upgradeSubscription(targetPlan.lookupKey, true);
+      const result = await upgradeSubscription(targetPlan.lookupKey);
 
-      // For upgrades, result should be an object with success info
-      if (typeof result === "object" && result.type === "upgrade_completed") {
+      if (result && result.type === "upgrade_completed") {
         setIsOpen(false);
         router.refresh();
       } else {
@@ -125,31 +90,7 @@ export function UpgradeConfirmationDialog({
             </div>
           </div>
 
-          {/* Prorated Charge Preview */}
-          {isLoadingPreview ? (
-            <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-sm text-gray-600">
-                Calculating prorated charge...
-              </p>
-            </div>
-          ) : preview ? (
-            <div className="rounded-lg bg-blue-50 p-4">
-              <div className="flex items-start gap-2">
-                <DollarSign className="mt-0.5 h-4 w-4 text-blue-600" />
-                <div className="text-blue-800">
-                  <p className="font-medium">Prorated Charge</p>
-                  <p className="text-2xl font-bold">
-                    ${preview.proratedAmountInDollars.toFixed(2)}
-                  </p>
-                  <p className="text-sm">
-                    Charged immediately for the remaining billing period
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="rounded-lg bg-green-50 p-4">
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
             <div className="flex items-start gap-2">
               <CreditCard className="mt-0.5 h-4 w-4 text-green-600" />
               <div className="text-green-800">
@@ -168,20 +109,6 @@ export function UpgradeConfirmationDialog({
               </div>
             </div>
           </div>
-
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 text-blue-600" />
-              <div className="text-blue-800">
-                <p className="font-medium">Payment Information</p>
-                <p className="mt-1 text-sm">
-                  Your payment method will be charged immediately for the
-                  prorated amount. If the payment fails, your upgrade will be
-                  cancelled.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <DialogFooter>
@@ -194,14 +121,10 @@ export function UpgradeConfirmationDialog({
           </Button>
           <Button
             onClick={handleUpgrade}
-            disabled={isUpgrading || !preview}
+            disabled={isUpgrading}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isUpgrading
-              ? "Processing..."
-              : preview
-                ? `Confirm Upgrade - $${preview.proratedAmountInDollars.toFixed(2)}`
-                : "Confirm Upgrade"}
+            {isUpgrading ? "Processing..." : "Confirm Upgrade"}
           </Button>
         </DialogFooter>
       </DialogContent>
