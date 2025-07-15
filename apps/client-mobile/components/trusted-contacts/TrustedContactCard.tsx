@@ -38,19 +38,16 @@ export default function TrustedContactCard({
   contact,
   type,
 }: TrustedContactCardProps) {
-  const [isRemoving, setIsRemoving] = useState(false);
-
   const utils = api.useUtils();
-  const removeTrustedContact =
+  const { mutate, isPending: isRemoving } =
     api.trustedContacts.removeTrustedContact.useMutation({
       onSuccess: () => {
         utils.trustedContacts.getMyTrustedContacts.invalidate();
-        setIsRemoving(false);
+        utils.order.getShareAccesses.invalidate();
       },
       onError: (error) => {
         console.error("Failed to remove trusted contact:", error);
         Alert.alert("Error", "Failed to remove trusted contact");
-        setIsRemoving(false);
       },
     });
 
@@ -67,7 +64,7 @@ export default function TrustedContactCard({
 
     Alert.alert(
       "Remove Trusted Contact",
-      `Are you sure you want to remove ${displayName} as a trusted contact? They will no longer be able to view your orders or pick up packages.`,
+      `Are you sure you want to remove ${displayName} as a trusted contact? They will no longer be able to view your orders or pick up packages you shared with them.`,
       [
         {
           text: "Cancel",
@@ -77,8 +74,7 @@ export default function TrustedContactCard({
           text: "Remove",
           style: "destructive",
           onPress: () => {
-            setIsRemoving(true);
-            removeTrustedContact.mutate({
+            mutate({
               trustedContactId: contact.trustedContactId,
             });
           },
