@@ -237,8 +237,6 @@ function ShareModal({
     new Set(),
   );
 
-  console.log("loading contactIds", loadingContactIds);
-
   const {
     data: trustedContacts = [],
     isLoading: loadingTrustedContacts,
