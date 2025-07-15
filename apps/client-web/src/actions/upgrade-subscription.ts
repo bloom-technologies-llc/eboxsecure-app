@@ -9,10 +9,7 @@ import { TIER_SUBSCRIPTIONS } from "@ebox/client-api";
 
 import { getCurrentSubscriptionStatus } from "../lib/get-subscription-data";
 
-export async function upgradeSubscription(
-  targetTier: Plan,
-  confirm: boolean = false,
-) {
+export async function upgradeSubscription(targetTier: Plan) {
   const user = await currentUser();
   if (!user) {
     throw new Error("User not authenticated");
@@ -85,63 +82,34 @@ export async function upgradeSubscription(
       },
     );
 
-    console.log("Mapped subscription items:", subscriptionItems);
+    // if user has any downgrades scheduled, cancel them
+    const schedules = await stripe.subscriptionSchedules.list({
+      customer: stripeCustomerId,
+    });
 
-    if (!confirm) {
-      const invoicePreview = await stripe.invoices.createPreview({
-        customer: stripeCustomerId,
-        subscription: currentStatus.subscriptionId,
-        subscription_details: {
-          items: subscriptionItems,
-          proration_behavior: "create_prorations",
-          proration_date: proration_date,
-        },
-      });
-
-      const prorations = invoicePreview.lines.data.filter(
-        (item) => item.parent?.subscription_item_details?.proration === true,
-      );
-
-      const proratedAmount = prorations.reduce(
-        (sum, item) => sum + item.amount,
-        0,
-      );
-
-      // Convert from cents to dollars (if needed)
-      const proratedAmountInDollars = proratedAmount / 100;
-
-      console.log(
-        "Net proration for current billing cycle:",
-        proratedAmountInDollars,
-      );
-
-      return {
-        success: true,
-        type: "upgrade_preview",
-        message: `Upgrade preview calculated for ${targetTier}`,
-        proratedAmount,
-        proratedAmountInDollars,
-        proration_date,
-        invoicePreview,
-        subscriptionItems, // Include for potential future use
-      };
-    } else {
-      const updatedSubscription = await stripe.subscriptions.update(
-        currentStatus.subscriptionId,
-        {
-          items: subscriptionItems,
-          proration_behavior: "always_invoice",
-          proration_date: proration_date,
-        },
-      );
-
-      return {
-        success: true,
-        type: "upgrade_completed",
-        message: `Successfully upgraded to ${targetTier}`,
-        subscription: updatedSubscription,
-      };
+    if (schedules.data.length > 0) {
+      for (const schedule of schedules.data) {
+        if (schedule.status === "active") {
+          await stripe.subscriptionSchedules.release(schedule.id);
+        }
+      }
     }
+
+    const updatedSubscription = await stripe.subscriptions.update(
+      currentStatus.subscriptionId,
+      {
+        items: subscriptionItems,
+        proration_behavior: "always_invoice",
+        proration_date: proration_date,
+      },
+    );
+
+    return {
+      success: true,
+      type: "upgrade_completed",
+      message: `Successfully upgraded to ${targetTier}`,
+      subscription: updatedSubscription,
+    };
   } catch (error) {
     console.error("Error processing upgrade:", error);
 

@@ -96,6 +96,7 @@ export async function downgradeSubscription(targetTier: Plan) {
             })),
             start_date: currentPhase?.start_date,
             end_date: currentStatus.currentPeriodEnd,
+            proration_behavior: "none",
           },
           {
             items: targetSubscriptionItems,
@@ -122,6 +123,7 @@ export async function downgradeSubscription(targetTier: Plan) {
             })),
             start_date: newSchedule.phases[0]?.start_date,
             end_date: currentStatus.currentPeriodEnd,
+            proration_behavior: "none",
           },
           {
             items: targetSubscriptionItems,
