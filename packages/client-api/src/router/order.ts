@@ -57,7 +57,7 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return await ctx.db.order.findUnique({
+      const order = await ctx.db.order.findUnique({
         where: {
           id: input.orderId,
           OR: [
@@ -90,6 +90,22 @@ export const orderRouter = createTRPCRouter({
           },
         },
       });
+
+      if (!order) {
+        console.error(
+          `Order ID ${input.orderId} was not found or User ID ${ctx.session.userId} is not an owner or has shared access.`,
+        );
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "Order was not found or user is not owner or has been granted shared access.",
+        });
+      }
+
+      return {
+        ...order,
+        directlyOwned: order.customerId === ctx.session.userId,
+      };
     }),
   getShareAccesses: protectedCustomerProcedure
     .input(
