@@ -28,6 +28,7 @@ export const authRouter = createTRPCRouter({
           portraitUrl: z.string(),
           firstName: z.string(),
           lastName: z.string(),
+          isTrustedContact: z.boolean(),
         }),
         z.object({
           authorized: z.literal(false),
@@ -123,14 +124,28 @@ export const authRouter = createTRPCRouter({
           message: "Order not found.",
         });
       }
-      // ensure order belongs to given session's user ID
-      if (order.customerId !== payloadSession.userId) {
+      // ensure order belongs to given session's user ID OR that the session's userId represents a trusted contact that was shared this order with
+      const isOwner = order.customerId === payloadSession.userId;
+
+      const orderShareRecord = await ctx.db.orderSharedAccess.findFirst({
+        where: {
+          orderId: order.id,
+          sharedWithId: payloadSession.userId,
+        },
+        include: {
+          sharedWith: true,
+        },
+      });
+
+      const isShared = Boolean(orderShareRecord);
+
+      if (!isOwner && !isShared) {
         console.error(
-          `Given session's user ID ${payloadSession.userId} does not match order's customer ID ${order.customerId}.`,
+          `Given session's user ID ${payloadSession.userId} does not match the order's customer ID ${order.customerId} and it is NOT a trusted contact with shared access to order ${order.id}.`,
         );
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Session does not match order owner.",
+          message: "Session does not match order owner or trusted contact.",
         });
       }
 
@@ -144,9 +159,14 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const { firstName, lastName } = order.customer;
+      const {
+        id: customerId,
+        firstName,
+        lastName,
+        photoLink,
+      } = isOwner ? order.customer : orderShareRecord!.sharedWith;
 
-      if (!order.customer.photoLink) {
+      if (!photoLink) {
         console.error(
           `Given session's user ID ${payloadSession.userId} attempted to pick up Order ID ${order.id}, but doesn't have portrait URL.`,
         );
@@ -160,10 +180,11 @@ export const authRouter = createTRPCRouter({
       return {
         authorized: true,
         orderId: order.id,
-        customerId: order.customerId,
-        portraitUrl: order.customer.photoLink,
+        customerId,
+        portraitUrl: photoLink,
         firstName,
         lastName,
+        isTrustedContact: isShared,
       };
     }),
 });

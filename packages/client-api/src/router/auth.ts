@@ -43,16 +43,28 @@ export const authRouter = createTRPCRouter({
       const order = await ctx.db.order.findUnique({
         where: {
           id: input.orderId,
-          customerId: ctx.session.userId,
+          OR: [
+            // User's own orders
+            { customerId: ctx.session.userId },
+            // Order is shared with trusted contact of owner
+            {
+              OrderSharedAccess: {
+                some: {
+                  sharedWithId: ctx.session.userId,
+                },
+              },
+            },
+          ],
         },
       });
+
       if (!order) {
         console.error(
-          `Order ID ${input.orderId} not found in database as valid order.`,
+          `Order ID ${input.orderId} not found in database as valid order or User ID ${ctx.session.userId} is not the owner or trusted contact of this order.`,
         );
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Order ID ${input.orderId} not found in database as valid order.`,
+          message: `Order ID ${input.orderId} not found in database as valid order or User ID ${ctx.session.userId} is not the owner or trusted contact of this order.`,
         });
       }
       if (order.pickedUpAt) {
@@ -64,7 +76,6 @@ export const authRouter = createTRPCRouter({
           message: `Order ID ${input.orderId} was already picked up.`,
         });
       }
-
       const secret = Buffer.from(PICKUP_TOKEN_JWT_SECRET_KEY, "base64");
       const payload: AuthorizedPickupTokenPayload = {
         sessionId: ctx.session.sessionId,

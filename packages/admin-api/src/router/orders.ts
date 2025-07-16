@@ -210,9 +210,28 @@ export const ordersRouter = createTRPCRouter({
       const order = await ctx.db.order.findUniqueOrThrow({
         where: {
           id: orderId,
-          customerId, // TODO: trusted contact
+          OR: [
+            { customerId },
+            {
+              OrderSharedAccess: {
+                some: {
+                  sharedWithId: customerId,
+                },
+              },
+            },
+          ],
         },
       });
+
+      if (!order) {
+        console.error(
+          `Order ID ${input.orderId} was not found, possibly because it is not owned or share with customer ID# ${customerId}.`,
+        );
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "This order was not found.",
+        });
+      }
 
       if (order.pickedUpAt) {
         console.error(`Order ID ${input.orderId} was already picked up.`);

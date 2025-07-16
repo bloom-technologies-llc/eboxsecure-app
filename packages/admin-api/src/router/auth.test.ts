@@ -390,6 +390,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       await expect(
@@ -397,7 +399,7 @@ describe("auth router", () => {
       ).rejects.toThrowError(
         expect.objectContaining({
           code: "UNAUTHORIZED",
-          message: "Session does not match order owner.",
+          message: "Session does not match order owner or trusted contact.",
         }),
       );
     });
@@ -456,6 +458,8 @@ describe("auth router", () => {
         pickedUpById: "mock-user-id",
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       await expect(
@@ -544,7 +548,7 @@ describe("auth router", () => {
         }),
       );
     });
-    it("should successfully return user name, portrait, and order ID.", async () => {
+    it("should successfully return owner's name, portrait, and order ID.", async () => {
       vi.useFakeTimers();
       const ctx = getContext();
       const caller = createCallerFactory(appRouter)({
@@ -581,7 +585,7 @@ describe("auth router", () => {
       });
 
       db.session.findUnique.mockResolvedValue({
-        id: "mock-id",
+        id: "mock-order-id",
         userId: "mock-user-id",
         status: "ACTIVE",
       });
@@ -600,7 +604,7 @@ describe("auth router", () => {
         processedAt: null,
         carrierId: null,
         customer: {
-          id: "1",
+          id: "mock-user-id",
           subscription: null,
           firstName: "John",
           lastName: "Smith",
@@ -611,6 +615,16 @@ describe("auth router", () => {
         },
       } as Prisma.OrderGetPayload<{ include: { customer: true } }>);
 
+      db.orderSharedAccess.findFirst.mockResolvedValue(null);
+
+      // db.orderSharedAccess.findFirst.mockResolvedValue({
+      //   id: "mock-share-id",
+      //   createdAt: new Date(),
+      //   updatedAt: new Date(),
+      //   orderId: 1,
+      //   sharedWithId: "",
+      //   grantedById: "",
+      // });
       await expect(
         caller.auth.authenticateAuthorizedPickupToken(input),
       ).resolves.toEqual({
@@ -620,6 +634,106 @@ describe("auth router", () => {
         firstName: "John",
         lastName: "Smith",
         portraitUrl: "www.cdn.com/image",
+        isTrustedContact: false,
+      });
+    });
+    it("should successfully return trusted contact's name, portrait, and order ID.", async () => {
+      vi.useFakeTimers();
+      const ctx = getContext();
+      const caller = createCallerFactory(appRouter)({
+        ...ctx,
+        db,
+      });
+
+      type Input = inferProcedureInput<
+        AppRouter["auth"]["authenticateAuthorizedPickupToken"]
+      >;
+
+      const secret = Buffer.from(MOCK_PICKUP_TOKEN_JWT_SECRET_KEY, "base64");
+
+      const encryptedToken = await new EncryptJWT({
+        sessionId: ctx.session.sessionId,
+        orderId: 1,
+      })
+        .setProtectedHeader({ alg: "dir", enc: "A128CBC-HS256" })
+        .setIssuedAt()
+        .setIssuer(MOCK_PICKUP_TOKEN_ISSUER)
+        .setAudience(MOCK_PICKUP_TOKEN_AUDIENCE)
+        .setExpirationTime("15 mins")
+        .encrypt(secret);
+
+      const input: Input = {
+        pickupToken: await encryptedToken,
+      };
+
+      db.user.findUnique.mockResolvedValue({
+        userType: "CORPORATE",
+        id: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      db.session.findUnique.mockResolvedValue({
+        id: "mock-order-id",
+        userId: "mock-user-id",
+        status: "ACTIVE",
+      });
+
+      db.order.findUnique.mockResolvedValue({
+        customerId: "mock-user-id-2",
+        id: 1,
+        vendorOrderId: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        total: 0,
+        shippedLocationId: 0,
+        deliveredDate: null,
+        pickedUpAt: null,
+        pickedUpById: null,
+        processedAt: null,
+        carrierId: null,
+        customer: {
+          id: "mock-user-id-2",
+          subscription: null,
+          firstName: "John",
+          lastName: "Smith",
+          email: "john@example.com",
+          phoneNumber: null,
+          shippingAddress: null,
+          photoLink: "www.cdn.com/image",
+        },
+      } as Prisma.OrderGetPayload<{ include: { customer: true } }>);
+
+      db.orderSharedAccess.findFirst.mockResolvedValue({
+        id: "mock-share-id",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        orderId: 1,
+        sharedWithId: "",
+        grantedById: "",
+        sharedWith: {
+          id: "mock-user-id",
+          subscription: null,
+          firstName: "John",
+          lastName: "Smith",
+          email: "john@example.com",
+          phoneNumber: null,
+          shippingAddress: null,
+          photoLink: "www.cdn.com/image",
+        },
+      } as Prisma.OrderSharedAccessGetPayload<{
+        include: { sharedWith: true };
+      }>);
+      await expect(
+        caller.auth.authenticateAuthorizedPickupToken(input),
+      ).resolves.toEqual({
+        authorized: true,
+        orderId: 1,
+        customerId: "mock-user-id",
+        firstName: "John",
+        lastName: "Smith",
+        portraitUrl: "www.cdn.com/image",
+        isTrustedContact: true,
       });
     });
   });

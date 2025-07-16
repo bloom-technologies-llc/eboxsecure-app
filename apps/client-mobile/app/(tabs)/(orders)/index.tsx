@@ -23,7 +23,7 @@ const getShippingStatus = (order: OrderView) => {
 };
 
 const OrderCard = ({ order }: { order: OrderView }) => {
-  const { pickedUpAt, deliveredDate, shippedLocation } = order;
+  const { pickedUpAt, deliveredDate, shippedLocation, directlyOwned } = order;
 
   return (
     <Link href={`/(tabs)/(orders)/order-detail?id=${order.id}`} asChild>
@@ -31,9 +31,18 @@ const OrderCard = ({ order }: { order: OrderView }) => {
         <View className="flex flex-row items-center gap-x-4">
           <View className="h-24 w-24 rounded-lg bg-slate-300" />
           <View className="flex flex-1 gap-y-2">
-            <Text className="text-base font-semibold text-gray-800">
-              Order #{order.id}
-            </Text>
+            <View className="flex flex-row items-center gap-x-2">
+              <Text className="text-base font-semibold text-gray-800">
+                Order #{order.id}
+              </Text>
+              {!directlyOwned && (
+                <View className="rounded-full bg-yellow-100 px-2 py-1">
+                  <Text className="text-xs font-medium text-yellow-600">
+                    Shared
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text className="text-sm text-gray-600">
               {getShippingStatus(order)}
             </Text>

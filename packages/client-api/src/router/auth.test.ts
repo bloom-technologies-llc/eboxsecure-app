@@ -134,7 +134,7 @@ describe("auth router", () => {
       ).rejects.toThrowError(
         expect.objectContaining({
           code: "NOT_FOUND",
-          message: `Order ID ${input.orderId} not found in database as valid order.`,
+          message: `Order ID ${input.orderId} not found in database as valid order or User ID mock-user is not the owner or trusted contact of this order.`,
         }),
       );
     });
@@ -172,6 +172,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       await expect(
@@ -217,6 +219,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
+        meteredAt: null,
+        meterEventId: null,
       });
 
       const token = await caller.auth.getAuthorizedPickupToken(input);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import { AlertCircle, CheckCircle, QrCode } from "lucide-react";
+import { AlertCircle, CheckCircle, QrCode, ShieldCheck } from "lucide-react";
 import { Label } from "recharts";
 
 import { Alert, AlertDescription } from "@ebox/ui/alert";
@@ -48,12 +48,11 @@ interface QRInputProps {
 }
 
 interface UserInfoProps {
-  userInfo: {
-    portraitUrl: string;
-    firstName: string;
-    lastName: string;
-    orderId: number;
-  };
+  portraitUrl: string;
+  firstName: string;
+  lastName: string;
+  orderId: number;
+  isTrustedContact: boolean;
 }
 
 export default function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
@@ -148,7 +147,7 @@ export default function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
               )}
 
               {/* User Information Display */}
-              {userInfo?.authorized && <UserInfoDisplay userInfo={userInfo} />}
+              {userInfo?.authorized && <UserInfoDisplay {...userInfo} />}
 
               {/* QR Code Input */}
               <QRInput
@@ -285,7 +284,13 @@ function QRInput({ value, onChange, disabled = false }: QRInputProps) {
 }
 
 // User Information Display Component
-function UserInfoDisplay({ userInfo }: UserInfoProps) {
+function UserInfoDisplay({
+  firstName,
+  lastName,
+  portraitUrl,
+  orderId,
+  isTrustedContact,
+}: UserInfoProps) {
   return (
     <Card className="bg-muted/50">
       <CardContent className="p-4">
@@ -294,8 +299,8 @@ function UserInfoDisplay({ userInfo }: UserInfoProps) {
           <div className="flex justify-center">
             <div className="relative h-96 w-80 overflow-hidden rounded-lg border-2 border-border bg-muted shadow-xl">
               <Image
-                src={userInfo.portraitUrl || "/placeholder.svg"}
-                alt={`${userInfo.firstName} ${userInfo.lastName}`}
+                src={portraitUrl || "/placeholder.svg"}
+                alt={`${firstName} ${lastName}`}
                 fill
                 className="h-full w-full object-cover"
               />
@@ -308,15 +313,31 @@ function UserInfoDisplay({ userInfo }: UserInfoProps) {
               <Label className="text-xs text-muted-foreground">
                 Legal Name
               </Label>
-              <p className="text-lg font-semibold">{`${userInfo.firstName} ${userInfo.lastName}`}</p>
+              <p className="text-lg font-semibold">{`${firstName} ${lastName}`}</p>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Order ID</Label>
               <p className="inline-block rounded border bg-background px-2 py-1 font-mono text-sm">
-                {userInfo.orderId}
+                {orderId}
               </p>
             </div>
           </div>
+
+          {/* Trusted Contact Status */}
+          {isTrustedContact && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <div className="flex items-center justify-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  Authorized Trusted Contact
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-blue-600">
+                This person is authorized to pick up packages on behalf of the
+                customer
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
