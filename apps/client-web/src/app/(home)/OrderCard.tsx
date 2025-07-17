@@ -10,6 +10,7 @@ import { Button } from "@ebox/ui/button";
 import { Card, CardContent, CardHeader } from "@ebox/ui/card";
 import { Separator } from "@ebox/ui/separator";
 
+import ShareOrderDialog from "./ShareOrderDialog";
 import ViewQRCodeDialog from "./ViewQRCodeDialog";
 
 export default function OrderCard({
@@ -19,12 +20,21 @@ export default function OrderCard({
   shippedLocation,
   deliveredDate,
   createdAt,
+  pickedUpAt,
+  directlyOwned,
 }: RouterOutput["order"]["getAllOrders"][number]) {
   const [fetchQrCode, setFetchQrCode] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+
+  const alreadyPickedUp = Boolean(pickedUpAt);
   const { data: qrCode } = api.auth.getAuthorizedPickupToken.useQuery(
     { orderId: id },
-    { enabled: fetchQrCode, refetchInterval: 1000 * 60 * 5 }, // expires after 5 minutes
+    {
+      enabled: fetchQrCode && !alreadyPickedUp,
+      refetchInterval: 1000 * 60 * 15,
+    }, // expires after 15 minutes
   );
+
   return (
     <>
       {qrCode && fetchQrCode && (
@@ -34,7 +44,15 @@ export default function OrderCard({
         />
       )}
 
-      <Card className="my-4" key={id}>
+      {showShareDialog && (
+        <ShareOrderDialog
+          orderId={id}
+          vendorOrderId={vendorOrderId}
+          onClose={() => setShowShareDialog(false)}
+        />
+      )}
+
+      <Card className={"my-4"} key={id}>
         <CardHeader className="px-6 py-4">
           <div className="flex justify-between text-sm">
             <div className="flex w-1/4 flex-col">
@@ -62,6 +80,11 @@ export default function OrderCard({
               <p className="place-self-end text-sm font-medium text-[#575959]">
                 View invoice
               </p>
+              {!directlyOwned && (
+                <span className="text-smfont-semibold mt-5 place-self-end rounded bg-yellow-200 px-2 py-0.5 text-yellow-700">
+                  Shared
+                </span>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -95,12 +118,21 @@ export default function OrderCard({
                 <Button
                   className="bg-[#00698F] text-white"
                   onClick={() => setFetchQrCode(true)}
+                  disabled={alreadyPickedUp}
                 >
-                  View QR Code
+                  {alreadyPickedUp ? `Picked Up` : `View QR Code`}
                 </Button>
               ) : (
                 <Button className="bg-[#00698F] text-white">
                   Track package
+                </Button>
+              )}
+              {directlyOwned && (
+                <Button
+                  className="bg-[#00698F] text-white"
+                  onClick={() => setShowShareDialog(true)}
+                >
+                  Share Order
                 </Button>
               )}
               <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">

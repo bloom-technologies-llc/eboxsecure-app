@@ -19,14 +19,20 @@
     "lint:ws": "pnpm dlx sherif@latest",
     "postinstall": "pnpm lint:ws",
     "typecheck": "turbo typecheck",
-    "ui-add": "pnpm -F ui ui-add"
+    "ui-add": "pnpm -F ui ui-add",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@ebox/prettier-config": "workspace:*",
     "@turbo/gen": "^1.13.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "prettier": "^3.2.5",
     "turbo": "^1.13.2",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4",
+    "vitest-mock-extended": "^3.1.0"
   },
   "prettier": "@ebox/prettier-config",
   "prisma": {
