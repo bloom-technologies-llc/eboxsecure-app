@@ -44,6 +44,7 @@ interface ActionButtonsProps {
 interface QRInputProps {
   value: string;
   onChange: (value: string) => void;
+  onScanQR?: () => void;
   disabled?: boolean;
 }
 
@@ -153,6 +154,7 @@ export default function PickupQRScanner({ isOpen, onClose }: QRScannerProps) {
               <QRInput
                 value={qrCodeInput}
                 onChange={handleQRCodeChange}
+                onScanQR={processQRCode}
                 disabled={userInfo?.authorized}
               />
 
@@ -265,7 +267,18 @@ function ActionButtons({
 }
 
 // QR Input Component
-function QRInput({ value, onChange, disabled = false }: QRInputProps) {
+function QRInput({
+  value,
+  onChange,
+  onScanQR,
+  disabled = false,
+}: QRInputProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !disabled && value.trim().length > 0 && onScanQR) {
+      e.preventDefault();
+      onScanQR();
+    }
+  };
   return (
     <div className="space-y-2">
       <Label>QR Code</Label>
@@ -275,6 +288,7 @@ function QRInput({ value, onChange, disabled = false }: QRInputProps) {
         placeholder="Enter QR code..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         className="font-mono"
         disabled={disabled}
         autoFocus
