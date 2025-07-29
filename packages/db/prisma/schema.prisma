@@ -382,6 +382,6 @@ enum SubscriptionType {
 }
 
 enum MeterEventType {
-    PACKAGE_HOLDING
+    OVERDUE_PACKAGE_HOLDING
     PACKAGE_ALLOWANCE
 }

@@ -7,13 +7,6 @@ import { Button } from "@ebox/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ebox/ui/card";
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@ebox/ui/select";
 
 export default function TestOrderAndMeter() {
   const { user } = useUser();
@@ -35,8 +28,6 @@ export default function TestOrderAndMeter() {
     return today.toISOString().split("T")[0];
   });
 
-  const [meterEventName, setMeterEventName] = useState("package_holding");
-  const [meterEventValue, setMeterEventValue] = useState("1");
   const [stripeCustomerId, setStripeCustomerId] = useState("");
 
   // Set default Stripe customer ID from user's private metadata
@@ -68,8 +59,6 @@ export default function TestOrderAndMeter() {
           deliveredDate,
           pickedUpAt,
           processedAt,
-          meterEventName,
-          meterEventValue: parseInt(meterEventValue),
           stripeCustomerId,
         }),
       });
@@ -93,7 +82,7 @@ export default function TestOrderAndMeter() {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Test Order Creation & Meter Event</CardTitle>
+        <CardTitle>Test Order Creation & Overage Calculation</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,35 +118,6 @@ export default function TestOrderAndMeter() {
             </div>
 
             <div>
-              <Label htmlFor="meterEventName">Meter Event Name</Label>
-              <Select value={meterEventName} onValueChange={setMeterEventName}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select meter event" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="package_holding">
-                    Package Holding
-                  </SelectItem>
-                  <SelectItem value="package_allowance">
-                    Package Allowance
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="meterEventValue">Meter Event Value</Label>
-              <Input
-                id="meterEventValue"
-                type="number"
-                value={meterEventValue}
-                onChange={(e) => setMeterEventValue(e.target.value)}
-                placeholder="1"
-                required
-              />
-            </div>
-
-            <div>
               <Label htmlFor="stripeCustomerId">Stripe Customer ID</Label>
               <Input
                 id="stripeCustomerId"
@@ -181,7 +141,7 @@ export default function TestOrderAndMeter() {
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "Creating..." : "Create Order & Meter Event"}
+            {isLoading ? "Creating..." : "Create Order & Calculate Overage"}
           </Button>
         </form>
 
@@ -196,14 +156,55 @@ export default function TestOrderAndMeter() {
             <div className="text-green-600">
               <strong>Success!</strong> Order created with ID:{" "}
               {result.order?.id}
-              {result.meterEvent && (
-                <div className="mt-2">
-                  <strong>Meter Event:</strong> Successfully created
+              {result.calculation && (
+                <div className="mt-4 space-y-2">
+                  <strong>Holding Calculation:</strong>
+                  <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+                    <div>
+                      Subscription Tier: {result.calculation.tier || "Unknown"}
+                    </div>
+                    <div>
+                      Holding Allowance: {result.calculation.allowance} days
+                    </div>
+                    <div>
+                      Actual Holding Days: {result.calculation.holdingDays}
+                    </div>
+                    <div
+                      className={
+                        result.calculation.overageDays > 0
+                          ? "font-bold text-red-600"
+                          : "font-bold"
+                      }
+                    >
+                      Overage Days: {result.calculation.overageDays}
+                    </div>
+                  </div>
                 </div>
               )}
-              <pre className="mt-2 rounded bg-gray-100 p-2 text-xs">
-                {JSON.stringify(result, null, 2)}
-              </pre>
+              {result.meterEvent ? (
+                <div className="mt-2">
+                  <strong className="text-red-600">Meter Event:</strong> Created
+                  for {result.calculation?.overageDays} overage days
+                </div>
+              ) : result.calculation?.overageDays === 0 ? (
+                <div className="mt-2">
+                  <strong className="text-green-600">No Overage:</strong>{" "}
+                  Package picked up within allowance - no billing
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <strong>No Meter Event:</strong> Missing pickup date or other
+                  required data
+                </div>
+              )}
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-gray-600">
+                  View raw response
+                </summary>
+                <pre className="mt-2 rounded bg-gray-100 p-2 text-xs">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </details>
             </div>
           </div>
         )}

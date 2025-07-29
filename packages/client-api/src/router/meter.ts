@@ -68,7 +68,7 @@ export const meterRouter = createTRPCRouter({
 
     // Calculate usage by event type
     const holdingUsage = meterEvents
-      .filter((event) => event.eventType === "PACKAGE_HOLDING")
+      .filter((event) => event.eventType === "OVERDUE_PACKAGE_HOLDING")
       .reduce((sum, event) => sum + event.value, 0);
 
     const allowanceUsage = meterEvents
@@ -119,7 +119,9 @@ export const meterRouter = createTRPCRouter({
       z.object({
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-        eventType: z.enum(["PACKAGE_HOLDING", "PACKAGE_ALLOWANCE"]).optional(),
+        eventType: z
+          .enum(["OVERDUE_PACKAGE_HOLDING", "PACKAGE_ALLOWANCE"])
+          .optional(),
       }),
     )
     .query(async ({ ctx, input }) => {

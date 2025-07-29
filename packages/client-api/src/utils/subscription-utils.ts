@@ -31,16 +31,16 @@ export enum Plan {
 
 // Mapping of plans to all their associated subscription lookup keys (main + metering)
 export const TIER_SUBSCRIPTIONS: Record<Plan, string[]> = {
-  [Plan.BASIC]: ["basic", "basic_holding", "basic_allowance"],
+  [Plan.BASIC]: ["basic", "basic_overdue_holding", "basic_allowance"],
   [Plan.BASIC_PLUS]: [
     "basic_plus",
-    "basic_plus_holding",
+    "basic_plus_overdue_holding",
     "basic_plus_allowance",
   ],
-  [Plan.PREMIUM]: ["premium", "premium_holding", "premium_allowance"],
+  [Plan.PREMIUM]: ["premium", "premium_overdue_holding", "premium_allowance"],
   [Plan.BUSINESS_PRO]: [
     "business_pro",
-    "business_pro_holding",
+    "business_pro_overdue_holding",
     "business_pro_allowance",
   ],
 };

@@ -35,7 +35,7 @@ import {
 interface QueryParams {
   startDate?: Date;
   endDate?: Date;
-  eventType?: "PACKAGE_HOLDING" | "PACKAGE_ALLOWANCE";
+  eventType?: "OVERDUE_PACKAGE_HOLDING" | "PACKAGE_ALLOWANCE";
 }
 
 export function UsageHistoryTable() {
@@ -63,7 +63,7 @@ export function UsageHistoryTable() {
       eventType:
         eventType === "all" || eventType === ""
           ? undefined
-          : (eventType as "PACKAGE_HOLDING" | "PACKAGE_ALLOWANCE"),
+          : (eventType as "OVERDUE_PACKAGE_HOLDING" | "PACKAGE_ALLOWANCE"),
     });
     setHasSearched(true);
   };
@@ -96,7 +96,7 @@ export function UsageHistoryTable() {
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
-      case "PACKAGE_HOLDING":
+      case "OVERDUE_PACKAGE_HOLDING":
         return <Clock className="h-4 w-4 text-blue-600" />;
       case "PACKAGE_ALLOWANCE":
         return <Package className="h-4 w-4 text-purple-600" />;
@@ -107,10 +107,10 @@ export function UsageHistoryTable() {
 
   const getEventTypeBadge = (type: string) => {
     switch (type) {
-      case "PACKAGE_HOLDING":
+      case "OVERDUE_PACKAGE_HOLDING":
         return (
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            Holding
+            Overdue Holding
           </Badge>
         );
       case "PACKAGE_ALLOWANCE":
@@ -190,8 +190,8 @@ export function UsageHistoryTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Events</SelectItem>
-                  <SelectItem value="PACKAGE_HOLDING">
-                    Package Holding
+                  <SelectItem value="OVERDUE_PACKAGE_HOLDING">
+                    Overdue Package Holding
                   </SelectItem>
                   <SelectItem value="PACKAGE_ALLOWANCE">
                     Package Allowance
@@ -261,7 +261,7 @@ export function UsageHistoryTable() {
                   <TableCell>
                     <span className="font-medium">
                       {event.value}{" "}
-                      {event.eventType === "PACKAGE_HOLDING"
+                      {event.eventType === "OVERDUE_PACKAGE_HOLDING"
                         ? "days"
                         : "packages"}
                     </span>
@@ -325,8 +325,11 @@ export function UsageHistoryTable() {
           </span>
           <div className="flex items-center gap-4">
             <span>
-              {events.filter((e) => e.eventType === "PACKAGE_HOLDING").length}{" "}
-              holding events
+              {
+                events.filter((e) => e.eventType === "OVERDUE_PACKAGE_HOLDING")
+                  .length
+              }{" "}
+              overdue holding events
             </span>
             <span>
               {events.filter((e) => e.eventType === "PACKAGE_ALLOWANCE").length}{" "}
