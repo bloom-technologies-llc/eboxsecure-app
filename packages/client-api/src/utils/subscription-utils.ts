@@ -13,6 +13,7 @@ interface SubscriptionData {
   subscriptionId?: string;
 }
 
+// TODO: make this better. IDs change if in production.
 // Exported mapping of Stripe price IDs to subscription tiers
 export const priceIdToPlanMap: Record<string, string> = {
   price_1RkSngPFcJwvZfVCHyrtvBd9: "BASIC",
