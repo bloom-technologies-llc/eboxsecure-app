@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { hasValidSubscription } from "@/lib/stripe";
 
 export default async function SuccessPage() {
-  // Check if user has an active subscription after successful payment
   const userHasValidSubscription = await hasValidSubscription();
 
   if (userHasValidSubscription) {
