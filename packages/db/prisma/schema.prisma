@@ -333,7 +333,7 @@ model OrderSharedAccess {
 model StripePrice {
     id               String           @id // Stripe Price ID
     subscriptionType SubscriptionType
-    lookupKey        String
+    lookupKey        String           @unique
 
     @@unique([id, subscriptionType])
 }

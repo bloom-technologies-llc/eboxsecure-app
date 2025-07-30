@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { SubscriptionType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import Stripe from "stripe";
 import z from "zod";
 
 import { db } from "@ebox/db";
@@ -24,7 +25,8 @@ export type SubscriptionData = {
   cancelAtPeriodEnd: boolean;
 };
 
-const subscriptionDataSchema = z.object({
+// Must match the schema in client-web
+export const subscriptionDataSchema = z.object({
   subscriptionId: z.string(),
   status: z.enum([
     "active",
@@ -56,45 +58,89 @@ const LOCATION_LIMITS: Record<SubscriptionType, number> = {
  * @param priceIds - The multiple price IDs that are associated with a subscription plan
  * @returns The Subscription Type of the price IDs
  */
-async function priceIdsToPlan(priceIds: string[]) {
+export async function priceIdsToPlan(priceIds: string[]) {
   if (priceIds.length !== 3) {
     console.error("User must have 3 price IDs to determine subscription tier");
     return null;
   }
-  const subscriptionType = await db.stripePrice.findMany({
-    where: {
-      OR: [
-        {
-          id: priceIds[0],
-        },
-        {
-          id: priceIds[1],
-        },
-        {
-          id: priceIds[2],
-        },
-      ],
-    },
-  });
 
-  if (subscriptionType.length !== 3) {
-    console.error(
-      "Could not find three Stripe price entries in DB from price IDs",
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+  try {
+    // Fetch all three prices from Stripe
+    const pricePromises = priceIds.map((priceId) =>
+      stripe.prices.retrieve(priceId, { expand: ["product"] }),
     );
-    return null;
-  }
-  // if the subscription type isnt the same for all three price IDs, throw an error
-  if (
-    subscriptionType.some(
-      (price) =>
-        price.subscriptionType !== subscriptionType[0]!.subscriptionType,
-    )
-  ) {
-    console.error("Subscription type is not the same for all three price IDs");
-    return null;
-  }
 
-  return subscriptionType[0]!.subscriptionType;
+    const prices = await Promise.all(pricePromises);
+
+    // Validate that all prices exist
+    if (prices.length !== 3) {
+      console.error("Could not fetch all three prices from Stripe");
+      return null;
+    }
+
+    // Extract subscription types from lookup keys
+    const subscriptionTypes = prices.map((price) => {
+      const lookupKey = price.lookup_key;
+      if (!lookupKey) {
+        console.error("Price missing lookup key");
+        return null;
+      }
+
+      let baseType: string;
+
+      if (lookupKey.endsWith("_allowance")) {
+        baseType = lookupKey.replace("_allowance", "");
+      } else if (lookupKey.endsWith("_overdue_holding")) {
+        baseType = lookupKey.replace("_overdue_holding", "");
+      } else {
+        // Assume it's the base subscription type
+        baseType = lookupKey;
+      }
+
+      return baseType.toUpperCase();
+    });
+
+    // Check if any extraction failed
+    if (subscriptionTypes.some((type) => type === null)) {
+      console.error(
+        "Failed to extract subscription type from one or more lookup keys",
+      );
+      return null;
+    }
+
+    // Validate that all three prices have the same subscription type
+    const firstType = subscriptionTypes[0];
+    const allSameType = subscriptionTypes.every((type) => type === firstType);
+
+    if (!allSameType) {
+      console.error(
+        "Subscription type is not the same across all three price lookup keys",
+      );
+      return null;
+    }
+
+    // Map the extracted type to SubscriptionType enum
+    const subscriptionTypeMap: Record<string, SubscriptionType> = {
+      BASIC: SubscriptionType.BASIC,
+      BASIC_PLUS: SubscriptionType.BASIC_PLUS,
+      PREMIUM: SubscriptionType.PREMIUM,
+      BUSINESS_PRO: SubscriptionType.BUSINESS_PRO,
+    };
+
+    const subscriptionType = subscriptionTypeMap[firstType!];
+
+    if (!subscriptionType) {
+      console.error(`Unknown subscription type: ${firstType}`);
+      return null;
+    }
+
+    return subscriptionType;
+  } catch (error) {
+    console.error("Error fetching prices from Stripe:", error);
+    return null;
+  }
 }
 
 /**
