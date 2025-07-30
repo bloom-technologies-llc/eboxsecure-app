@@ -330,14 +330,6 @@ model OrderSharedAccess {
     @@index([grantedById])
 }
 
-model StripePrice {
-    id               String           @id // Stripe Price ID
-    subscriptionType SubscriptionType
-    lookupKey        String           @unique
-
-    @@unique([id, subscriptionType])
-}
-
 enum UserType {
     CUSTOMER
     EMPLOYEE
