@@ -145,7 +145,7 @@ export async function priceIdsToPlan(priceIds: string[]) {
 /**
  * Get user's current subscription tier from KV store
  */
-export async function getUserSubscriptionTier() {
+async function getUserSubscriptionTier() {
   const user = await currentUser();
 
   if (!user) {
@@ -187,7 +187,7 @@ export async function getUserSubscriptionTier() {
     });
   }
 
-  const subscriptionTier = priceIdsToPlan(subscriptionData.priceIds);
+  const subscriptionTier = await priceIdsToPlan(subscriptionData.priceIds);
 
   if (!subscriptionTier) {
     // Unable to determine tier
