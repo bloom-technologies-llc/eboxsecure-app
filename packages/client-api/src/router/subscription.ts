@@ -116,6 +116,150 @@ export const subscriptionRouter = createTRPCRouter({
 
     return { url: session.url };
   }),
+  upgradeSubscription: protectedCustomerProcedure
+    .input(
+      z.object({
+        targetTier: z.nativeEnum(SubscriptionType),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { targetTier } = input;
+      const user = await currentUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const customerId = user.privateMetadata.stripeCustomerId as string;
+      if (!customerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Customer ID not found",
+        });
+      }
+      const subscriptionDataKv = await kv.get(`stripe:customer:${customerId}`);
+      const parsedSubscriptionData =
+        subscriptionDataSchema.safeParse(subscriptionDataKv);
+      const subscriptionData = parsedSubscriptionData.data;
+      if (!subscriptionData || !subscriptionData.subscriptionId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Subscription data not found",
+        });
+      }
+
+      // Validate that user has an active subscription
+      if (
+        subscriptionData.status !== "active" ||
+        !subscriptionData.subscriptionId
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No active subscription found to upgrade",
+        });
+      }
+
+      const plan = await priceIdsToPlan(subscriptionData.priceIds);
+
+      // Validate that this is actually a plan change
+      if (plan === targetTier) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You are already subscribed to this plan",
+        });
+      }
+
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+      try {
+        // Set proration date to this moment for consistency
+        const proration_date = Math.floor(Date.now() / 1000);
+
+        // Get current subscription details
+        const currentSubscription = await stripe.subscriptions.retrieve(
+          subscriptionData.subscriptionId,
+          {
+            expand: ["items.data.price"],
+          },
+        );
+
+        // Get target tier pricing
+        const lookupKey = targetTier.toLowerCase();
+        const lookupKeys = [
+          lookupKey,
+          lookupKey + "_allowance",
+          lookupKey + "_overdue_holding",
+        ];
+        const targetPrices = await stripe.prices.list({
+          lookup_keys: lookupKeys,
+        });
+
+        // Map existing subscription items to new prices
+        // This follows the pattern from Stripe docs: items should have id and price
+        const subscriptionItems = currentSubscription.items.data.map(
+          (item, index) => {
+            // Find corresponding target price by index or lookup key
+            const targetPrice = targetPrices.data[index];
+            if (!targetPrice) {
+              throw new Error(
+                `No target price found for subscription item ${item.id}`,
+              );
+            }
+
+            return {
+              id: item.id,
+              price: targetPrice.id,
+              // Only include quantity for non-metered items
+              ...(targetPrice.recurring?.usage_type !== "metered" && {
+                quantity: item.quantity || 1,
+              }),
+            };
+          },
+        );
+
+        // if user has any downgrades scheduled, cancel them
+        const schedules = await stripe.subscriptionSchedules.list({
+          customer: customerId,
+        });
+
+        if (schedules.data.length > 0) {
+          for (const schedule of schedules.data) {
+            if (schedule.status === "active") {
+              await stripe.subscriptionSchedules.release(schedule.id);
+            }
+          }
+        }
+
+        const updatedSubscription = await stripe.subscriptions.update(
+          subscriptionData.subscriptionId,
+          {
+            items: subscriptionItems,
+            proration_behavior: "always_invoice",
+            proration_date: proration_date,
+          },
+        );
+
+        return {
+          success: true,
+          message: `Successfully upgraded to ${targetTier}`,
+          subscription: updatedSubscription,
+        };
+      } catch (error) {
+        if (error instanceof Stripe.errors.StripeError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Stripe error: ${error.message}`,
+          });
+        }
+
+        // Show the actual error details for debugging
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to process upgrade: ${errorMessage}`,
+        });
+      }
+    }),
   downgradeSubscription: protectedCustomerProcedure
     .input(
       z.object({
@@ -288,6 +432,40 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
     }),
+  reactivateSubscription: protectedCustomerProcedure.mutation(async () => {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const customerId = user.privateMetadata.stripeCustomerId as string;
+    if (!customerId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Customer ID not found",
+      });
+    }
+
+    const subscriptionDataKv = await kv.get(`stripe:customer:${customerId}`);
+    const parsedSubscriptionData =
+      subscriptionDataSchema.safeParse(subscriptionDataKv);
+    const subscriptionData = parsedSubscriptionData.data;
+    if (!subscriptionData || !subscriptionData.subscriptionId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Subscription data not found",
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+    // Remove cancellation
+    await stripe.subscriptions.update(subscriptionData.subscriptionId, {
+      cancel_at_period_end: false,
+    });
+
+    return { success: true };
+  }),
 });
 
 const createStripeSession = async (lookupKey: string) => {
