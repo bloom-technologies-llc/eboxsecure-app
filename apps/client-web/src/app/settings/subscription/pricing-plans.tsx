@@ -1,0 +1,150 @@
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
+import { plans } from "@/utils/plans-data";
+import { Check, Crown, Zap } from "lucide-react";
+
+import { Badge } from "@ebox/ui/badge";
+import { Button } from "@ebox/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@ebox/ui/card";
+
+import { DowngradeConfirmationDialog } from "./downgrade-confirmation-dialog";
+import SubscribeButton from "./subscribe-button";
+import {
+  getPlanAction,
+  getPlanActionText,
+  getPlanActionVariant,
+} from "./subscription-plan-utils";
+import { UpgradeConfirmationDialog } from "./upgrade-confirmation-dialog";
+
+export default async function PricingPlans() {
+  const {
+    subscriptionData: subscriptionStatus,
+    plan: currentPlan,
+    price,
+  } = await api.subscription.getCurrentPlan();
+  if (!currentPlan) {
+    redirect("/payment");
+  }
+  const currentPlanLookupKey = currentPlan.toLowerCase();
+
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {plans.map((plan) => {
+        const isCurrentPlan = currentPlanLookupKey === plan.lookupKey;
+        const planAction = getPlanAction(currentPlan, plan.lookupKey);
+        const actionText = getPlanActionText(planAction);
+        const actionVariant = getPlanActionVariant(planAction);
+
+        return (
+          <Card
+            key={plan.name}
+            className={`relative ${isCurrentPlan ? "border-primary" : ""}`}
+          >
+            {plan.mostPopular && (
+              <Badge className="absolute -top-2 right-2 bg-blue-100 text-blue-800">
+                Most popular
+              </Badge>
+            )}
+            {isCurrentPlan && !plan.mostPopular && (
+              <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 transform">
+                Current Plan
+              </Badge>
+            )}
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {plan.name === "Diamond" && (
+                  <Crown className="h-5 w-5 text-yellow-500" />
+                )}
+                {plan.name === "Gold" && (
+                  <Zap className="h-5 w-5 text-yellow-500" />
+                )}
+                {plan.name}
+              </CardTitle>
+              <CardDescription>{plan.description}</CardDescription>
+              <div className="pt-2">
+                <span className="text-3xl font-bold">{plan.price}</span>
+                <span className="text-muted-foreground">{plan.period}</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="space-y-2">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              {planAction === "downgrade" ? (
+                <DowngradeConfirmationDialog
+                  targetPlan={{
+                    name: plan.name,
+                    price: plan.price,
+                    lookupKey: plan.lookupKey,
+                  }}
+                  currentPlan={{
+                    name: currentPlan,
+                    price: price.toString(),
+                  }}
+                  currentPeriodEnd={subscriptionStatus?.currentPeriodEnd || 0}
+                >
+                  <Button
+                    className="w-full"
+                    variant={actionVariant}
+                    disabled={isCurrentPlan}
+                  >
+                    {actionText}
+                  </Button>
+                </DowngradeConfirmationDialog>
+              ) : planAction === "upgrade" ? (
+                <UpgradeConfirmationDialog
+                  targetPlan={{
+                    name: plan.name,
+                    price: plan.price,
+                    lookupKey: plan.lookupKey,
+                  }}
+                  currentPlan={{
+                    name: currentPlan,
+                    price: price.toString(),
+                  }}
+                >
+                  <Button
+                    className="w-full"
+                    variant={actionVariant}
+                    disabled={isCurrentPlan}
+                  >
+                    {actionText}
+                  </Button>
+                </UpgradeConfirmationDialog>
+              ) : (
+                <SubscribeButton
+                  lookupKey={plan.lookupKey}
+                  actionVariant={actionVariant}
+                  disabled={isCurrentPlan}
+                  actionText={actionText}
+                />
+              )}
+              {actionText === "Upgrade" && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  You'll be charged a prorated amount for the remaining billing
+                  period
+                </p>
+              )}
+              {actionText === "Downgrade" && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Downgrade will take effect on your next billing cycle
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
