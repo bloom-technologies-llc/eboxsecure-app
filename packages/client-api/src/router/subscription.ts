@@ -113,8 +113,8 @@ const createStripeSession = async (lookupKey: string) => {
   // NOTE: localhost causes Stripe to fail
   const baseUrl =
     process.env.NEXT_PUBLIC_VERCEL_URL === "localhost:3000"
-      ? "https://google.com"
-      : process.env.NEXT_PUBLIC_VERCEL_URL;
+      ? "http://localhost:3000"
+      : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
 
   const session = await stripe.checkout.sessions.create({
     billing_address_collection: "auto",
