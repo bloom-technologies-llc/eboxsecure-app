@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
 
-const subscriptionDataSchema = z.object({
+export const subscriptionDataSchema = z.object({
   subscriptionId: z.string(),
   status: z.enum([
     "active",
