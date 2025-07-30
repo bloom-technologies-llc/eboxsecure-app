@@ -110,12 +110,7 @@ const createStripeSession = async (lookupKey: string) => {
     return { price: price.id, quantity: 1 };
   });
 
-  // NOTE: localhost causes Stripe to fail
-  const baseUrl =
-    process.env.NEXT_PUBLIC_VERCEL_URL === "localhost:3000"
-      ? "http://localhost:3000"
-      : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-
+  const baseUrl = process.env.BASE_URL;
   const session = await stripe.checkout.sessions.create({
     billing_address_collection: "auto",
     customer: stripeCustomerId,
