@@ -1,5 +1,6 @@
 import { authRouter } from "./router/auth";
 import { favoritesRouter } from "./router/favorites";
+import { meterRouter } from "./router/meter";
 import { onboardingRouter } from "./router/onboarding";
 import { orderRouter } from "./router/order";
 import { subscriptionRouter } from "./router/subscription";
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   favorites: favoritesRouter,
   trustedContacts: trustedContactsRouter,
   subscription: subscriptionRouter,
+  meter: meterRouter,
 });
 
 // export type definition of API

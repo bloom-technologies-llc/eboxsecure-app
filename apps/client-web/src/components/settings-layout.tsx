@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CreditCard, Crown, Settings, Trash2, Users } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  CreditCard,
+  Crown,
+  Settings,
+  Trash2,
+  Users,
+} from "lucide-react";
 
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
@@ -15,6 +23,12 @@ const settingsNavItems = [
     label: "General",
     icon: Settings,
     description: "Account & Profile",
+  },
+  {
+    href: "/settings/usage",
+    label: "Usage",
+    icon: BarChart3,
+    description: "Metered Usage & Limits",
   },
   {
     href: "/settings/notifications",
