@@ -24,7 +24,7 @@ export const subscriptionRouter = createTRPCRouter({
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
       const priceValidation = await stripe.prices.list({
-        lookup_keys: [input.lookupKey],
+        lookup_keys: [input.lookupKey.toLowerCase()],
         limit: 1,
       });
 
