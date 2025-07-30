@@ -110,7 +110,7 @@ model Order {
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
     meteredAt         DateTime?
-    meterEventId      String?         @unique
+    meterEventId      String?   @unique
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
@@ -119,7 +119,6 @@ model Order {
     orderComments     OrderComment[]
     meterEvent        MeterEvent?
     OrderSharedAccess OrderSharedAccess[]
-
 }
 
 model MeterEvent {
@@ -331,6 +330,14 @@ model OrderSharedAccess {
     @@index([grantedById])
 }
 
+model StripePrice {
+    id               String           @id // Stripe Price ID
+    subscriptionType SubscriptionType
+    lookupKey        String
+
+    @@unique([id, subscriptionType])
+}
+
 enum UserType {
     CUSTOMER
     EMPLOYEE
@@ -383,6 +390,6 @@ enum SubscriptionType {
 }
 
 enum MeterEventType {
-    PACKAGE_HOLDING
+    OVERDUE_PACKAGE_HOLDING
     PACKAGE_ALLOWANCE
 }
