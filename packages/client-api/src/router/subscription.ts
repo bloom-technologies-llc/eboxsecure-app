@@ -467,6 +467,33 @@ export const subscriptionRouter = createTRPCRouter({
 
     return { success: true };
   }),
+  getCurrentPlan: protectedCustomerProcedure.query(async () => {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+    if (!stripeCustomerId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Customer ID not found",
+      });
+    }
+    const subscriptionDataKv = await kv.get(
+      `stripe:customer:${stripeCustomerId}`,
+    );
+    const subscriptionData = subscriptionDataSchema.parse(subscriptionDataKv);
+
+    const priceIds = subscriptionData.priceIds;
+    const plan = await priceIdsToPlan(priceIds);
+
+    return {
+      plan,
+      subscriptionData,
+      price: getPrice(plan),
+    };
+  }),
 });
 
 const createStripeSession = async (lookupKey: string) => {
@@ -558,4 +585,17 @@ const createStripeSession = async (lookupKey: string) => {
   }
 
   return session.url;
+};
+
+const getPrice = (plan: SubscriptionType | null) => {
+  if (!plan) {
+    return -1;
+  }
+  const prices: Record<SubscriptionType, number> = {
+    [SubscriptionType.BASIC]: 9.99,
+    [SubscriptionType.BASIC_PLUS]: 19.99,
+    [SubscriptionType.PREMIUM]: 49.99,
+    [SubscriptionType.BUSINESS_PRO]: 99.99,
+  };
+  return prices[plan];
 };
