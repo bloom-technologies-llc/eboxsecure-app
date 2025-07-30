@@ -16,10 +16,9 @@ export const subscriptionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Initialize Stripe
+      // Validate lookup key
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-      // Validate lookup key by calling Stripe directly
       const priceValidation = await stripe.prices.list({
         lookup_keys: [input.lookupKey],
         limit: 1,
