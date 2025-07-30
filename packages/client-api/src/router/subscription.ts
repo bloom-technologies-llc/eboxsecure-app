@@ -102,9 +102,10 @@ export const subscriptionRouter = createTRPCRouter({
       });
     }
 
+    const baseUrl = process.env.BASE_URL;
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
-      return_url: `${process.env.BASE_URL}/settings/subscription`,
+      return_url: `${baseUrl}/settings/subscription`,
     });
 
     if (!session.url) {
