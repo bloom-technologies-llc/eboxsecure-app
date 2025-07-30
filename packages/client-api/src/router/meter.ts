@@ -55,23 +55,26 @@ export const meterRouter = createTRPCRouter({
       throw new Error("Unable to determine subscription tier from price IDs");
     }
 
-    // Get current month's meter events
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    // Get current billing period's meter events
+    const currentPeriodStart = new Date(
+      subscriptionData.currentPeriodStart * 1000,
+    );
+    const currentPeriodEnd = new Date(subscriptionData.currentPeriodEnd * 1000);
 
-    const endOfMonth = new Date();
-    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-    endOfMonth.setDate(0);
-    endOfMonth.setHours(23, 59, 59, 999);
+    if (!currentPeriodStart || !currentPeriodEnd) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No current period start or end found",
+      });
+    }
 
     // Fetch meter events for current month
     const meterEvents = await ctx.db.meterEvent.findMany({
       where: {
         customerId: user.id,
         createdAt: {
-          gte: startOfMonth,
-          lte: endOfMonth,
+          gte: currentPeriodStart,
+          lte: currentPeriodEnd,
         },
       },
       orderBy: {
@@ -119,8 +122,8 @@ export const meterRouter = createTRPCRouter({
       },
       limits: currentLimits,
       period: {
-        start: startOfMonth,
-        end: endOfMonth,
+        start: currentPeriodStart,
+        end: currentPeriodEnd,
       },
       events: meterEvents,
     };
