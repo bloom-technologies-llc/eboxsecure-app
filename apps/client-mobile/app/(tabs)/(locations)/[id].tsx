@@ -45,10 +45,14 @@ export default function LocationDetailPage() {
     { enabled: !isNaN(locationId) },
   );
 
+  const { data: favoritesLimits, refetch: refetchLimits } =
+    api.favorites.getFavoritesLimits.useQuery();
+
   const addFavoriteMutation = api.favorites.addFavorite.useMutation({
     onSuccess: () => {
       showToast("Location added to favorites!");
       refetch();
+      refetchLimits();
     },
     onError: (error) => {
       showToast(error.message, "error");
@@ -59,6 +63,7 @@ export default function LocationDetailPage() {
     onSuccess: () => {
       showToast("Location removed from favorites!");
       refetch();
+      refetchLimits();
     },
     onError: (error) => {
       showToast(error.message, "error");
@@ -69,6 +74,7 @@ export default function LocationDetailPage() {
     onSuccess: () => {
       showToast("Set as primary location!");
       refetch();
+      refetchLimits();
     },
     onError: (error) => {
       showToast(error.message, "error");
@@ -111,6 +117,13 @@ export default function LocationDetailPage() {
   }
 
   const handleAddFavorite = () => {
+    if (favoritesLimits?.canAdd === false) {
+      showToast(
+        `You've reached your limit of ${favoritesLimits?.limit} favorite locations`,
+        "error",
+      );
+      return;
+    }
     addFavoriteMutation.mutate({ locationId });
   };
 
@@ -202,6 +215,7 @@ export default function LocationDetailPage() {
               <Button
                 onPress={handleAddFavorite}
                 loading={addFavoriteMutation.isPending}
+                disabled={favoritesLimits?.canAdd === false}
                 className="flex-1"
               >
                 <Heart size={16} weight="regular" />

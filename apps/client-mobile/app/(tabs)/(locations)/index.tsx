@@ -39,6 +39,9 @@ export default function LocationsPage() {
     { enabled: searchQuery.length >= 2 },
   );
 
+  const { data: favoritesLimits, refetch: refetchLimits } =
+    api.favorites.getFavoritesLimits.useQuery();
+
   // API Mutations
   const addFavoriteMutation = api.favorites.addFavorite.useMutation({
     onMutate: (variables) => {
@@ -46,6 +49,7 @@ export default function LocationsPage() {
     },
     onSuccess: () => {
       refetchFavorites();
+      refetchLimits();
       showToast("Location added to favorites!");
     },
     onError: (error) => {
@@ -59,6 +63,7 @@ export default function LocationsPage() {
   const removeFavoriteMutation = api.favorites.removeFavorite.useMutation({
     onSuccess: () => {
       refetchFavorites();
+      refetchLimits();
       showToast("Location removed from favorites");
     },
     onError: (error) => {
@@ -68,9 +73,16 @@ export default function LocationsPage() {
 
   const handleAddFavorite = useCallback(
     (locationId: number) => {
+      if (favoritesLimits?.canAdd === false) {
+        showToast(
+          `You've reached your limit of ${favoritesLimits?.limit} favorite locations`,
+          "error",
+        );
+        return;
+      }
       addFavoriteMutation.mutate({ locationId });
     },
-    [addFavoriteMutation],
+    [addFavoriteMutation, favoritesLimits],
   );
 
   // Handle deep link for adding to favorites
@@ -139,6 +151,7 @@ export default function LocationsPage() {
           onAddFavorite={handleAddFavorite}
           onResultPress={handleResultPress}
           isAddingFavorite={!!addingFavoriteId}
+          canAddFavorite={favoritesLimits?.canAdd ?? true}
         />
       </View>
 
