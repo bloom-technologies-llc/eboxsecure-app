@@ -121,7 +121,6 @@ export async function priceIdsToPlan(priceIds: string[]) {
       return null;
     }
 
-    // Map the extracted type to SubscriptionType enum
     const subscriptionTypeMap: Record<string, SubscriptionType> = {
       BASIC: SubscriptionType.BASIC,
       BASIC_PLUS: SubscriptionType.BASIC_PLUS,
