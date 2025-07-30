@@ -598,6 +598,9 @@ importers:
       '@ebox/db':
         specifier: workspace:*
         version: link:../db
+      '@ebox/redis-client':
+        specifier: workspace:*
+        version: link:../redis-client
       '@trpc/server':
         specifier: 11.0.0-next.320
         version: 11.0.0-next.320
