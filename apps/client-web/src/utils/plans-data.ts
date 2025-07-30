@@ -1,4 +1,4 @@
-import { Plan } from "@/types/subscription";
+import { SubscriptionType } from "@prisma/client";
 
 export const plans = [
   {
@@ -6,7 +6,7 @@ export const plans = [
     price: "$9.99",
     period: "/month",
     description: "Perfect for individuals with occasional package deliveries.",
-    lookupKey: Plan.BASIC,
+    lookupKey: SubscriptionType.BASIC,
     features: [
       "Access to 3 EboxSecure locations",
       "2-day package holding",
@@ -19,7 +19,7 @@ export const plans = [
     price: "$19.99",
     period: "/month",
     description: "Great for regular online shoppers with more delivery needs.",
-    lookupKey: Plan.BASIC_PLUS,
+    lookupKey: SubscriptionType.BASIC_PLUS,
     features: [
       "Access to 25 EboxSecure locations",
       "5-day package holding",
@@ -33,7 +33,7 @@ export const plans = [
     period: "/month",
     description: "Ideal for small businesses with regular deliveries.",
     mostPopular: true,
-    lookupKey: Plan.PREMIUM,
+    lookupKey: SubscriptionType.PREMIUM,
     features: [
       "Access to 75 EboxSecure locations",
       "7-day package holding",
@@ -48,7 +48,7 @@ export const plans = [
     price: "$99.99",
     period: "/month",
     description: "For businesses with high-volume delivery needs.",
-    lookupKey: Plan.BUSINESS_PRO,
+    lookupKey: SubscriptionType.BUSINESS_PRO,
     features: [
       "Unlimited EboxSecure locations",
       "10-day package holding",

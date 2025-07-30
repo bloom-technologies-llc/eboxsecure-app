@@ -1,10 +1,3 @@
-export enum Plan {
-  BASIC = "basic",
-  BASIC_PLUS = "basic_plus",
-  PREMIUM = "premium",
-  BUSINESS_PRO = "business_pro",
-}
-
 // Must be equal to the SubscriptionType enum in the client-api package
 export type SubscriptionData = {
   subscriptionId: string;
