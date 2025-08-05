@@ -29,7 +29,7 @@ export async function syncCustomerData(customerId: string) {
   }
 
   // TODO: remove this
-  console.log({ subscriptionSchedule: subscription.schedule });
+  console.log({ subscriptionData: JSON.stringify(subscription, null, 2) });
 
   const subData: SubscriptionData = {
     subscriptionId: subscription.id,
