@@ -35,7 +35,7 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
 
-      const url = await createStripeSession(input.lookupKey);
+      const url = await createStripeSession(input.lookupKey.toLowerCase());
       return { url };
     }),
   cancelSubscription: protectedCustomerProcedure.mutation(async ({ ctx }) => {
@@ -342,7 +342,9 @@ export const subscriptionRouter = createTRPCRouter({
         const targetSubscriptionItems = lookupKeys.map((key) => {
           const price = targetPrices.data.find((p) => p.lookup_key === key);
           if (!price) {
-            throw new Error(`Price not found for lookup key: ${key}`);
+            throw new Error(
+              `Price not found for lookup key: during downgrade ${key}`,
+            );
           }
 
           // For metered usage (like package holding/allowance), don't specify quantity
@@ -558,7 +560,9 @@ const createStripeSession = async (lookupKey: string) => {
   const lineItems = lookupKeys.map((key) => {
     const price = prices.data.find((price) => price.lookup_key === key);
     if (!price) {
-      throw new Error(`Price not found for lookup key: ${key}`);
+      throw new Error(
+        `Price not found for lookup key during stripe session creation: ${key}`,
+      );
     }
 
     // For metered subscriptions, don't include quantity
