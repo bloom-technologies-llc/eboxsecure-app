@@ -28,6 +28,9 @@ export async function syncCustomerData(customerId: string) {
     throw new Error(`No subscriptions found`);
   }
 
+  // TODO: remove this
+  console.log({ subscriptionSchedule: subscription.schedule });
+
   const subData: SubscriptionData = {
     subscriptionId: subscription.id,
     status: subscription.status,
