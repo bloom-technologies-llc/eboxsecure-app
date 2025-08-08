@@ -15,4 +15,12 @@ export type SubscriptionData = {
   currentPeriodEnd: number;
   currentPeriodStart: number;
   cancelAtPeriodEnd: boolean;
+  schedule?: {
+    scheduleId: string;
+    startDate: number;
+    endDate: number;
+    items: {
+      price: string;
+    }[];
+  };
 };

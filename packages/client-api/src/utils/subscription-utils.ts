@@ -4,9 +4,9 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import z from "zod";
 
-import { db } from "@ebox/db";
 import { kv } from "@ebox/redis-client";
 
+// Must match the type in client-web
 export type SubscriptionData = {
   subscriptionId: string;
   status:
@@ -23,6 +23,14 @@ export type SubscriptionData = {
   currentPeriodEnd: number;
   currentPeriodStart: number;
   cancelAtPeriodEnd: boolean;
+  schedule?: {
+    scheduleId: string;
+    startDate: number;
+    endDate: number;
+    items: {
+      price: string;
+    }[];
+  };
 };
 
 // Must match the schema in client-web
@@ -43,6 +51,18 @@ export const subscriptionDataSchema = z.object({
   currentPeriodEnd: z.number(),
   currentPeriodStart: z.number(),
   cancelAtPeriodEnd: z.boolean(),
+  schedule: z.optional(
+    z.object({
+      scheduleId: z.string(),
+      startDate: z.number(),
+      endDate: z.number(),
+      items: z.array(
+        z.object({
+          price: z.string(),
+        }),
+      ),
+    }),
+  ),
 });
 
 // Location limits per subscription tier
@@ -232,4 +252,56 @@ export async function canUserAddMoreFavorites(currentFavoriteCount: number) {
 
 export function getLocationLimit(subscriptionTier: SubscriptionType): number {
   return LOCATION_LIMITS[subscriptionTier as keyof typeof LOCATION_LIMITS] || 0;
+}
+
+/**
+ * Check if there's a scheduled plan change
+ */
+export function hasScheduledChange(
+  subscriptionData: SubscriptionData,
+): boolean {
+  return !!subscriptionData.schedule;
+}
+
+/**
+ * Get the scheduled plan information
+ */
+export async function getScheduledPlanInfo(subscriptionData: SubscriptionData) {
+  if (!subscriptionData.schedule) {
+    return null;
+  }
+
+  const scheduledPriceIds = subscriptionData.schedule.items.map(
+    (item) => item.price,
+  );
+  const scheduledPlan = await priceIdsToPlan(scheduledPriceIds);
+
+  return {
+    plan: scheduledPlan,
+    startDate: subscriptionData.schedule.startDate,
+    endDate: subscriptionData.schedule.endDate,
+    priceIds: scheduledPriceIds,
+  };
+}
+
+/**
+ * Determine if the scheduled change is an upgrade or downgrade
+ */
+export function getScheduledChangeType(
+  currentPlan: SubscriptionType,
+  scheduledPlan: SubscriptionType,
+): "upgrade" | "downgrade" | "none" {
+  const planHierarchy = {
+    [SubscriptionType.BASIC]: 1,
+    [SubscriptionType.BASIC_PLUS]: 2,
+    [SubscriptionType.PREMIUM]: 3,
+    [SubscriptionType.BUSINESS_PRO]: 4,
+  };
+
+  const currentLevel = planHierarchy[currentPlan];
+  const scheduledLevel = planHierarchy[scheduledPlan];
+
+  if (scheduledLevel > currentLevel) return "upgrade";
+  if (scheduledLevel < currentLevel) return "downgrade";
+  return "none";
 }

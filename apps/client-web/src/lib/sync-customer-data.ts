@@ -28,9 +28,6 @@ export async function syncCustomerData(customerId: string) {
     throw new Error(`No subscriptions found`);
   }
 
-  // TODO: remove this
-  console.log({ subscriptionData: JSON.stringify(subscription, null, 2) });
-
   const subData: SubscriptionData = {
     subscriptionId: subscription.id,
     status: subscription.status,
@@ -39,6 +36,41 @@ export async function syncCustomerData(customerId: string) {
     currentPeriodStart: subscription.items.data[0]?.current_period_start!,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
+
+  if (subscription.schedule && typeof subscription.schedule === "string") {
+    const schedule = await stripe.subscriptionSchedules.retrieve(
+      subscription.schedule,
+    );
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    // Get the next phase that hasn't started yet
+    const upcomingPhase = schedule.phases.find(
+      (phase) => phase.start_date > currentTime,
+    );
+
+    if (upcomingPhase) {
+      console.log("Found upcoming scheduled phase:", {
+        scheduleId: schedule.id,
+        startDate: upcomingPhase.start_date,
+        itemCount: upcomingPhase.items.length,
+      });
+
+      subData.schedule = {
+        scheduleId: schedule.id,
+        startDate: upcomingPhase.start_date,
+        endDate: upcomingPhase.end_date ?? 0, // Default to 0 if no end date
+        items: upcomingPhase.items.map((item) => ({
+          price: typeof item.price === "string" ? item.price : item.price.id,
+        })),
+      };
+    } else {
+      console.log(
+        "No upcoming scheduled phase found for schedule:",
+        schedule.id,
+      );
+    }
+  }
+
   await kv.set(`stripe:customer:${customerId}`, subData);
   return subData;
 }

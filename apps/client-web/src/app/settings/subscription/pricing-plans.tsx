@@ -27,26 +27,47 @@ export default async function PricingPlans() {
     subscriptionData: subscriptionStatus,
     plan: currentPlan,
     price,
+    scheduledPlan,
   } = await api.subscription.getCurrentPlan();
   if (!currentPlan) {
     redirect("/payment");
   }
   const currentPlanLookupKey = currentPlan.toLowerCase();
+  const hasScheduledDowngrade = scheduledPlan?.changeType === "downgrade";
+  const scheduledPlanLookupKey = scheduledPlan?.plan?.toLowerCase();
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
       {plans.map((plan) => {
         const isCurrentPlan = currentPlanLookupKey === plan.lookupKey;
+        const isScheduledPlan = scheduledPlanLookupKey === plan.lookupKey;
         const planAction = getPlanAction(currentPlan, plan.lookupKey);
         const actionText = getPlanActionText(planAction);
         const actionVariant = getPlanActionVariant(planAction);
 
+        // Override action text and variant if there's a scheduled downgrade
+        let finalActionText = actionText;
+        let finalActionVariant = actionVariant;
+        let isActionDisabled = isCurrentPlan;
+
+        if (hasScheduledDowngrade) {
+          if (isScheduledPlan) {
+            finalActionText = "Scheduled";
+            finalActionVariant = "outline";
+            isActionDisabled = true;
+          } else if (planAction === "downgrade") {
+            finalActionText = "Downgrade Scheduled";
+            finalActionVariant = "outline";
+            isActionDisabled = true;
+          }
+        }
+
         return (
           <Card
             key={plan.name}
-            className={`relative ${isCurrentPlan ? "border-primary" : ""}`}
+            className={`relative ${isCurrentPlan ? "border-primary" : ""} ${isScheduledPlan ? "border-orange-400" : ""}`}
           >
-            {plan.mostPopular && (
+            {plan.mostPopular && !isCurrentPlan && !isScheduledPlan && (
               <Badge className="absolute -top-2 right-2 bg-blue-100 text-blue-800">
                 Most popular
               </Badge>
@@ -54,6 +75,14 @@ export default async function PricingPlans() {
             {isCurrentPlan && !plan.mostPopular && (
               <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 transform">
                 Current Plan
+              </Badge>
+            )}
+            {isScheduledPlan && hasScheduledDowngrade && (
+              <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 transform bg-orange-100 text-orange-800">
+                Scheduled{" "}
+                {scheduledPlan?.startDate
+                  ? `from ${new Date(scheduledPlan.startDate * 1000).toLocaleDateString()}`
+                  : ""}
               </Badge>
             )}
             <CardHeader>
@@ -81,7 +110,7 @@ export default async function PricingPlans() {
                   </li>
                 ))}
               </ul>
-              {planAction === "downgrade" ? (
+              {planAction === "downgrade" && !hasScheduledDowngrade ? (
                 <DowngradeConfirmationDialog
                   targetPlan={{
                     name: plan.name,
@@ -96,13 +125,13 @@ export default async function PricingPlans() {
                 >
                   <Button
                     className="w-full"
-                    variant={actionVariant}
-                    disabled={isCurrentPlan}
+                    variant={finalActionVariant}
+                    disabled={isActionDisabled}
                   >
-                    {actionText}
+                    {finalActionText}
                   </Button>
                 </DowngradeConfirmationDialog>
-              ) : planAction === "upgrade" ? (
+              ) : planAction === "upgrade" && !hasScheduledDowngrade ? (
                 <UpgradeConfirmationDialog
                   targetPlan={{
                     name: plan.name,
@@ -116,31 +145,53 @@ export default async function PricingPlans() {
                 >
                   <Button
                     className="w-full"
-                    variant={actionVariant}
-                    disabled={isCurrentPlan}
+                    variant={finalActionVariant}
+                    disabled={isActionDisabled}
                   >
-                    {actionText}
+                    {finalActionText}
                   </Button>
                 </UpgradeConfirmationDialog>
+              ) : hasScheduledDowngrade ? (
+                <Button
+                  className="w-full"
+                  variant={finalActionVariant}
+                  disabled={isActionDisabled}
+                >
+                  {finalActionText}
+                </Button>
               ) : (
                 <SubscribeButton
                   lookupKey={plan.lookupKey}
-                  actionVariant={actionVariant}
-                  disabled={isCurrentPlan}
-                  actionText={actionText}
+                  actionVariant={finalActionVariant}
+                  disabled={isActionDisabled}
+                  actionText={finalActionText}
                 />
               )}
-              {actionText === "Upgrade" && (
+              {finalActionText === "Upgrade" && !hasScheduledDowngrade && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   You'll be charged a prorated amount for the remaining billing
                   period
                 </p>
               )}
-              {actionText === "Downgrade" && (
+              {finalActionText === "Downgrade" && !hasScheduledDowngrade && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Downgrade will take effect on your next billing cycle
                 </p>
               )}
+              {hasScheduledDowngrade && isScheduledPlan && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  This plan will take effect on{" "}
+                  {new Date(
+                    scheduledPlan?.startDate! * 1000,
+                  ).toLocaleDateString()}
+                </p>
+              )}
+              {hasScheduledDowngrade &&
+                finalActionText === "Downgrade Scheduled" && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    A downgrade to {scheduledPlan?.plan} is already scheduled
+                  </p>
+                )}
             </CardContent>
           </Card>
         );

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
 
+// Must match the schema in client-api
 export const subscriptionDataSchema = z.object({
   subscriptionId: z.string(),
   status: z.enum([
@@ -20,6 +21,18 @@ export const subscriptionDataSchema = z.object({
   currentPeriodEnd: z.number(),
   currentPeriodStart: z.number(),
   cancelAtPeriodEnd: z.boolean(),
+  schedule: z.optional(
+    z.object({
+      scheduleId: z.string(),
+      startDate: z.number(),
+      endDate: z.number(),
+      items: z.array(
+        z.object({
+          price: z.string(),
+        }),
+      ),
+    }),
+  ),
 });
 
 /**

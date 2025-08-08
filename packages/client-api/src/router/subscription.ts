@@ -8,6 +8,8 @@ import { kv } from "@ebox/redis-client";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 import {
+  getScheduledChangeType,
+  getScheduledPlanInfo,
   priceIdsToPlan,
   subscriptionDataSchema,
 } from "../utils/subscription-utils";
@@ -490,10 +492,24 @@ export const subscriptionRouter = createTRPCRouter({
     const priceIds = subscriptionData.priceIds;
     const plan = await priceIdsToPlan(priceIds);
 
+    // Get scheduled plan information if available
+    const scheduledPlanInfo = await getScheduledPlanInfo(subscriptionData);
+
     return {
       plan,
       subscriptionData,
       price: getPrice(plan),
+      scheduledPlan: scheduledPlanInfo
+        ? {
+            plan: scheduledPlanInfo.plan,
+            price: getPrice(scheduledPlanInfo.plan),
+            startDate: scheduledPlanInfo.startDate,
+            changeType:
+              plan && scheduledPlanInfo.plan
+                ? getScheduledChangeType(plan, scheduledPlanInfo.plan)
+                : "none",
+          }
+        : null,
     };
   }),
 });
