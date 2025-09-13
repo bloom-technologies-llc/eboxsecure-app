@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-// import { handleSubscriptionFormAction } from "@/actions/handle-subscription-form-action";
-import { hasValidSubscription } from "@/lib/stripe";
 import { plans } from "@/utils/plans-data";
+import { currentUser } from "@clerk/nextjs/server";
 import { CreditCard } from "lucide-react";
 
+// import { handleSubscriptionFormAction } from "@/actions/handle-subscription-form-action";
+import { hasValidSubscription } from "@ebox/stripe";
 import {
   Card,
   CardContent,
@@ -15,7 +16,19 @@ import {
 import SubscribeButton from "./subscribe-button";
 
 export default async function PaymentPage() {
-  const userHasValidSubscription = await hasValidSubscription();
+  const user = await currentUser();
+
+  if (!user) {
+    console.error("Request does not have user");
+    return false;
+  }
+
+  const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+  if (!stripeCustomerId) {
+    return false;
+  }
+
+  const userHasValidSubscription = await hasValidSubscription(stripeCustomerId);
 
   if (userHasValidSubscription) {
     redirect("/onboarding");

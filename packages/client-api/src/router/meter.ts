@@ -3,22 +3,9 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
+import { priceIdsToPlan, subscriptionDataSchema } from "@ebox/stripe";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
-import {
-  priceIdsToPlan,
-  subscriptionDataSchema,
-} from "../utils/subscription-utils";
-
-// Type for subscription data from KV store
-interface SubscriptionData {
-  priceIds?: string[];
-  status?: string;
-  currentPeriodEnd?: number;
-  currentPeriodStart?: number;
-  cancelAtPeriodEnd?: boolean;
-  subscriptionId?: string;
-}
 
 export const meterRouter = createTRPCRouter({
   getCurrentUsage: protectedCustomerProcedure.query(async ({ ctx }) => {

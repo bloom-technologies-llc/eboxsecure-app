@@ -100,7 +100,8 @@ export function UsageCard() {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Package Holding Usage */}
-        <div className="space-y-2">
+        {/* TODO: doesn't make sense as a metric. 0/10 days package holding? At the per-package level we hold for 10 days. */}
+        {/* <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-blue-600" />
@@ -130,7 +131,7 @@ export function UsageCard() {
             {Math.round(holdingPercentage)}% of your{" "}
             {usage.limits.packageHolding}-day holding allowance
           </div>
-        </div>
+        </div> */}
 
         {/* Package Allowance Usage */}
         <div className="space-y-2">

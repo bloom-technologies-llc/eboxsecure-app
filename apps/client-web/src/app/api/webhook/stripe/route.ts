@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { syncCustomerData } from "@/lib/sync-customer-data";
 import Stripe from "stripe";
+
+import { syncCustomerData } from "@ebox/stripe";
 
 export async function POST(req: Request) {
   try {

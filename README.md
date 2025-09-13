@@ -71,3 +71,19 @@ Note the `'use client'` directive at the top of the file. This is required for R
 ### Logging
 
 We use Axiom for logging. In order to log to Axiom's log streams, use the `log` object for server-side Next.js logging or the `useLogger` hook for client-side logging, sourced by whatever application you're in. To log within a tRPC server, use the `ctx.log` object.
+
+### Stripe
+
+The lookup key for the meter `package_allowance` is `<tier>_allowance`. More explicitly:
+
+1. basic_allowance
+2. basic_plus_allowance
+3. premium_allowance
+4. business_pro_allowance
+
+The lookup key for the meter `overdue_package_holding` is `<tier>_overdue_holding`. More explicitly:
+
+1. basic_overdue_holding
+2. basic_plus_overdue_holding
+3. premium_overdue_holding
+4. business_pro_overdue_holding

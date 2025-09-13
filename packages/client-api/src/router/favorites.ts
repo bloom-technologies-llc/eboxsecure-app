@@ -1,8 +1,10 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { canUserAddMoreFavorites } from "@ebox/stripe";
+
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
-import { canUserAddMoreFavorites } from "../utils/subscription-utils";
 
 export const favoritesRouter = createTRPCRouter({
   // Get all user's favorite locations
@@ -31,6 +33,20 @@ export const favoritesRouter = createTRPCRouter({
   addFavorite: protectedCustomerProcedure
     .input(z.object({ locationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const user = await currentUser();
+      if (!user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not found",
+        });
+      }
+      const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+      if (!stripeCustomerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User does not have a Stripe customer ID",
+        });
+      }
       // Check if location exists
       const location = await ctx.db.location.findUnique({
         where: { id: input.locationId },
@@ -65,7 +81,10 @@ export const favoritesRouter = createTRPCRouter({
       });
 
       // Check subscription limits
-      const { canAdd } = await canUserAddMoreFavorites(userFavoritesCount);
+      const { canAdd } = await canUserAddMoreFavorites(
+        userFavoritesCount,
+        stripeCustomerId,
+      );
 
       if (!canAdd) {
         throw new TRPCError({
@@ -257,9 +276,24 @@ export const favoritesRouter = createTRPCRouter({
     const favoritesCount = await ctx.db.userFavoriteLocation.count({
       where: { userId: ctx.session.userId },
     });
-
-    const { canAdd, limit, remaining } =
-      await canUserAddMoreFavorites(favoritesCount);
+    const user = await currentUser();
+    if (!user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not found",
+      });
+    }
+    const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+    if (!stripeCustomerId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User does not have a Stripe customer ID",
+      });
+    }
+    const { canAdd, limit, remaining } = await canUserAddMoreFavorites(
+      favoritesCount,
+      stripeCustomerId,
+    );
 
     return {
       current: favoritesCount,
