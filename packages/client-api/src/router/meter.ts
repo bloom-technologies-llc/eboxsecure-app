@@ -10,16 +10,6 @@ import {
   subscriptionDataSchema,
 } from "../utils/subscription-utils";
 
-// Type for subscription data from KV store
-interface SubscriptionData {
-  priceIds?: string[];
-  status?: string;
-  currentPeriodEnd?: number;
-  currentPeriodStart?: number;
-  cancelAtPeriodEnd?: boolean;
-  subscriptionId?: string;
-}
-
 export const meterRouter = createTRPCRouter({
   getCurrentUsage: protectedCustomerProcedure.query(async ({ ctx }) => {
     const user = await currentUser();
