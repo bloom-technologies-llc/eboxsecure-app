@@ -5,14 +5,14 @@ import Stripe from "stripe";
 import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
-
-import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 import {
   getScheduledChangeType,
   getScheduledPlanInfo,
   priceIdsToPlan,
   subscriptionDataSchema,
-} from "../utils/subscription-utils";
+} from "@ebox/stripe";
+
+import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const subscriptionRouter = createTRPCRouter({
   subscribe: protectedCustomerProcedure

@@ -1,0 +1,23 @@
+{
+  "name": "@ebox/stripe",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@ebox/db": "workspace:*",
+    "@ebox/redis-client": "workspace:*",
+    "@trpc/server": "11.0.0-next.320",
+    "stripe": "^18.3.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@ebox/eslint-config": "workspace:*",
+    "@ebox/tsconfig": "workspace:*",
+    "eslint": "latest",
+    "typescript": "latest"
+  }
+}
