@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
+import { CancelDowngradeDialog } from "./cancel-downgrade-dialog";
 import { DowngradeConfirmationDialog } from "./downgrade-confirmation-dialog";
 import SubscribeButton from "./subscribe-button";
 import {
@@ -41,26 +42,13 @@ export default async function PricingPlans() {
       {plans.map((plan) => {
         const isCurrentPlan = currentPlanLookupKey === plan.lookupKey;
         const isScheduledPlan = scheduledPlanLookupKey === plan.lookupKey;
-        const planAction = getPlanAction(currentPlan, plan.lookupKey);
+        const planAction = getPlanAction(
+          currentPlan,
+          plan.lookupKey,
+          scheduledPlan?.plan ?? undefined,
+        );
         const actionText = getPlanActionText(planAction);
         const actionVariant = getPlanActionVariant(planAction);
-
-        // Override action text and variant if there's a scheduled downgrade
-        let finalActionText = actionText;
-        let finalActionVariant = actionVariant;
-        let isActionDisabled = isCurrentPlan;
-
-        if (hasScheduledDowngrade) {
-          if (isScheduledPlan) {
-            finalActionText = "Scheduled";
-            finalActionVariant = "outline";
-            isActionDisabled = true;
-          } else if (planAction === "downgrade") {
-            finalActionText = "Downgrade Scheduled";
-            finalActionVariant = "outline";
-            isActionDisabled = true;
-          }
-        }
 
         return (
           <Card
@@ -87,12 +75,6 @@ export default async function PricingPlans() {
             )}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {plan.name === "Diamond" && (
-                  <Crown className="h-5 w-5 text-yellow-500" />
-                )}
-                {plan.name === "Gold" && (
-                  <Zap className="h-5 w-5 text-yellow-500" />
-                )}
                 {plan.name}
               </CardTitle>
               <CardDescription>{plan.description}</CardDescription>
@@ -110,7 +92,9 @@ export default async function PricingPlans() {
                   </li>
                 ))}
               </ul>
-              {planAction === "downgrade" && !hasScheduledDowngrade ? (
+
+              {planAction === "downgrade" ||
+              planAction === "change downgrade" ? (
                 <DowngradeConfirmationDialog
                   targetPlan={{
                     name: plan.name,
@@ -123,15 +107,12 @@ export default async function PricingPlans() {
                   }}
                   currentPeriodEnd={subscriptionStatus?.currentPeriodEnd || 0}
                 >
-                  <Button
-                    className="w-full"
-                    variant={finalActionVariant}
-                    disabled={isActionDisabled}
-                  >
-                    {finalActionText}
+                  <Button className="w-full" variant={actionVariant}>
+                    {actionText}
                   </Button>
                 </DowngradeConfirmationDialog>
-              ) : planAction === "upgrade" && !hasScheduledDowngrade ? (
+              ) : planAction === "upgrade" ||
+                planAction === "cancel downgrade and upgrade" ? (
                 <UpgradeConfirmationDialog
                   targetPlan={{
                     name: plan.name,
@@ -143,41 +124,52 @@ export default async function PricingPlans() {
                     price: price.toString(),
                   }}
                 >
-                  <Button
-                    className="w-full"
-                    variant={finalActionVariant}
-                    disabled={isActionDisabled}
-                  >
-                    {finalActionText}
+                  <Button className="h-full w-full" variant={actionVariant}>
+                    {actionText}
                   </Button>
                 </UpgradeConfirmationDialog>
-              ) : hasScheduledDowngrade ? (
-                <Button
-                  className="w-full"
-                  variant={finalActionVariant}
-                  disabled={isActionDisabled}
+              ) : scheduledPlan && planAction === "cancel downgrade" ? (
+                <CancelDowngradeDialog
+                  currentPlan={{
+                    name: currentPlan,
+                    price: price.toString(),
+                  }}
+                  downgradedPlan={{
+                    plan: scheduledPlan.plan!,
+                    price: scheduledPlan.price,
+                  }}
                 >
-                  {finalActionText}
+                  <Button className="w-full" variant={actionVariant}>
+                    {actionText}
+                  </Button>
+                </CancelDowngradeDialog>
+              ) : hasScheduledDowngrade ? (
+                <Button className="w-full" variant={actionVariant} disabled>
+                  {actionText}
                 </Button>
               ) : (
                 <SubscribeButton
                   lookupKey={plan.lookupKey}
-                  actionVariant={finalActionVariant}
-                  disabled={isActionDisabled}
-                  actionText={finalActionText}
+                  actionVariant={actionVariant}
+                  disabled={false}
+                  actionText={actionText}
                 />
               )}
-              {finalActionText === "Upgrade" && !hasScheduledDowngrade && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  You'll be charged a prorated amount for the remaining billing
-                  period
-                </p>
-              )}
-              {finalActionText === "Downgrade" && !hasScheduledDowngrade && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  Downgrade will take effect on your next billing cycle
-                </p>
-              )}
+              {(planAction === "upgrade" ||
+                planAction === "cancel downgrade and upgrade") &&
+                !hasScheduledDowngrade && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    You'll be charged a prorated amount for the remaining
+                    billing period
+                  </p>
+                )}
+              {(planAction === "downgrade" ||
+                planAction === "change downgrade") &&
+                !hasScheduledDowngrade && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Downgrade will take effect on your next billing cycle
+                  </p>
+                )}
               {hasScheduledDowngrade && isScheduledPlan && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   This plan will take effect on{" "}
@@ -186,12 +178,6 @@ export default async function PricingPlans() {
                   ).toLocaleDateString()}
                 </p>
               )}
-              {hasScheduledDowngrade &&
-                finalActionText === "Downgrade Scheduled" && (
-                  <p className="mt-2 text-center text-xs text-muted-foreground">
-                    A downgrade to {scheduledPlan?.plan} is already scheduled
-                  </p>
-                )}
             </CardContent>
           </Card>
         );

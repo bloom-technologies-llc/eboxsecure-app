@@ -77,6 +77,19 @@ export const subscriptionRouter = createTRPCRouter({
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+    // if user has any downgrades scheduled, cancel them
+    const schedules = await stripe.subscriptionSchedules.list({
+      customer: customerId,
+    });
+
+    if (schedules.data.length > 0) {
+      for (const schedule of schedules.data) {
+        if (schedule.status === "active") {
+          await stripe.subscriptionSchedules.release(schedule.id);
+        }
+      }
+    }
+
     // Cancel at period end (soft cancel)
     await stripe.subscriptions.update(subscriptionData.subscriptionId, {
       cancel_at_period_end: true,
@@ -309,6 +322,19 @@ export const subscriptionRouter = createTRPCRouter({
 
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+      // before proceeding, cancel any existing downgrades
+      // if user has any downgrades scheduled, cancel them
+      const schedules = await stripe.subscriptionSchedules.list({
+        customer: customerId,
+      });
+
+      if (schedules.data.length > 0) {
+        for (const schedule of schedules.data) {
+          if (schedule.status === "active") {
+            await stripe.subscriptionSchedules.release(schedule.id);
+          }
+        }
+      }
       try {
         // Retrieve current subscription with schedule information
         const currentSubscription = await stripe.subscriptions.retrieve(
@@ -511,6 +537,46 @@ export const subscriptionRouter = createTRPCRouter({
           }
         : null,
     };
+  }),
+  cancelDowngrade: protectedCustomerProcedure.mutation(async () => {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const customerId = user.privateMetadata.stripeCustomerId as string;
+    if (!customerId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Customer ID not found",
+      });
+    }
+
+    const subscriptionDataKv = await kv.get(`stripe:customer:${customerId}`);
+    const parsedSubscriptionData =
+      subscriptionDataSchema.safeParse(subscriptionDataKv);
+    const subscriptionData = parsedSubscriptionData.data;
+    if (!subscriptionData || !subscriptionData.subscriptionId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Subscription data not found",
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+    // if user has any downgrades scheduled, cancel them
+    const schedules = await stripe.subscriptionSchedules.list({
+      customer: customerId,
+    });
+
+    if (schedules.data.length > 0) {
+      for (const schedule of schedules.data) {
+        if (schedule.status === "active") {
+          await stripe.subscriptionSchedules.release(schedule.id);
+        }
+      }
+    }
   }),
 });
 

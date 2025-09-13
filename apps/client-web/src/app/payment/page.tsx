@@ -23,7 +23,7 @@ export default async function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="mx-auto max-w-4xl px-4">
+      <div className="mx-auto max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
