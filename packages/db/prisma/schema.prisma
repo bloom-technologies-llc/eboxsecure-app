@@ -37,6 +37,7 @@ model CustomerAccount {
     phoneNumber      String?
     shippingAddress  String?
     photoLink        String? // UploadThing URL for portrait photo
+    stripeCustomerId String?
     subscription     SubscriptionType?          @default(BASIC)
     customerComments CustomerComment[]
     customerNotes    CustomerNote[]

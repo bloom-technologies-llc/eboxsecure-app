@@ -2,17 +2,15 @@ import { redirect } from "next/navigation";
 import { api } from "@/trpc/server";
 import { currentUser } from "@clerk/nextjs/server";
 
-import { hasValidSubscription } from "@ebox/stripe";
+import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 
 export default async function ProtectPage() {
   const user = await currentUser();
-
   if (!user) {
-    console.error("Request does not have user");
     return false;
   }
+  const stripeCustomerId = await getStripeCustomerId(user.id);
 
-  const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
   if (!stripeCustomerId) {
     return false;
   }

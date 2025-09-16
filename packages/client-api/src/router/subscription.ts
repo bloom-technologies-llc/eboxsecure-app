@@ -4,10 +4,12 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
+import { db } from "@ebox/db";
 import { kv } from "@ebox/redis-client";
 import {
   getScheduledChangeType,
   getScheduledPlanInfo,
+  getStripeCustomerId,
   priceIdsToPlan,
   subscriptionDataSchema,
 } from "@ebox/stripe";
@@ -41,15 +43,7 @@ export const subscriptionRouter = createTRPCRouter({
       return { url };
     }),
   cancelSubscription: protectedCustomerProcedure.mutation(async ({ ctx }) => {
-    const user = await currentUser();
-    if (!user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User not found",
-      });
-    }
-
-    const customerId = user.privateMetadata.stripeCustomerId as string;
+    const customerId = await getStripeCustomerId(ctx.session.userId);
     if (!customerId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -97,55 +91,44 @@ export const subscriptionRouter = createTRPCRouter({
 
     return { success: true };
   }),
-  createBillingPortalSession: protectedCustomerProcedure.mutation(async () => {
-    const user = await currentUser();
-    if (!user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User not found",
+  createBillingPortalSession: protectedCustomerProcedure.mutation(
+    async ({ ctx }) => {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+      const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
+
+      if (!stripeCustomerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Customer ID not found",
+        });
+      }
+
+      const baseUrl = process.env.BASE_URL;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${baseUrl}/settings/subscription`,
       });
-    }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      if (!session.url) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create billing portal session",
+        });
+      }
 
-    const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
-
-    if (!stripeCustomerId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Customer ID not found",
-      });
-    }
-
-    const baseUrl = process.env.BASE_URL;
-    const session = await stripe.billingPortal.sessions.create({
-      customer: stripeCustomerId,
-      return_url: `${baseUrl}/settings/subscription`,
-    });
-
-    if (!session.url) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create billing portal session",
-      });
-    }
-
-    return { url: session.url };
-  }),
+      return { url: session.url };
+    },
+  ),
   upgradeSubscription: protectedCustomerProcedure
     .input(
       z.object({
         targetTier: z.nativeEnum(SubscriptionType),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { targetTier } = input;
-      const user = await currentUser();
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
-      const customerId = user.privateMetadata.stripeCustomerId as string;
+      const customerId = await getStripeCustomerId(ctx.session.userId);
       if (!customerId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -282,14 +265,9 @@ export const subscriptionRouter = createTRPCRouter({
         targetTier: z.nativeEnum(SubscriptionType),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { targetTier } = input;
-
-      const user = await currentUser();
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-      const customerId = user.privateMetadata.stripeCustomerId as string;
+      const customerId = await getStripeCustomerId(ctx.session.userId);
       if (!customerId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -463,47 +441,39 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
     }),
-  reactivateSubscription: protectedCustomerProcedure.mutation(async () => {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
+  reactivateSubscription: protectedCustomerProcedure.mutation(
+    async ({ ctx }) => {
+      const customerId = await getStripeCustomerId(ctx.session.userId);
+      if (!customerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Customer ID not found",
+        });
+      }
 
-    const customerId = user.privateMetadata.stripeCustomerId as string;
-    if (!customerId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Customer ID not found",
+      const subscriptionDataKv = await kv.get(`stripe:customer:${customerId}`);
+      const parsedSubscriptionData =
+        subscriptionDataSchema.safeParse(subscriptionDataKv);
+      const subscriptionData = parsedSubscriptionData.data;
+      if (!subscriptionData || !subscriptionData.subscriptionId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Subscription data not found",
+        });
+      }
+
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+      // Remove cancellation
+      await stripe.subscriptions.update(subscriptionData.subscriptionId, {
+        cancel_at_period_end: false,
       });
-    }
 
-    const subscriptionDataKv = await kv.get(`stripe:customer:${customerId}`);
-    const parsedSubscriptionData =
-      subscriptionDataSchema.safeParse(subscriptionDataKv);
-    const subscriptionData = parsedSubscriptionData.data;
-    if (!subscriptionData || !subscriptionData.subscriptionId) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Subscription data not found",
-      });
-    }
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-    // Remove cancellation
-    await stripe.subscriptions.update(subscriptionData.subscriptionId, {
-      cancel_at_period_end: false,
-    });
-
-    return { success: true };
-  }),
-  getCurrentPlan: protectedCustomerProcedure.query(async () => {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+      return { success: true };
+    },
+  ),
+  getCurrentPlan: protectedCustomerProcedure.query(async ({ ctx }) => {
+    const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
     if (!stripeCustomerId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -538,13 +508,9 @@ export const subscriptionRouter = createTRPCRouter({
         : null,
     };
   }),
-  cancelDowngrade: protectedCustomerProcedure.mutation(async () => {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
+  cancelDowngrade: protectedCustomerProcedure.mutation(async ({ ctx }) => {
+    const customerId = await getStripeCustomerId(ctx.session.userId);
 
-    const customerId = user.privateMetadata.stripeCustomerId as string;
     if (!customerId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -587,7 +553,7 @@ const createStripeSession = async (lookupKey: string) => {
     throw new Error("User not found");
   }
 
-  let stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+  let stripeCustomerId = await getStripeCustomerId(user.id);
 
   // Check if customer is already subscribed
   if (stripeCustomerId) {
@@ -616,9 +582,19 @@ const createStripeSession = async (lookupKey: string) => {
       },
     });
 
+    // add Stripe customer ID to clerk metadata for utility
     const clerk = await clerkClient();
     await clerk.users.updateUserMetadata(user.id, {
       privateMetadata: {
+        stripeCustomerId: newCustomer.id,
+      },
+    });
+    // add Stripe customer ID to db for most use cases
+    await db.customerAccount.update({
+      where: {
+        id: user.id,
+      },
+      data: {
         stripeCustomerId: newCustomer.id,
       },
     });

@@ -1,21 +1,18 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
-import { priceIdsToPlan, subscriptionDataSchema } from "@ebox/stripe";
+import {
+  getStripeCustomerId,
+  priceIdsToPlan,
+  subscriptionDataSchema,
+} from "@ebox/stripe";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const meterRouter = createTRPCRouter({
   getCurrentUsage: protectedCustomerProcedure.query(async ({ ctx }) => {
-    const user = await currentUser();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    let stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+    const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
 
     // Get the customer's subscription data from KV store
     const subscriptionDataKv = await kv.get(
@@ -58,7 +55,7 @@ export const meterRouter = createTRPCRouter({
     // Fetch meter events for current month
     const meterEvents = await ctx.db.meterEvent.findMany({
       where: {
-        customerId: user.id,
+        customerId: ctx.session.userId,
         createdAt: {
           gte: currentPeriodStart,
           lte: currentPeriodEnd,

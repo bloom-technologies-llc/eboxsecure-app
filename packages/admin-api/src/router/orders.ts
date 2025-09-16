@@ -1,11 +1,14 @@
-import { clerkClient } from "@clerk/nextjs/server";
 import { UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
-import { priceIdsToPlan, subscriptionDataSchema } from "@ebox/stripe";
+import {
+  getStripeCustomerId,
+  priceIdsToPlan,
+  subscriptionDataSchema,
+} from "@ebox/stripe";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
@@ -212,15 +215,7 @@ export const ordersRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { orderId, customerId } = input;
-      const clerk = await clerkClient();
-      const user = await clerk.users.getUser(customerId);
-      if (!user) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "User not found",
-        });
-      }
-      const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+      const stripeCustomerId = await getStripeCustomerId(customerId);
       if (!stripeCustomerId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -323,7 +318,7 @@ export const ordersRouter = createTRPCRouter({
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
         const meterEvent = await stripe.billing.meterEvents.create({
-          event_name: "ferris_credits",
+          event_name: "overdue_package_holding",
           payload: {
             value: overdueDays.toString(),
             stripe_customer_id: stripeCustomerId,
@@ -333,7 +328,7 @@ export const ordersRouter = createTRPCRouter({
           data: {
             eventType: "OVERDUE_PACKAGE_HOLDING",
             value: overdueDays,
-            customerId: stripeCustomerId,
+            customerId: customerId,
             orderId: order.id,
           },
         });
