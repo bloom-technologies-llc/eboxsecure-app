@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { api } from "@/trpc/server";
 import { currentUser } from "@clerk/nextjs/server";
 
-import { hasValidSubscription } from "@ebox/stripe";
+import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 
 import PortraitPhotoUpload from "./PortraitPhotoUpload";
 
@@ -14,7 +14,7 @@ export default async function Page() {
     return false;
   }
 
-  const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+  const stripeCustomerId = await getStripeCustomerId(user.id);
   if (!stripeCustomerId) {
     return false;
   }

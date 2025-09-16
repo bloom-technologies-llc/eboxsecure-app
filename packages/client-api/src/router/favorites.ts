@@ -1,8 +1,7 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { canUserAddMoreFavorites } from "@ebox/stripe";
+import { canUserAddMoreFavorites, getStripeCustomerId } from "@ebox/stripe";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
@@ -33,14 +32,7 @@ export const favoritesRouter = createTRPCRouter({
   addFavorite: protectedCustomerProcedure
     .input(z.object({ locationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const user = await currentUser();
-      if (!user) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "User not found",
-        });
-      }
-      const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+      const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
       if (!stripeCustomerId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -276,14 +268,7 @@ export const favoritesRouter = createTRPCRouter({
     const favoritesCount = await ctx.db.userFavoriteLocation.count({
       where: { userId: ctx.session.userId },
     });
-    const user = await currentUser();
-    if (!user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User not found",
-      });
-    }
-    const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+    const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
     if (!stripeCustomerId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",

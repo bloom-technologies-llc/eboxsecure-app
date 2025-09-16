@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import z from "zod";
 
+import { db } from "@ebox/db";
 import { kv } from "@ebox/redis-client";
 
 export type SubscriptionData = {
@@ -375,4 +376,14 @@ export async function syncCustomerData(customerId: string) {
 
   await kv.set(`stripe:customer:${customerId}`, subData);
   return subData;
+}
+
+export async function getStripeCustomerId(userId: string) {
+  console.log("getStripeCustomerId", userId);
+  const user = await db.customerAccount.findUniqueOrThrow({
+    where: {
+      id: userId,
+    },
+  });
+  return user.stripeCustomerId;
 }

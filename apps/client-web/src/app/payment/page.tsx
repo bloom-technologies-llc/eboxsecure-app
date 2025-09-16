@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { CreditCard } from "lucide-react";
 
 // import { handleSubscriptionFormAction } from "@/actions/handle-subscription-form-action";
-import { hasValidSubscription } from "@ebox/stripe";
+import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 import {
   Card,
   CardContent,
@@ -23,7 +23,7 @@ export default async function PaymentPage() {
     return false;
   }
 
-  const stripeCustomerId = user.privateMetadata.stripeCustomerId as string;
+  const stripeCustomerId = await getStripeCustomerId(user.id);
   if (!stripeCustomerId) {
     return false;
   }
