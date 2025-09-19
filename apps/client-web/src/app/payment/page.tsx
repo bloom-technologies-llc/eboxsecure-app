@@ -24,14 +24,14 @@ export default async function PaymentPage() {
   }
 
   const stripeCustomerId = await getStripeCustomerId(user.id);
-  if (!stripeCustomerId) {
-    return false;
-  }
 
-  const userHasValidSubscription = await hasValidSubscription(stripeCustomerId);
+  if (stripeCustomerId) {
+    const userHasValidSubscription =
+      await hasValidSubscription(stripeCustomerId);
 
-  if (userHasValidSubscription) {
-    redirect("/onboarding");
+    if (userHasValidSubscription) {
+      redirect("/onboarding");
+    }
   }
 
   return (

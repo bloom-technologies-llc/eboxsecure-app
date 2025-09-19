@@ -16,7 +16,7 @@ export default async function Page() {
 
   const stripeCustomerId = await getStripeCustomerId(user.id);
   if (!stripeCustomerId) {
-    return false;
+    redirect("/payment");
   }
 
   const userHasValidSubscription = await hasValidSubscription(stripeCustomerId);

@@ -379,7 +379,6 @@ export async function syncCustomerData(customerId: string) {
 }
 
 export async function getStripeCustomerId(userId: string) {
-  console.log("getStripeCustomerId", userId);
   const user = await db.customerAccount.findUniqueOrThrow({
     where: {
       id: userId,
