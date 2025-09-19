@@ -7,12 +7,12 @@ import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 export default async function ProtectPage() {
   const user = await currentUser();
   if (!user) {
-    return false;
+    return null;
   }
   const stripeCustomerId = await getStripeCustomerId(user.id);
 
   if (!stripeCustomerId) {
-    return false;
+    redirect("/payment");
   }
 
   // Check subscription status first
