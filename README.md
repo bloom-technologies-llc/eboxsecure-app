@@ -87,3 +87,49 @@ The lookup key for the meter `overdue_package_holding` is `<tier>_overdue_holdin
 2. basic_plus_overdue_holding
 3. premium_overdue_holding
 4. business_pro_overdue_holding
+
+If the tier is yearly, all tiers are appended with `_yearly`. Therefore, the entire repository of prices is:
+
+Basic:
+
+- month:
+  - basic
+  - basic_allowance
+  - basic_overdue_holding
+- year:
+  - basic_yearly
+  - basic_yearly_allowance
+  - basic_yearly_overdue_holding
+
+Basic+:
+
+- month:
+  - basic_plus
+  - basic_plus_allowance
+  - basic_plus_overdue_holding
+- year:
+  - basic_plus_yearly
+  - basic_plus_yearly_allowance
+  - basic_plus_yearly_overdue_holding
+
+Premium:
+
+- month:
+  - premium
+  - premium_allowance
+  - premium_overdue_holding
+- year:
+  - premium_yearly
+  - premium_yearly_allowance
+  - premium_yearly_overdue_holding
+
+Business Pro:
+
+- month:
+  - business_pro
+  - business_pro_allowance
+  - business_pro_overdue_holding
+- year:
+  - business_pro_yearly
+  - business_pro_yearly_allowance
+  - business_pro_yearly_overdue_holding
