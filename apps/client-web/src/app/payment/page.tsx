@@ -1,19 +1,11 @@
 import { redirect } from "next/navigation";
-import { plans } from "@/utils/plans-data";
 import { currentUser } from "@clerk/nextjs/server";
 import { CreditCard } from "lucide-react";
 
 // import { handleSubscriptionFormAction } from "@/actions/handle-subscription-form-action";
 import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@ebox/ui/card";
 
-import SubscribeButton from "./subscribe-button";
+import PricingCards from "./pricing-cards";
 
 export default async function PaymentPage() {
   const user = await currentUser();
@@ -49,53 +41,7 @@ export default async function PaymentPage() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => (
-            <Card
-              key={plan.lookupKey}
-              className={`relative flex flex-col ${
-                plan.mostPopular
-                  ? "border-blue-500 ring-2 ring-blue-500"
-                  : "border-gray-200"
-              }`}
-            >
-              {plan.mostPopular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-500 px-3 py-1 text-sm font-medium text-white">
-                  Most Popular
-                </div>
-              )}
-
-              <CardHeader className="text-center">
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {plan.price}
-                  </span>
-                  <span className="text-gray-600">{plan.period}</span>
-                </div>
-                <CardDescription className="mt-2">
-                  {plan.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex flex-1 flex-col">
-                <ul className="mb-6 flex-1 space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="mr-2 text-blue-500">✓</span>
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <SubscribeButton
-                  lookupKey={plan.lookupKey}
-                  mostPopular={plan.mostPopular ?? false}
-                />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <PricingCards />
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">

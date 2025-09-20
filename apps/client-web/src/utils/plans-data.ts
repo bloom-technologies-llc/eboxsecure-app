@@ -1,10 +1,32 @@
 import { SubscriptionType } from "@prisma/client";
 
-export const plans = [
+type Plan = {
+  name: string;
+  description: string;
+  lookupKey: SubscriptionType;
+  features: string[];
+  mostPopular?: boolean;
+  prices: {
+    month: {
+      price: string;
+    };
+    year: {
+      price: string;
+    };
+  };
+};
+
+export const plans: Plan[] = [
   {
     name: "Basic",
-    price: "$9.99",
-    period: "/month",
+    prices: {
+      month: {
+        price: "$9.99",
+      },
+      year: {
+        price: "$102",
+      },
+    },
     description: "Perfect for individuals with occasional package deliveries.",
     lookupKey: SubscriptionType.BASIC,
     features: [
@@ -13,11 +35,18 @@ export const plans = [
       "Maximum 5 packages",
       "Standard support",
     ],
+    mostPopular: false,
   },
   {
     name: "Basic+",
-    price: "$19.99",
-    period: "/month",
+    prices: {
+      month: {
+        price: "$19.99",
+      },
+      year: {
+        price: "$204",
+      },
+    },
     description: "Great for regular online shoppers with more delivery needs.",
     lookupKey: SubscriptionType.BASIC_PLUS,
     features: [
@@ -29,8 +58,14 @@ export const plans = [
   },
   {
     name: "Premium",
-    price: "$49.99",
-    period: "/month",
+    prices: {
+      month: {
+        price: "$49.99",
+      },
+      year: {
+        price: "$510",
+      },
+    },
     description: "Ideal for small businesses with regular deliveries.",
     mostPopular: true,
     lookupKey: SubscriptionType.PREMIUM,
@@ -45,8 +80,14 @@ export const plans = [
   },
   {
     name: "Business Pro",
-    price: "$99.99",
-    period: "/month",
+    prices: {
+      month: {
+        price: "$99.99",
+      },
+      year: {
+        price: "$1020",
+      },
+    },
     description: "For businesses with high-volume delivery needs.",
     lookupKey: SubscriptionType.BUSINESS_PRO,
     features: [
