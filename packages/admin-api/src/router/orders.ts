@@ -314,6 +314,9 @@ export const ordersRouter = createTRPCRouter({
       );
       const overdueDays = numDaysHeld - maxHoldingDays;
       if (overdueDays > 0) {
+        console.log(
+          `Order ID ${input.orderId} is overdue by ${overdueDays} days. Sending Stripe metering event.`,
+        );
         // Send Stripe metering event
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
