@@ -76,7 +76,9 @@ const LOCATION_LIMITS: Record<SubscriptionType, number> = {
  * @param priceIds - The multiple price IDs that are associated with a subscription plan
  * @returns The Subscription Type of the price IDs
  */
-export async function priceIdsToPlan(priceIds: string[]) {
+export async function priceIdsToPlan(
+  priceIds: string[],
+): Promise<{ subscriptionType: SubscriptionType; isYearly: boolean } | null> {
   if (priceIds.length !== 3) {
     console.error("User must have 3 price IDs to determine subscription tier");
     return null;
@@ -108,6 +110,7 @@ export async function priceIdsToPlan(priceIds: string[]) {
 
       let baseType: string;
 
+      // remove _allowance or _overdue_holding from lookup key
       if (lookupKey.endsWith("_allowance")) {
         baseType = lookupKey.replace("_allowance", "");
       } else if (lookupKey.endsWith("_overdue_holding")) {
@@ -117,7 +120,14 @@ export async function priceIdsToPlan(priceIds: string[]) {
         baseType = lookupKey;
       }
 
-      return baseType.toUpperCase();
+      // remove _yearly from lookup key
+      let isYearly = false;
+      if (baseType.endsWith("_yearly")) {
+        baseType = baseType.replace("_yearly", "");
+        isYearly = true;
+      }
+
+      return { subscriptionType: baseType.toUpperCase(), isYearly };
     });
 
     // Check if any extraction failed
@@ -130,7 +140,11 @@ export async function priceIdsToPlan(priceIds: string[]) {
 
     // Validate that all three prices have the same subscription type
     const firstType = subscriptionTypes[0];
-    const allSameType = subscriptionTypes.every((type) => type === firstType);
+    const allSameType = subscriptionTypes.every(
+      (type) =>
+        type?.subscriptionType === firstType?.subscriptionType &&
+        type?.isYearly === firstType?.isYearly,
+    );
 
     if (!allSameType) {
       console.error(
@@ -146,14 +160,14 @@ export async function priceIdsToPlan(priceIds: string[]) {
       BUSINESS_PRO: SubscriptionType.BUSINESS_PRO,
     };
 
-    const subscriptionType = subscriptionTypeMap[firstType!];
+    const subscriptionType = subscriptionTypeMap[firstType!.subscriptionType];
 
     if (!subscriptionType) {
       console.error(`Unknown subscription type: ${firstType}`);
       return null;
     }
 
-    return subscriptionType;
+    return { subscriptionType, isYearly: firstType!.isYearly };
   } catch (error) {
     console.error("Error fetching prices from Stripe:", error);
     return null;
@@ -195,7 +209,7 @@ async function getUserSubscriptionTier(stripeCustomerId: string) {
     });
   }
 
-  return subscriptionTier;
+  return subscriptionTier.subscriptionType;
 }
 
 /**
@@ -258,6 +272,9 @@ export async function getScheduledPlanInfo(subscriptionData: SubscriptionData) {
   );
   const scheduledPlan = await priceIdsToPlan(scheduledPriceIds);
 
+  if (!scheduledPlan) {
+    return null;
+  }
   return {
     plan: scheduledPlan,
     startDate: subscriptionData.schedule.startDate,

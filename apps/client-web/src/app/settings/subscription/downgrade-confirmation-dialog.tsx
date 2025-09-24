@@ -22,10 +22,12 @@ interface DowngradeConfirmationDialogProps {
     name: string;
     price: string;
     lookupKey: SubscriptionType;
+    billingPeriod: "month" | "year";
   };
   currentPlan: {
     name: string;
     price: string;
+    billingPeriod: "month" | "year";
   };
   currentPeriodEnd: number;
   children: React.ReactNode;
@@ -49,7 +51,10 @@ export function DowngradeConfirmationDialog({
     });
 
   const handleDowngrade = async () => {
-    downgradeSubscription({ targetTier: targetPlan.lookupKey });
+    downgradeSubscription({
+      targetTier: targetPlan.lookupKey,
+      billingPeriod: targetPlan.billingPeriod,
+    });
   };
 
   const nextBillingDate = new Date(
@@ -79,6 +84,9 @@ export function DowngradeConfirmationDialog({
                 {currentPlan.name}
               </p>
               <p className="text-lg font-bold">{currentPlan.price}</p>
+              <p className="text-xs text-muted-foreground">
+                /{currentPlan.billingPeriod}
+              </p>
             </div>
             <div className="flex items-center">
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -87,6 +95,9 @@ export function DowngradeConfirmationDialog({
               <p className="font-medium">New Plan</p>
               <p className="text-sm text-muted-foreground">{targetPlan.name}</p>
               <p className="text-lg font-bold">{targetPlan.price}</p>
+              <p className="text-xs text-muted-foreground">
+                /{targetPlan.billingPeriod}
+              </p>
             </div>
           </div>
 

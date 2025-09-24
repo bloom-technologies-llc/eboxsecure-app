@@ -133,3 +133,5 @@ Business Pro:
   - business_pro_yearly
   - business_pro_yearly_allowance
   - business_pro_yearly_overdue_holding
+
+In general, the way we do this is quite confusing, because our SubscriptionTypes are one of the four subscription plans, and then we append `_yearly` if it's a yearly subscription. Perhaps in the future we refactor everything within the `subscription.ts` client api routes.

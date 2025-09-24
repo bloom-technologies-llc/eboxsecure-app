@@ -96,7 +96,9 @@ export const meterRouter = createTRPCRouter({
     };
 
     const currentLimits =
-      subscriptionLimits[subscriptionTier as keyof typeof subscriptionLimits];
+      subscriptionLimits[
+        subscriptionTier.subscriptionType as keyof typeof subscriptionLimits
+      ];
 
     return {
       subscription: subscriptionTier,

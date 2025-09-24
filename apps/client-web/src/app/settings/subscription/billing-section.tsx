@@ -58,7 +58,7 @@ export default async function BillingSection() {
                 </p>
               </div>
               <CancelSubscriptionDialog
-                currentPlanName={plan}
+                currentPlanName={plan.subscriptionType}
                 currentPeriodEnd={subscriptionData.currentPeriodEnd}
               />
             </div>

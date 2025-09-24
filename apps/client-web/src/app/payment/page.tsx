@@ -8,6 +8,8 @@ import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 import PricingCards from "./pricing-cards";
 
 export default async function PaymentPage() {
+  // wait for 2 seconds, for webhook processing
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   const user = await currentUser();
 
   if (!user) {

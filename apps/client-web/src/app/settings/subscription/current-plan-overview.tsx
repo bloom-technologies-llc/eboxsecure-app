@@ -36,20 +36,22 @@ export default async function CurrentPlanOverview() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h3 className="text-lg font-semibold">{currentPlan} Plan</h3>
+              <h3 className="text-lg font-semibold">
+                {currentPlan.subscriptionType} Plan
+              </h3>
 
               {hasScheduledChange ? (
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    {scheduledPlan.changeType === "downgrade"
-                      ? `Downgrades to ${scheduledPlan.plan} on ${scheduledChangeDate?.toLocaleDateString()}`
-                      : `Changes to ${scheduledPlan.plan} on ${scheduledChangeDate?.toLocaleDateString()}`}
-                  </p>
                   <p className="text-sm text-muted-foreground">
                     Current billing continues until{" "}
                     {new Date(
                       subscriptionData.currentPeriodEnd! * 1000,
                     ).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {scheduledPlan.changeType === "downgrade"
+                      ? `Downgrades to ${scheduledPlan.plan.subscriptionType} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`
+                      : `Changes to ${scheduledPlan.plan.subscriptionType} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`}
                   </p>
                 </div>
               ) : (
@@ -64,8 +66,10 @@ export default async function CurrentPlanOverview() {
 
           <div className="text-right">
             <div>
-              <p className="text-2xl font-bold">{price}</p>
-              <p className="text-sm text-muted-foreground">/month</p>
+              <p className="text-2xl font-bold">${price?.toString() || ""}</p>
+              <p className="text-sm text-muted-foreground">
+                /{currentPlan.isYearly ? "year" : "month"}
+              </p>
             </div>
 
             {hasScheduledChange && (
@@ -73,8 +77,10 @@ export default async function CurrentPlanOverview() {
                 <p className="text-sm text-muted-foreground">
                   Next billing cycle:
                 </p>
-                <p className="text-lg font-semibold">{scheduledPlan.price}</p>
-                <p className="text-xs text-muted-foreground">/month</p>
+                <p className="text-lg font-semibold">${scheduledPlan.price}</p>
+                <p className="text-xs text-muted-foreground">
+                  /{scheduledPlan.plan.isYearly ? "year" : "month"}
+                </p>
               </div>
             )}
           </div>

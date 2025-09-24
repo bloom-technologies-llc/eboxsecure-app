@@ -22,10 +22,12 @@ interface UpgradeConfirmationDialogProps {
     name: string;
     price: string;
     lookupKey: SubscriptionType;
+    billingPeriod: "month" | "year";
   };
   currentPlan: {
     name: string;
     price: string;
+    billingPeriod: "month" | "year";
   };
   children: React.ReactNode;
 }
@@ -45,7 +47,10 @@ export function UpgradeConfirmationDialog({
       },
     });
   const handleUpgrade = async () => {
-    upgradeSubscription({ targetTier: targetPlan.lookupKey });
+    upgradeSubscription({
+      targetTier: targetPlan.lookupKey,
+      billingPeriod: targetPlan.billingPeriod,
+    });
   };
 
   return (
@@ -70,6 +75,9 @@ export function UpgradeConfirmationDialog({
                 {currentPlan.name}
               </p>
               <p className="text-lg font-bold">{currentPlan.price}</p>
+              <p className="text-xs text-muted-foreground">
+                /{currentPlan.billingPeriod}
+              </p>
             </div>
             <div className="flex items-center">
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -78,6 +86,9 @@ export function UpgradeConfirmationDialog({
               <p className="font-medium">New Plan</p>
               <p className="text-sm text-muted-foreground">{targetPlan.name}</p>
               <p className="text-lg font-bold">{targetPlan.price}</p>
+              <p className="text-xs text-muted-foreground">
+                /{targetPlan.billingPeriod}
+              </p>
             </div>
           </div>
 

@@ -300,7 +300,7 @@ export const ordersRouter = createTRPCRouter({
       const allowedHoldingPeriod =
         await ctx.db.subscriptionLimit.findUniqueOrThrow({
           where: {
-            type: plan,
+            type: plan.subscriptionType,
           },
           select: {
             maxPackageHolding: true,
