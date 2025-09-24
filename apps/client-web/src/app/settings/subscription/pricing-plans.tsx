@@ -105,7 +105,7 @@ export default function PricingPlans() {
             </span>
 
             <span className="py-1 text-xs font-medium italic text-green-800">
-              (Save 18%)
+              (Save 15%)
             </span>
           </span>
         </div>
