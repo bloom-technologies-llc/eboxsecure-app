@@ -7,7 +7,7 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import SuperJSON from "superjson";
 
-import type { AppRouter } from "@ebox/client-api";
+import type { AppRouter } from "@ebox/admin-api";
 
 const createQueryClient = () =>
   new QueryClient({
@@ -51,7 +51,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: async () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "expo-react");
-            headers.set("application-source", "eboxsecure-client-mobile");
+            headers.set("application-source", "eboxsecure-mobile-scanner");
 
             // Add authentication token
             try {
@@ -82,6 +82,6 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 const getBaseUrl = () => {
   // if (typeof window !== "undefined") return window.location.origin;
   // TODO: change to real base url
-  return `https://app-qa.eboxsecure.com`;
+  return `https://admin-qa.eboxsecure.com`;
   // return `http://localhost:3000`;
 };

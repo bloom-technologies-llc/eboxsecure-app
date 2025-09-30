@@ -31,7 +31,7 @@ export default function RootLayout() {
     // Async font loading only occurs in development.
     return null;
   }
-
+  // TODO: add qa/prod publishable keys
   return (
     <ClerkProvider
       publishableKey={

@@ -1,5 +1,5 @@
 {
-  "name": "client-mobile",
+  "name": "mobile-scanner",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -12,12 +12,10 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.13.0",
-    "@ebox/client-api": "workspace:*",
+    "@ebox/admin-api": "workspace:*",
     "@expo/metro-config": "^0.20.14",
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.6",
-    "@react-navigation/bottom-tabs": "^7.3.10",
-    "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "@tanstack/react-query": "^5.29.0",
     "@trpc/client": "11.0.0-next.320",
