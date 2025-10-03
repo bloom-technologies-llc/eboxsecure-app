@@ -58,8 +58,6 @@ const PackageXInferenceSchema = z.object({
   message: z.string().optional(),
 });
 
-type PackageXInferenceResponse = z.infer<typeof PackageXInferenceSchema>;
-
 export const scannerRouter = createTRPCRouter({
   inferShippingLabel: protectedProcedure
     .input(
