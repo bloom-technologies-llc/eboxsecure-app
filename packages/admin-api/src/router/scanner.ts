@@ -85,7 +85,7 @@ export const scannerRouter = createTRPCRouter({
               layout_id: layoutId,
               options: {
                 postprocess: {
-                  parse_addresses: ["sender", "recipient"],
+                  parse_addresses: ["recipient"],
                 },
               },
             }),
