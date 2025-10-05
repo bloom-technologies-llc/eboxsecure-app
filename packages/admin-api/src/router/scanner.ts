@@ -100,7 +100,7 @@ export const scannerRouter = createTRPCRouter({
         }
 
         const data = await response.json();
-
+        console.log("PackageX response:", JSON.stringify(data, null, 2));
         // Validate and parse the response using Zod schema
         const parseResult = PackageXInferenceSchema.safeParse(data);
 
@@ -120,7 +120,7 @@ export const scannerRouter = createTRPCRouter({
         console.error("PackageX inference error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to process shipping label inference",
+          message: "Failed to process shipping label inference.",
         });
       }
     }),
