@@ -1,6 +1,12 @@
-import { ActivityIndicator, SafeAreaView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import logo from "@/assets/images/logos/eboxsecure-logo.png";
 import { useAuth } from "@clerk/clerk-expo";
 
@@ -36,9 +42,14 @@ export default function Page() {
           Welcome to the mobile scanner application
         </Text>
         <View className="mt-8 w-full max-w-sm">
-          <Text className="text-center text-sm text-gray-500">
-            Scanner functionality will be implemented here
-          </Text>
+          <TouchableOpacity
+            className="rounded-lg bg-blue-500 px-6 py-3"
+            onPress={() => router.push("/scanner")}
+          >
+            <Text className="text-center font-semibold text-white">
+              Open Scanner
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
