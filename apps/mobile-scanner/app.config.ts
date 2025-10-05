@@ -7,10 +7,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "expo",
   version: "0.0.1",
   orientation: "portrait",
-  icon: "./assets/images/logos/eboxsecure-logo-ios.png",
+  icon: "./assets/images/logos/mobile-scanner.png",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/logos/eboxsecure-logo.png",
+    image: "./assets/images/logos/mobile-scanner.png",
     resizeMode: "contain",
     backgroundColor: "#dbeafe",
   },
@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: "com.eboxsecure.eboxsecuremobilescanner",
     adaptiveIcon: {
-      foregroundImage: "./assets/images/logos/eboxsecure-logo.png",
+      foregroundImage: "./assets/images/logos/mobile-scanner.png",
       backgroundColor: "#dbeafe",
     },
   },
