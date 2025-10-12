@@ -27,6 +27,7 @@ export default function TabLayout() {
             <Text 
               style={styles.link} 
               onPress={() => Linking.openURL("https://app.eboxsecure.com")}
+            // TODO: make link qa/prod
             >
               app.eboxsecure.com
             </Text>

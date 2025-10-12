@@ -1,12 +1,14 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { api } from "@/trpc/react";
 
 export default function Page() {
   const { signOut } = useAuth();
   const { user } = useUser();
+  const { data: plan } = api.subscription.getCurrentPlan.useQuery();
 
   const onLogOut = async () => {
     await signOut();
@@ -58,7 +60,8 @@ export default function Page() {
 
       <View>
         <View className=" flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
-          <Text className="text-[#333333]">Subscription</Text>
+          <Text className="text-[#333333]" onPress={() => Linking.openURL("https://app.eboxsecure.com/settings/subscription")}>Manage subscription (web only)</Text>
+          <Text className="text-[#333333]">{plan?.plan.subscriptionType ?? "-"}</Text>
         </View>
         <View className=" flex flex-row justify-between border border-t-0 border-[#e4e4e7] px-6 py-5">
           <Text className="text-[#333333]">Purchase history</Text>
