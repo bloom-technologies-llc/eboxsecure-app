@@ -10,6 +10,7 @@ import {
   getScheduledChangeType,
   getScheduledPlanInfo,
   getStripeCustomerId,
+  hasValidSubscription,
   priceIdsToPlan,
   subscriptionDataSchema,
 } from "@ebox/stripe";
@@ -747,6 +748,13 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
     }),
+  isSubscribed: protectedCustomerProcedure.query(async ({ ctx }) => {
+    const customerId = await getStripeCustomerId(ctx.session.userId);
+    if (!customerId) {
+      return false;
+    }
+    return await hasValidSubscription(customerId);
+  }),
 });
 
 const createStripeSession = async (lookupKey: string) => {
