@@ -8,7 +8,12 @@ import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, Linking } 
 
 export default function TabLayout() {
   const { isSignedIn, signOut } = useAuth();
-  const { data: isSubscribed, isLoading } = api.subscription.isSubscribed.useQuery();
+  const { data: isSubscribed, isLoading } = api.subscription.isSubscribed.useQuery(
+    undefined,
+    {
+      networkMode: 'always',
+    }
+  );
 
   if (!isSignedIn) {
     return <Redirect href="/sign-in" />;
