@@ -106,8 +106,8 @@ export default function ScannerScreen() {
         recipientName,
         formattedAddress,
         rawDeliveryJson,
+        trackingNumber: trackingNumber,
         virtualAddress: virtualAddress || undefined,
-        trackingNumber: trackingNumber || undefined,
         vendorOrderId: vendorOrderId || undefined,
       });
     } catch (error) {

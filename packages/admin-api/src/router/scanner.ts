@@ -143,8 +143,8 @@ export const scannerRouter = createTRPCRouter({
         recipientName: z.string(),
         formattedAddress: z.string(),
         rawDeliveryJson: z.string(),
+        trackingNumber: z.string(),
         virtualAddress: z.string().optional(),
-        trackingNumber: z.string().optional(),
         vendorOrderId: z.string().optional(),
       }),
     )
@@ -219,10 +219,7 @@ export const scannerRouter = createTRPCRouter({
       const names = recipientName.split(" ");
       // Tracking number = Shopify, virtual address = manual
       // Build OR conditions based on available data
-      const orConditions: any[] = [];
-      if (trackingNumber) {
-        orConditions.push({ orders: { some: { trackingNumber } } });
-      }
+      const orConditions: any[] = [{ orders: { some: { trackingNumber } } }];
       if (virtualAddress) {
         orConditions.push({
           virtualAddress: {
