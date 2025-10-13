@@ -365,6 +365,7 @@ export const scannerRouter = createTRPCRouter({
         },
       });
 
+      // TODO: send notification to customer. Email, push notification
       return {
         status: "success",
         data: {
