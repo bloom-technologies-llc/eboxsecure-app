@@ -76,10 +76,6 @@ export function UsageCard() {
     return "text-green-600";
   };
 
-  const holdingPercentage = Math.min(
-    (usage.usage.holding / usage.limits.packageHolding) * 100,
-    100,
-  );
   const allowancePercentage = Math.min(
     (usage.usage.allowance / usage.limits.packageAllowance) * 100,
     100,
@@ -94,45 +90,11 @@ export function UsageCard() {
             Metered Usage
           </div>
           <Badge variant="outline">
-            {formatSubscriptionTier(usage.subscription)}
+            {formatSubscriptionTier(usage.subscription.subscriptionType)}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Package Holding Usage */}
-        {/* TODO: doesn't make sense as a metric. 0/10 days package holding? At the per-package level we hold for 10 days. */}
-        {/* <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">Package Holding</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-sm font-medium ${getUsageColor(usage.usage.holding, usage.limits.packageHolding)}`}
-              >
-                {usage.usage.holding} / {usage.limits.packageHolding} days
-              </span>
-              {usage.usage.holding <= usage.limits.packageHolding ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-              )}
-            </div>
-          </div>
-          <Progress
-            value={holdingPercentage}
-            className="h-2"
-            style={{
-              backgroundColor: "#e5e7eb",
-            }}
-          />
-          <div className="text-xs text-gray-500">
-            {Math.round(holdingPercentage)}% of your{" "}
-            {usage.limits.packageHolding}-day holding allowance
-          </div>
-        </div> */}
-
         {/* Package Allowance Usage */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -167,6 +129,25 @@ export function UsageCard() {
           </div>
         </div>
 
+        {/* Package Holding Limit */}
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">
+                Package Holding Limit
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-blue-900">
+              {usage.limits.packageHolding} days
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-blue-700">
+            You can hold packages for up to {usage.limits.packageHolding} days
+            per package
+          </p>
+        </div>
+
         {/* Billing Period */}
         <div className="border-t border-gray-200 pt-4">
           <div className="text-xs text-gray-500">
@@ -176,13 +157,12 @@ export function UsageCard() {
         </div>
 
         {/* Warnings */}
-        {(usage.usage.holding > usage.limits.packageHolding ||
-          usage.usage.allowance > usage.limits.packageAllowance) && (
+        {usage.usage.allowance > usage.limits.packageAllowance && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium text-red-800">
-                You've exceeded your usage limits
+                You've exceeded your package allowance
               </span>
             </div>
             <p className="mt-1 text-xs text-red-700">
