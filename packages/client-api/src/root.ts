@@ -5,6 +5,7 @@ import { onboardingRouter } from "./router/onboarding";
 import { orderRouter } from "./router/order";
 import { subscriptionRouter } from "./router/subscription";
 import { trustedContactsRouter } from "./router/trustedContacts";
+import { userRouter } from "./router/user";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   trustedContacts: trustedContactsRouter,
   subscription: subscriptionRouter,
   meter: meterRouter,
+  user: userRouter,
 });
 
 // export type definition of API
