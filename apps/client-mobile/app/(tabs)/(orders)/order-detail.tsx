@@ -140,11 +140,17 @@ export default function Page() {
             <View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
                 <Text className="text-[#333333]">Order ID #</Text>
-                <Text className="text-[#333333]">{order.id}</Text>
+                <Text className="text-[#333333]">
+                  {order.vendorOrderId.length > 15
+                    ? `${order.vendorOrderId.slice(0, 15)}...`
+                    : order.vendorOrderId}
+                </Text>
               </View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
                 <Text className="text-[#333333]">Total Price</Text>
-                <Text className="text-[#333333]">${order.total}</Text>
+                <Text className="text-[#333333]">
+                  {order.total === -1 ? "N/A" : `$${order.total}`}
+                </Text>
               </View>
               <View className="flex flex-row justify-between border border-[#e4e4e7] px-6 py-5">
                 <Text className="text-[#333333]">Customer Email</Text>
@@ -156,9 +162,9 @@ export default function Page() {
                   {order.customer.phoneNumber}
                 </Text>
               </View>
-              <View className="flex flex-row justify-between border border-t-0 border-[#e4e4e7] px-6 py-5">
+              <View className="flex flex-row justify-between gap-3 border border-t-0 border-[#e4e4e7] px-6 py-5">
                 <Text className="text-[#333333]">Shipping Address</Text>
-                <Text className="text-[#333333]">
+                <Text className="flex-1 text-right text-[#333333]">
                   {order.shippedLocation.address ?? "—"}
                 </Text>
               </View>

@@ -64,7 +64,7 @@ export default function OrderCard({
             <div className="flex w-1/4 flex-col">
               <p className="text-sm text-[#575959]">TOTAL</p>
               <p className="text-sm font-medium text-[#575959]">
-                {total.toFixed(2)}
+                {total === -1 ? "N/A" : total.toFixed(2)}
               </p>
             </div>
             <div className="flex w-1/4 flex-col">
@@ -75,7 +75,10 @@ export default function OrderCard({
             </div>
             <div className="flex w-1/4 flex-col">
               <p className="place-self-end truncate text-sm text-[#575959]">
-                ORDER #: {vendorOrderId}
+                ORDER #:{" "}
+                {vendorOrderId.length > 15
+                  ? `${vendorOrderId.slice(0, 15)}...`
+                  : vendorOrderId}
               </p>
               <p className="place-self-end text-sm font-medium text-[#575959]">
                 View invoice

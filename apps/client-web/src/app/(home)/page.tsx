@@ -6,6 +6,9 @@ import OrderCard from "./OrderCard";
 
 export default async function HomePage() {
   const orders = await api.order.getAllOrders();
+
+  const pickedUpOrders = orders.filter((order) => order.pickedUpAt);
+  const notPickedUpOrders = orders.filter((order) => !order.pickedUpAt);
   return (
     <main className="container h-screen w-full py-16 md:w-9/12">
       <div className="flex flex-col items-center justify-center">
@@ -18,11 +21,15 @@ export default async function HomePage() {
               <TabsTrigger value="delivered">Delivered orders</TabsTrigger>
             </TabsList>
             <TabsContent value="active">
-              {orders.map((order) => (
+              {notPickedUpOrders.map((order) => (
                 <OrderCard {...order} key={order.id.toString()} />
               ))}
             </TabsContent>
-            <TabsContent value="delivered">Delivered</TabsContent>
+            <TabsContent value="delivered">
+              {pickedUpOrders.map((order) => (
+                <OrderCard {...order} key={order.id.toString()} />
+              ))}
+            </TabsContent>
           </Tabs>
         </div>
       </div>
