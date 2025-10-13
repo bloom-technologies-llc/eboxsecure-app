@@ -136,13 +136,13 @@ export const scannerRouter = createTRPCRouter({
           client.geocode({
             params: {
               address: parseResult.data.data.recipient.address.formatted_address,
-              key: process.env.GOOGLE_MAPS_API_KEY!,
+              key: process.env.GOOGLE_GEOCODING_API_KEY!,
             },
           }),
           client.geocode({
             params: {
               address: location.address,
-              key: process.env.GOOGLE_MAPS_API_KEY!,
+              key: process.env.GOOGLE_GEOCODING_API_KEY!,
             }
           })
         ])
