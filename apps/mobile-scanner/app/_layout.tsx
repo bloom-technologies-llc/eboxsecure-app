@@ -5,7 +5,6 @@ import { Stack } from "expo-router";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import "react-native-reanimated";
 import "../global.css";
@@ -33,9 +32,7 @@ export default function RootLayout() {
           <RootSiblingParent>
             <ClerkLoaded>
               <GestureHandlerRootView>
-                <BottomSheetModalProvider>
-                  <Stack screenOptions={{ headerShown: false }} />
-                </BottomSheetModalProvider>
+                <Stack screenOptions={{ headerShown: false }} />
               </GestureHandlerRootView>
             </ClerkLoaded>
           </RootSiblingParent>
