@@ -161,7 +161,7 @@ export const scannerRouter = createTRPCRouter({
         if (recipientFormattedAddress !== locationFormattedAddress && recipientDistance > 50) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Recipient address does not match location address",
+            message: "Recipient address does not match location address.\nRecipient: " + recipientFormattedAddress + "\nLocation: " + locationFormattedAddress,
           });
         }
         
