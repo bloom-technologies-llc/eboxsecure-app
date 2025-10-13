@@ -70,6 +70,7 @@ export default function ScannerScreen() {
             "Customer does not have an active subscription.",
           missing_identifier:
             "Order has neither a tracking number nor virtual address. Unable to uniquely identify the customer.",
+          order_already_processed: "Order has already been processed.",
         };
         Alert.alert("Error", errorMessages[data.reason]);
       }

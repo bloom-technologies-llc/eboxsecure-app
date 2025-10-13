@@ -66,6 +66,7 @@ const InferShippingLabelOutputSchema = z.discriminatedUnion("status", [
       "customer_not_found",
       "customer_not_subscribed",
       "missing_identifier",
+      "order_already_processed",
     ]),
   }),
 ]);
@@ -274,6 +275,21 @@ export const scannerRouter = createTRPCRouter({
         };
       }
 
+      // Check if order has already been processed
+      const existingOrder = await ctx.db.order.findFirst({
+        where: {
+          customerId: customer.id,
+          trackingNumber: trackingNumber,
+        },
+      });
+      if (existingOrder) {
+        if (existingOrder.processedAt || existingOrder.deliveredDate) {
+          return {
+            status: "error",
+            reason: "order_already_processed",
+          };
+        }
+      }
       const now = new Date();
       let orderId = null;
       // Create order if it doesn't exist
