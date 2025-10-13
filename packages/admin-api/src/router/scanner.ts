@@ -173,16 +173,20 @@ export const scannerRouter = createTRPCRouter({
         const { line2: recipientAddressLine2 } = address
         
         const names = recipientName.split(' ')
+        // TODO: this isn't working. fix
         // Tracking number = Shopify, virtual address = manual
         let customer = await ctx.db.customerAccount.findFirst({
-          where: { // TODO: this search needs to be prod-ready
+          where: {
                 AND: [
                   {  firstName: { in: names, mode: "insensitive" } } ,
                   { lastName: { in: names, mode: "insensitive" } },
                   {
                     OR: [
                       { orders: { some: { trackingNumber } } },
-              { virtualAddress: recipientAddressLine2 },
+              { virtualAddress: {
+                equals: recipientAddressLine2,
+                mode: "insensitive"
+              } },
                     ]
                   }
                 ] 
