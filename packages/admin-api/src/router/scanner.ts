@@ -15,10 +15,8 @@ const PackageXInferenceSchema = z.object({
   data: z.object({
     tracking_number: z.string(),
     order_number: z.string().nullable(),
-    location_id: z.string(),
     raw_text: z.string(),
     extracted_recipient_name: z.string(),
-    extracted_sender_name: z.string(),
     provider_name: z.string(),
     provider_id: z.string(),
     status: z.string(),
@@ -37,7 +35,6 @@ const PackageXInferenceSchema = z.object({
       email: z.string().nullable(),
       phone: z.string().nullable(),
       address: z.object({
-        id: z.string(),
         line1: z.string(),
         line2: z.string().nullable(),
         city: z.string(),
@@ -49,24 +46,6 @@ const PackageXInferenceSchema = z.object({
         formatted_address: z.string(),
       })
     }),
-    sender: z.object({
-      name: z.string(),
-      business: z.string().nullable(),
-      email: z.string().nullable(),
-      phone: z.string().nullable(),
-      address: z.object({
-        id: z.string(),
-        line1: z.string(),
-        line2: z.string().nullable(),
-        city: z.string(),
-        state: z.string(),
-        state_code: z.string(),
-        postal_code: z.string(),
-        country: z.string(),
-        country_code: z.string(),
-        formatted_address: z.string(),
-      })
-    })
   })
 });
 
@@ -89,6 +68,8 @@ const InferShippingLabelOutputSchema = z.discriminatedUnion("status", [
 ]);
 
 export const scannerRouter = createTRPCRouter({
+  // TODO: have this proc only be inference, return values to populate as field in UI
+  // then they can modify it if it's inaccurate, then resubmit to actually process the order
   inferShippingLabel: protectedProcedure
     .input(
       z.object({
