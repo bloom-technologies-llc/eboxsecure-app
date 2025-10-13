@@ -122,12 +122,7 @@ export const scannerRouter = createTRPCRouter({
             },
             body: JSON.stringify({
               image_url: imageUrl,
-              location_id: location.id,
-              options: {
-                postprocess: {
-                  parse_addresses: ["recipient"],
-                },
-              },
+              location_id: location.id.toString(),
             }),
           },
         );
