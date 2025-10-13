@@ -1,3 +1,4 @@
+import VirtualAddressBanner from "@/components/VirtualAddressBanner";
 import { api } from "@/trpc/server";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ebox/ui/tabs";
@@ -15,6 +16,7 @@ export default async function HomePage() {
         <div className="w-full">
           <div></div>
           <h2 className="mb-3 text-left text-2xl">Your orders</h2>
+          <VirtualAddressBanner />
           <Tabs defaultValue="active" className="w-full">
             <TabsList>
               <TabsTrigger value="active">Active orders</TabsTrigger>
