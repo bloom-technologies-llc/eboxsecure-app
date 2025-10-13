@@ -16,7 +16,7 @@ export default function Page() {
 
   // Use isSignedIn instead of just userId for more reliable state
   if (isSignedIn && userId) {
-    return <Redirect href="/(tabs)/(notifications)" />;
+    return <Redirect href="/(tabs)/(orders)" />;
   }
   return <Redirect href="/sign-in" />;
 }
