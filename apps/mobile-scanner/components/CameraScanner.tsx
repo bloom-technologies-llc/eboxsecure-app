@@ -1,9 +1,6 @@
 import { useRef, useState } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
-import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
-
-import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 interface CameraScannerProps {
   onImageCaptured: (base64Image: string) => void;
@@ -11,29 +8,28 @@ interface CameraScannerProps {
 
 export function CameraScanner({ onImageCaptured }: CameraScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState<CameraType>("back");
   const [isCapturing, setIsCapturing] = useState(false);
+  const zoom = 0.2;
   const cameraRef = useRef<CameraView>(null);
 
   if (!permission) {
-    return <ThemedView />;
+    return <View style={styles.container} />;
   }
 
   if (!permission.granted) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.message}>
+      <View style={styles.permissionContainer}>
+        <Text style={styles.permissionText}>
           We need your permission to show the camera
-        </ThemedText>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
-          <ThemedText style={styles.buttonText}>Grant Permission</ThemedText>
+        </Text>
+        <TouchableOpacity
+          onPress={requestPermission}
+          style={styles.permissionButton}
+        >
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
-      </ThemedView>
+      </View>
     );
-  }
-
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
   async function takePicture() {
@@ -63,67 +59,84 @@ export function CameraScanner({ onImageCaptured }: CameraScannerProps) {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
+    <View style={styles.container}>
+      <CameraView
+        ref={cameraRef}
+        style={styles.camera}
+        facing="back"
+        zoom={zoom}
+      >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <ThemedText style={styles.buttonText}>Flip Camera</ThemedText>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[
-              styles.button,
               styles.captureButton,
-              isCapturing && styles.capturingButton,
+              isCapturing ? styles.capturingButton : styles.readyButton,
             ]}
             onPress={takePicture}
             disabled={isCapturing}
+            activeOpacity={0.8}
           >
-            <ThemedText style={styles.buttonText}>
+            <Text style={styles.captureButtonText}>
               {isCapturing ? "Capturing..." : "Capture"}
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
         </View>
       </CameraView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   camera: {
     flex: 1,
-    width: "100%",
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  permissionText: {
+    textAlign: "center",
+    marginBottom: 16,
+    fontSize: 16,
+    color: "#334155",
+  },
+  permissionButton: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   buttonContainer: {
     flex: 1,
-    flexDirection: "row",
     backgroundColor: "transparent",
-    margin: 64,
-    justifyContent: "space-around",
-    alignItems: "flex-end",
-  },
-  button: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    padding: 15,
-    borderRadius: 8,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingBottom: 40,
   },
   captureButton: {
-    backgroundColor: "rgba(0, 255, 0, 0.5)",
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 8,
+  },
+  readyButton: {
+    backgroundColor: "rgba(34, 197, 94, 0.5)",
   },
   capturingButton: {
-    backgroundColor: "rgba(255, 255, 0, 0.5)",
+    backgroundColor: "rgba(234, 179, 8, 0.5)",
   },
-  buttonText: {
+  captureButtonText: {
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
-    color: "white",
-  },
-  message: {
-    textAlign: "center",
-    paddingBottom: 10,
   },
 });

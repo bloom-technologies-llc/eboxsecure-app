@@ -42,7 +42,6 @@ export default function ScannerScreen() {
   const inferMutation = api.scanner.inferShippingLabel.useMutation({
     onSuccess: (data) => {
       setInferenceData(data);
-      // Populate form fields
       setRecipientName(data.recipientName);
       setFormattedAddress(data.formattedAddress);
       setVirtualAddress(data.virtualAddress || "");
@@ -139,248 +138,230 @@ export default function ScannerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerLeft}>
-              <Package size={28} color="#1e40af" weight="bold" />
-              <Text style={styles.headerTitle}>Label Scanner</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Package size={28} color="#1e40af" weight="bold" />
+            <Text style={styles.headerTitle}>Label Scanner</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.closeButton}
+            activeOpacity={0.7}
+          >
+            <X size={28} color="#64748b" weight="bold" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Camera View */}
+      {!isInferring && !inferenceData && !processResult && (
+        <View style={styles.cameraContainer}>
+          <CameraScanner onImageCaptured={handleImageCaptured} />
+        </View>
+      )}
+
+      {/* Inferring View */}
+      {isInferring && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.loadingTitle}>Reading shipping label...</Text>
+          <Text style={styles.loadingSubtitle}>
+            This may take a few seconds
+          </Text>
+        </View>
+      )}
+
+      {/* Form View */}
+      {inferenceData && !processResult && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.formContainer}
+        >
+          <Text style={styles.formTitle}>Review Package Details</Text>
+          <Text style={styles.formSubtitle}>
+            Verify and edit the information below before processing
+          </Text>
+
+          <View style={styles.formFields}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Recipient Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={recipientName}
+                onChangeText={setRecipientName}
+                placeholder="Enter recipient name"
+                placeholderTextColor="#94a3b8"
+              />
             </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Formatted Address *</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={formattedAddress}
+                onChangeText={setFormattedAddress}
+                placeholder="Enter formatted address"
+                placeholderTextColor="#94a3b8"
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Virtual Address</Text>
+              <TextInput
+                style={styles.input}
+                value={virtualAddress}
+                onChangeText={setVirtualAddress}
+                placeholder="e.g., Suite 123, Box A"
+                placeholderTextColor="#94a3b8"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Tracking Number</Text>
+              <TextInput
+                style={styles.input}
+                value={trackingNumber}
+                onChangeText={setTrackingNumber}
+                placeholder="Enter tracking number"
+                placeholderTextColor="#94a3b8"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Vendor Order ID</Text>
+              <TextInput
+                style={styles.input}
+                value={vendorOrderId}
+                onChangeText={setVendorOrderId}
+                placeholder="Enter vendor order ID"
+                placeholderTextColor="#94a3b8"
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.jsonToggle}
+            onPress={() => setShowRawJson(!showRawJson)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.jsonToggleText}>
+              {showRawJson ? "Hide" : "View"} Raw JSON
+            </Text>
+          </TouchableOpacity>
+
+          {showRawJson && rawDeliveryJson && (
+            <View style={styles.jsonContainer}>
+              <ScrollView style={styles.jsonScroll} nestedScrollEnabled>
+                <Text style={styles.jsonText}>
+                  {JSON.stringify(JSON.parse(rawDeliveryJson), null, 2)}
+                </Text>
+              </ScrollView>
+            </View>
+          )}
+
+          <View style={styles.buttonRow}>
             <TouchableOpacity
-              onPress={handleClose}
-              style={styles.closeButton}
-              activeOpacity={0.7}
+              style={styles.cancelButton}
+              onPress={handleReset}
+              activeOpacity={0.8}
             >
-              <X size={28} color="#64748b" weight="bold" />
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                isProcessing && styles.disabledButton,
+              ]}
+              onPress={handleProcess}
+              activeOpacity={0.8}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Process Package</Text>
+              )}
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
+      )}
 
-        {/* Camera View */}
-        {!isInferring && !inferenceData && !processResult && (
-          <View style={styles.cameraContainer}>
-            <CameraScanner onImageCaptured={handleImageCaptured} />
+      {/* Success View */}
+      {processResult && processResult.status === "success" && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.successContainer}
+        >
+          <View style={styles.successHeader}>
+            <CheckCircle size={48} color="#16a34a" weight="fill" />
+            <Text style={styles.successTitle}>Success!</Text>
+            <Text style={styles.successSubtitle}>
+              Customer charged successfully
+            </Text>
           </View>
-        )}
 
-        {/* Inferring View */}
-        {isInferring && (
-          <View style={styles.processingContainer}>
-            <View style={styles.processingContent}>
-              <ActivityIndicator size="large" color="#2563eb" />
-              <Text style={styles.processingText}>
-                Reading shipping label...
+          <View style={styles.resultCards}>
+            <View style={styles.resultCard}>
+              <Text style={styles.resultCardLabel}>Customer</Text>
+              <Text style={styles.resultCardValue}>
+                {processResult.data.recipientName}
               </Text>
-              <Text style={styles.processingSubtext}>
-                This may take a few seconds
+            </View>
+
+            {processResult.data.virtualAddress && (
+              <View style={styles.resultCard}>
+                <Text style={styles.resultCardLabel}>Virtual Address</Text>
+                <Text style={styles.resultCardValue}>
+                  {processResult.data.virtualAddress}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.resultCard}>
+              <Text style={styles.resultCardLabel}>Order ID</Text>
+              <Text style={styles.resultCardValue}>
+                {processResult.data.orderId}
               </Text>
             </View>
           </View>
-        )}
 
-        {/* Form View - After Inference */}
-        {inferenceData && !processResult && (
-          <View style={styles.formContainer}>
-            <ScrollView
-              style={styles.formScroll}
-              contentContainerStyle={styles.formContent}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleReset}
+              activeOpacity={0.8}
             >
-              <Text style={styles.formTitle}>Review Package Details</Text>
-              <Text style={styles.formSubtitle}>
-                Verify and edit the information below before processing
-              </Text>
+              <Text style={styles.secondaryButtonText}>Scan Another</Text>
+            </TouchableOpacity>
 
-              {/* Form Fields */}
-              <View style={styles.formFields}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Recipient Name *</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={recipientName}
-                    onChangeText={setRecipientName}
-                    placeholder="Enter recipient name"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Formatted Address *</Text>
-                  <TextInput
-                    style={[styles.textInput, styles.textAreaInput]}
-                    value={formattedAddress}
-                    onChangeText={setFormattedAddress}
-                    placeholder="Enter formatted address"
-                    placeholderTextColor="#94a3b8"
-                    multiline
-                    numberOfLines={3}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Virtual Address</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={virtualAddress}
-                    onChangeText={setVirtualAddress}
-                    placeholder="e.g., Suite 123, Box A"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Tracking Number</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={trackingNumber}
-                    onChangeText={setTrackingNumber}
-                    placeholder="Enter tracking number"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Vendor Order ID</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={vendorOrderId}
-                    onChangeText={setVendorOrderId}
-                    placeholder="Enter vendor order ID"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              </View>
-
-              {/* Raw JSON Toggle */}
-              <TouchableOpacity
-                style={styles.jsonToggle}
-                onPress={() => setShowRawJson(!showRawJson)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.jsonToggleText}>
-                  {showRawJson ? "Hide" : "View"} Raw JSON
-                </Text>
-              </TouchableOpacity>
-
-              {showRawJson && (
-                <View style={styles.jsonContainer}>
-                  <ScrollView style={styles.jsonScroll} horizontal>
-                    <Text style={styles.jsonText}>{rawDeliveryJson}</Text>
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={handleReset}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.processButton,
-                    isProcessing && styles.processButtonDisabled,
-                  ]}
-                  onPress={handleProcess}
-                  activeOpacity={0.8}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Text style={styles.processButtonText}>
-                      Process Package
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Success Results Section */}
-        {processResult && processResult.status === "success" && (
-          <View style={styles.resultsContainer}>
-            <ScrollView
-              style={styles.resultsScroll}
-              contentContainerStyle={styles.resultsContent}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleClose}
+              activeOpacity={0.8}
             >
-              {/* Success Header */}
-              <View style={styles.successHeader}>
-                <CheckCircle size={48} color="#16a34a" weight="fill" />
-                <Text style={styles.successTitle}>Success!</Text>
-                <Text style={styles.successSubtitle}>
-                  Customer charged successfully
-                </Text>
-              </View>
-
-              {/* Results Cards */}
-              <View style={styles.resultsGrid}>
-                <View style={styles.resultCard}>
-                  <Text style={styles.resultLabel}>Customer</Text>
-                  <Text style={styles.resultValue}>
-                    {processResult.data.recipientName}
-                  </Text>
-                </View>
-
-                {processResult.data.virtualAddress && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Virtual Address</Text>
-                    <Text style={styles.resultValue}>
-                      {processResult.data.virtualAddress}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={styles.resultCard}>
-                  <Text style={styles.resultLabel}>Order ID</Text>
-                  <Text style={styles.resultValue}>
-                    {processResult.data.orderId}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={styles.scanAgainButton}
-                  onPress={handleReset}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.scanAgainButtonText}>Scan Another</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={handleClose}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.doneButtonText}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+              <Text style={styles.primaryButtonText}>Done</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: "#f8fafc",
   },
-  container: {
-    flex: 1,
-  },
   header: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
     paddingHorizontal: 20,
@@ -398,7 +379,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#1e293b",
   },
   closeButton: {
@@ -407,43 +388,35 @@ const styles = StyleSheet.create({
   cameraContainer: {
     flex: 1,
   },
-  processingContainer: {
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
-  },
-  processingContent: {
-    alignItems: "center",
     padding: 32,
   },
-  processingText: {
+  loadingTitle: {
+    marginTop: 16,
     fontSize: 18,
     fontWeight: "600",
     color: "#1e293b",
-    marginTop: 16,
     textAlign: "center",
   },
-  processingSubtext: {
+  loadingSubtitle: {
+    marginTop: 8,
     fontSize: 14,
     color: "#64748b",
-    marginTop: 8,
     textAlign: "center",
   },
-  // Form Styles
+  scrollView: {
+    flex: 1,
+  },
   formContainer: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  formScroll: {
-    flex: 1,
-  },
-  formContent: {
     padding: 20,
+    backgroundColor: "#f8fafc",
   },
   formTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#1e293b",
     marginBottom: 8,
   },
@@ -455,16 +428,16 @@ const styles = StyleSheet.create({
   formFields: {
     gap: 16,
   },
-  inputGroup: {
+  fieldGroup: {
     gap: 8,
   },
-  inputLabel: {
+  label: {
     fontSize: 14,
     fontWeight: "600",
     color: "#475569",
   },
-  textInput: {
-    backgroundColor: "#ffffff",
+  input: {
+    backgroundColor: "white",
     borderWidth: 1,
     borderColor: "#e2e8f0",
     borderRadius: 8,
@@ -473,15 +446,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1e293b",
   },
-  textAreaInput: {
+  textArea: {
     minHeight: 80,
-    textAlignVertical: "top",
   },
   jsonToggle: {
     marginTop: 20,
+    backgroundColor: "#f1f5f9",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: "#f1f5f9",
     borderRadius: 8,
     alignItems: "center",
   },
@@ -492,10 +464,10 @@ const styles = StyleSheet.create({
   },
   jsonContainer: {
     marginTop: 12,
+    height: 192,
     backgroundColor: "#1e293b",
     borderRadius: 8,
     padding: 12,
-    maxHeight: 200,
   },
   jsonScroll: {
     flex: 1,
@@ -505,45 +477,58 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#e2e8f0",
   },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  primaryButton: {
+    flex: 1,
+    backgroundColor: "#2563eb",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: "white",
+    borderWidth: 2,
+    borderColor: "#2563eb",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2563eb",
+  },
   cancelButton: {
     flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
+    backgroundColor: "white",
     borderWidth: 2,
     borderColor: "#dc2626",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
   },
   cancelButtonText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#dc2626",
   },
-  processButton: {
-    flex: 1,
-    backgroundColor: "#2563eb",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  processButtonDisabled: {
+  disabledButton: {
     opacity: 0.6,
   },
-  processButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  // Results Styles
-  resultsContainer: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  resultsScroll: {
-    flex: 1,
-  },
-  resultsContent: {
+  successContainer: {
     padding: 20,
+    backgroundColor: "#f8fafc",
   },
   successHeader: {
     alignItems: "center",
@@ -551,7 +536,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#16a34a",
     marginTop: 12,
   },
@@ -560,20 +545,20 @@ const styles = StyleSheet.create({
     color: "#64748b",
     marginTop: 4,
   },
-  resultsGrid: {
+  resultCards: {
     gap: 12,
   },
   resultCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
+    backgroundColor: "white",
     padding: 16,
+    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
-  resultLabel: {
+  resultCardLabel: {
     fontSize: 12,
     fontWeight: "600",
     color: "#64748b",
@@ -581,41 +566,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  resultValue: {
+  resultCardValue: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1e293b",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  scanAgainButton: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#2563eb",
-  },
-  scanAgainButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2563eb",
-  },
-  doneButton: {
-    flex: 1,
-    backgroundColor: "#2563eb",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  doneButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#ffffff",
   },
 });
