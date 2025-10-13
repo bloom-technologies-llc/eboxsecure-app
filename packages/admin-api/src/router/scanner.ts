@@ -1,75 +1,116 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
+import {Client} from "@googlemaps/google-maps-services-js";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import haversine from "haversine-distance";
+import Stripe from "stripe";
+import { getStripeCustomerId, hasValidSubscription } from "@ebox/stripe";
 
-// Zod schema for PackageX API response
+const client = new Client({});
+
 const PackageXInferenceSchema = z.object({
+  status: z.number(),
+  message: z.string(),
+  errors: z.array(z.string()),
   data: z.object({
-    id: z.string(),
+    tracking_number: z.string(),
+    order_number: z.string().nullable(),
+    location_id: z.string(),
+    raw_text: z.string(),
+    extracted_recipient_name: z.string(),
+    extracted_sender_name: z.string(),
+    provider_name: z.string(),
+    provider_id: z.string(),
     status: z.string(),
-    created_at: z.string(),
-    updated_at: z.string(),
-    image_url: z.string().optional(),
-    tracking_number: z.string().optional(),
-    carrier: z.string().optional(),
-    service: z.string().optional(),
-    weight: z
-      .object({
-        value: z.number(),
-        unit: z.string(),
+    errors: z.array(z.string()),
+    exceptions: z.object({
+      unknown_contact: z.boolean(),
+      addressed_generically: z.boolean(),
+      damaged_label: z.boolean(),
+      arrived_opened: z.boolean(),
+      suspicious: z.boolean(),
+      missing_label: z.boolean(),
+    }),
+    recipient: z.object({
+      name: z.string(),
+      business: z.string().nullable(),
+      email: z.string().nullable(),
+      phone: z.string().nullable(),
+      address: z.object({
+        id: z.string(),
+        line1: z.string(),
+        line2: z.string().nullable(),
+        city: z.string(),
+        state: z.string(),
+        state_code: z.string(),
+        postal_code: z.string(),
+        country: z.string(),
+        country_code: z.string(),
+        formatted_address: z.string(),
       })
-      .optional(),
-    dimensions: z
-      .object({
-        length: z.number(),
-        width: z.number(),
-        height: z.number(),
-        unit: z.string(),
+    }),
+    sender: z.object({
+      name: z.string(),
+      business: z.string().nullable(),
+      email: z.string().nullable(),
+      phone: z.string().nullable(),
+      address: z.object({
+        id: z.string(),
+        line1: z.string(),
+        line2: z.string().nullable(),
+        city: z.string(),
+        state: z.string(),
+        state_code: z.string(),
+        postal_code: z.string(),
+        country: z.string(),
+        country_code: z.string(),
+        formatted_address: z.string(),
       })
-      .optional(),
-    sender: z
-      .object({
-        name: z.string().optional(),
-        company: z.string().optional(),
-        address: z.string().optional(),
-        city: z.string().optional(),
-        state: z.string().optional(),
-        postal_code: z.string().optional(),
-        country: z.string().optional(),
-      })
-      .optional(),
-    recipient: z
-      .object({
-        name: z.string().optional(),
-        company: z.string().optional(),
-        address: z.string().optional(),
-        city: z.string().optional(),
-        state: z.string().optional(),
-        postal_code: z.string().optional(),
-        country: z.string().optional(),
-      })
-      .optional(),
-    barcode_values: z.array(z.string()).optional(),
-    exceptions: z.array(z.string()).optional(),
-    confidence_score: z.number().optional(),
-  }),
-  success: z.boolean(),
-  message: z.string().optional(),
+    })
+  })
 });
+
+const InferShippingLabelOutputSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("success"),
+    data: z.object({
+      recipientName: z.string(),
+      virtualAddress: z.string().nullable(),
+      orderId: z.string(),
+    }),
+  }),
+  z.object({
+    status: z.literal("error"),
+    reason: z.enum([
+      'customer_not_found',
+      'customer_not_subscribed'
+    ])
+  }),
+]);
 
 export const scannerRouter = createTRPCRouter({
   inferShippingLabel: protectedProcedure
     .input(
       z.object({
         imageUrl: z.string(),
-        locationId: z.string().optional(),
-        layoutId: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { imageUrl, locationId, layoutId } = input;
-
+    .output(InferShippingLabelOutputSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { imageUrl } = input;
+      const { location } = await ctx.db.employeeAccount.findUniqueOrThrow({
+        where: {
+          id: ctx.session.userId,
+        },
+        select: {
+          location: {
+            select: {
+              address: true,
+              id: true
+            }
+          }
+        }
+      })
       try {
         const response = await fetch(
           "https://api.packagex.io/v1/inferences/images/shipping-labels",
@@ -81,8 +122,7 @@ export const scannerRouter = createTRPCRouter({
             },
             body: JSON.stringify({
               image_url: imageUrl,
-              location_id: locationId,
-              layout_id: layoutId,
+              location_id: location.id,
               options: {
                 postprocess: {
                   parse_addresses: ["recipient"],
@@ -114,8 +154,185 @@ export const scannerRouter = createTRPCRouter({
             message: "Invalid response format from PackageX API",
           });
         }
+        
+        // Preprocess: ensure the recipient address matches this location
+        const [recipientAddress, locationAddress] = await Promise.all([
+          client.geocode({
+            params: {
+              address: parseResult.data.data.recipient.address.formatted_address,
+              key: process.env.GOOGLE_MAPS_API_KEY!,
+            },
+          }),
+          client.geocode({
+            params: {
+              address: location.address,
+              key: process.env.GOOGLE_MAPS_API_KEY!,
+            }
+          })
+        ])
+        const recipientAddressData = recipientAddress.data.results[0]
+        const locationAddressData = locationAddress.data.results[0]
+        if (!recipientAddressData || !locationAddressData) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to get address data from Google Maps API",
+          });
+        }
+        const recipientFormattedAddress = recipientAddressData.formatted_address
+        const locationFormattedAddress = locationAddressData.formatted_address
+        const recipientDistance = haversine(recipientAddressData.geometry.location, locationAddressData.geometry.location)
+        
+        if (recipientFormattedAddress !== locationFormattedAddress && recipientDistance > 50) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Recipient address does not match location address",
+          });
+        }
+        
 
-        return parseResult.data;
+
+        
+        const { tracking_number: trackingNumber, recipient } = parseResult.data.data
+        const { name: recipientName, address } = recipient
+        const { line2: recipientAddressLine2 } = address
+        
+        // Tracking number = Shopify, virtual address = manual
+        let customer = await ctx.db.customerAccount.findFirst({
+          where: {
+            
+              
+              
+                AND: [
+                  {  firstName: { contains: recipientName, mode: "insensitive" } } ,
+                  { lastName: { contains: recipientName, mode: "insensitive" } },
+                  {
+                    OR: [
+                      { orders: { some: { trackingNumber } } },
+              { virtualAddress: recipientAddressLine2 },
+                    ]
+                  }
+                ] 
+                
+            
+          },
+          include: {
+            orders: {
+              where: {
+                trackingNumber
+              }
+            }
+          }
+        })
+        
+        if (!customer) {
+          return {
+            status: 'error',
+            reason: 'customer_not_found'
+          }
+        }
+
+        // ensure customer is subscribed
+        const stripeCustomerId = customer.stripeCustomerId
+        if (!stripeCustomerId) {
+          return {
+            status: 'error',
+            reason: 'customer_not_subscribed'
+          }
+        }
+        const isValidSubscription = await hasValidSubscription(stripeCustomerId)
+        if (!isValidSubscription) {
+          return {
+            status: 'error',
+            reason: 'customer_not_subscribed'
+          }
+        }
+
+        
+        const now = new Date()
+        let orderId = null
+        // Create order if it doesn't exist
+        if (customer.orders.length === 0) {
+          // generate unique vendor order id
+          let uniqueId = 'DEFAULT_' + customer.id + '_' + crypto.randomUUID()
+          let isUnique = false
+          while (!isUnique) {
+            const order = await ctx.db.order.findFirst({ where: {vendorOrderId: uniqueId}})
+            if (!order) {
+              isUnique = true
+            }
+            else { uniqueId = 'DEFAULT_' + customer.id + '_' + crypto.randomUUID() }
+          }
+
+          
+          const order =await ctx.db.order.create({
+            data: {
+              customerId: customer.id,
+              trackingNumber,
+              vendorOrderId: parseResult.data.data.order_number || uniqueId,
+              total: -1,
+              shippedLocationId: location.id,
+              deliveredDate: now,
+              processedAt: now,
+              rawDeliveryJson: parseResult.data,
+            }
+          })
+          orderId = order.id
+        }
+        // If it exists, update the order
+        else {
+          const order = customer.orders[0]
+          if (!order) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Order not found in unexpected state",
+            });
+          }
+          const updatedOrder = await ctx.db.order.update({
+            where: {
+              id: order.id,
+            }, 
+            data: {
+              deliveredDate: now,
+              processedAt: now,
+              rawDeliveryJson: parseResult.data,
+            }
+          })
+          orderId = updatedOrder.id
+        }
+        
+        // Charge customer
+        // Send Stripe metering event
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+        const meterEvent = await stripe.billing.meterEvents.create({
+          event_name: "package_allowance",
+          payload: {
+            value: '1',
+            stripe_customer_id: stripeCustomerId,
+          },
+        });
+        await ctx.db.meterEvent.create({
+          data: {
+            eventType: "PACKAGE_ALLOWANCE",
+            value: 1,
+            customerId: customer.id,
+            orderId: orderId,
+            stripeEventId: meterEvent.identifier
+          },
+        });
+
+        return {
+          status: 'success',
+          data: {
+            carrier: parseResult.data.data.provider_name,
+            recipientName,
+            virtualAddress: customer.virtualAddress,
+            orderId: orderId.toString(),
+          }
+        }
+
+
+
       } catch (error) {
         console.error("PackageX inference error:", error);
         throw new TRPCError({

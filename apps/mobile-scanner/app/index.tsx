@@ -39,7 +39,7 @@ export default function Page() {
             style={{ width: 120, height: 85, backgroundColor: "transparent" }}
           />
           <Text className="mt-4 text-2xl font-bold text-slate-900">
-            Admin Scanner
+            Package Label Scanner
           </Text>
           <Text className="mt-1 text-sm text-slate-600">
             Package Management System
@@ -48,9 +48,9 @@ export default function Page() {
 
         {/* Quick Actions Grid */}
         <View className="flex-1">
-          <Text className="mb-4 text-base font-semibold text-slate-900">
+          {/* <Text className="mb-4 text-base font-semibold text-slate-900">
             Quick Actions
-          </Text>
+          </Text> */}
 
           <View className="gap-4">
             {/* Main Scanner Button */}
@@ -75,7 +75,7 @@ export default function Page() {
             </TouchableOpacity>
 
             {/* Stats Cards */}
-            <View className="flex-row gap-4">
+            {/* <View className="flex-row gap-4">
               <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
                 <View className="self-start rounded-full bg-green-100 p-2">
                   <Package size={24} color="#16a34a" weight="bold" />
@@ -95,7 +95,7 @@ export default function Page() {
                 </Text>
                 <Text className="text-xs text-slate-600">This Week</Text>
               </View>
-            </View>
+            </View> */}
           </View>
         </View>
 

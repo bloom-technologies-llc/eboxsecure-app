@@ -27,7 +27,16 @@ export default function ScannerScreen() {
     onSuccess: (data) => {
       setInferenceResult(data);
       setIsProcessing(false);
-      Alert.alert("Success", "Shipping label processed successfully!");
+      
+      if (data.status === 'success') {
+        Alert.alert("Success", "Package processed successfully!");
+      } else {
+        const errorMessages = {
+          customer_not_found: "Customer not found. Please verify the label.",
+          customer_not_subscribed: "Customer does not have an active subscription.",
+        };
+        Alert.alert("Error", errorMessages[data.reason]);
+      }
     },
     onError: (error) => {
       setIsProcessing(false);
@@ -99,7 +108,7 @@ export default function ScannerScreen() {
         ) : null}
 
         {/* Results Section */}
-        {inferenceResult && !isProcessing && (
+        {inferenceResult && !isProcessing && inferenceResult.status === 'success' && (
           <View style={styles.resultsContainer}>
             <ScrollView
               style={styles.resultsScroll}
@@ -108,91 +117,36 @@ export default function ScannerScreen() {
               {/* Success Header */}
               <View style={styles.successHeader}>
                 <CheckCircle size={48} color="#16a34a" weight="fill" />
-                <Text style={styles.successTitle}>Scan Complete</Text>
+                <Text style={styles.successSubtitle}>
+                  Customer charged successfully
+                </Text>
               </View>
 
               {/* Results Cards */}
               <View style={styles.resultsGrid}>
-                {inferenceResult.data.tracking_number && (
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultLabel}>Customer</Text>
+                  <Text style={styles.resultValue}>
+                    {inferenceResult.data.recipientName}
+                  </Text>
+                </View>
+
+                {inferenceResult.data.virtualAddress && (
                   <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Tracking Number</Text>
+                    <Text style={styles.resultLabel}>Virtual Address</Text>
                     <Text style={styles.resultValue}>
-                      {inferenceResult.data.tracking_number}
+                      {inferenceResult.data.virtualAddress}
                     </Text>
                   </View>
                 )}
 
-                {inferenceResult.data.carrier && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Carrier</Text>
-                    <Text style={styles.resultValue}>
-                      {inferenceResult.data.carrier}
-                    </Text>
-                  </View>
-                )}
-
-                {inferenceResult.data.service && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Service</Text>
-                    <Text style={styles.resultValue}>
-                      {inferenceResult.data.service}
-                    </Text>
-                  </View>
-                )}
-
-                {inferenceResult.data.weight && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Weight</Text>
-                    <Text style={styles.resultValue}>
-                      {inferenceResult.data.weight.value}{" "}
-                      {inferenceResult.data.weight.unit}
-                    </Text>
-                  </View>
-                )}
-
-                {inferenceResult.data.sender && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Sender</Text>
-                    <Text style={styles.resultValue}>
-                      {inferenceResult.data.sender.name ||
-                        inferenceResult.data.sender.company ||
-                        "N/A"}
-                    </Text>
-                  </View>
-                )}
-
-                {inferenceResult.data.recipient && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Recipient</Text>
-                    <Text style={styles.resultValue}>
-                      {inferenceResult.data.recipient.name ||
-                        inferenceResult.data.recipient.company ||
-                        "N/A"}
-                    </Text>
-                  </View>
-                )}
-
-                {inferenceResult.data.confidence_score && (
-                  <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Confidence</Text>
-                    <Text style={styles.resultValue}>
-                      {(inferenceResult.data.confidence_score * 100).toFixed(1)}
-                      %
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultLabel}>Order ID</Text>
+                  <Text style={styles.resultValue}>
+                    {inferenceResult.data.orderId}
+                  </Text>
+                </View>
               </View>
-
-              {/* Exceptions */}
-              {inferenceResult.data.exceptions &&
-                inferenceResult.data.exceptions.length > 0 && (
-                  <View style={styles.exceptionsCard}>
-                    <Text style={styles.exceptionsLabel}>Exceptions</Text>
-                    <Text style={styles.exceptionsText}>
-                      {inferenceResult.data.exceptions.join(", ")}
-                    </Text>
-                  </View>
-                )}
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
@@ -301,6 +255,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#16a34a",
     marginTop: 12,
+  },
+  successSubtitle: {
+    fontSize: 14,
+    color: "#64748b",
+    marginTop: 4,
   },
   resultsGrid: {
     gap: 12,

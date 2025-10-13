@@ -34,6 +34,7 @@ model CustomerAccount {
     firstName        String
     lastName         String
     email            String
+    virtualAddress   String?                    @unique
     phoneNumber      String?
     shippingAddress  String?
     photoLink        String? // UploadThing URL for portrait photo
@@ -110,8 +111,8 @@ model Order {
     pickedUpById      String?
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
-    meteredAt         DateTime?
-    meterEventId      String?   @unique
+    trackingNumber    String? // Provided by Shopify. TODO: may need to modify for better Shopify handling during integration
+    rawDeliveryJson   Json?
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
