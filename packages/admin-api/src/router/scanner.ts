@@ -133,9 +133,10 @@ export const scannerRouter = createTRPCRouter({
         );
 
         if (!response.ok) {
+          const errorText = await response.text();
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: `PackageX API error: ${response.status}`,
+            message: `PackageX API error: ${response.status}. ${response.statusText}. ${errorText}`,
           });
         }
 
