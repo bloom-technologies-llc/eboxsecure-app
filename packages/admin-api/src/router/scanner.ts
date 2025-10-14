@@ -67,6 +67,7 @@ const InferShippingLabelOutputSchema = z.discriminatedUnion("status", [
       "customer_not_subscribed",
       "missing_identifier",
       "order_already_processed",
+      "location_not_favorited",
     ]),
   }),
 ]);
@@ -287,6 +288,23 @@ export const scannerRouter = createTRPCRouter({
           };
         }
       }
+
+      // Check if customer has this location favorited
+      const isLocationFavorited = await ctx.db.userFavoriteLocation.findUnique({
+        where: {
+          userId_locationId: {
+            userId: customer.id,
+            locationId: location.id,
+          },
+        },
+      });
+      if (!isLocationFavorited) {
+        return {
+          status: "error",
+          reason: "location_not_favorited",
+        };
+      }
+
       const now = new Date();
       let orderId = null;
       // Create order if it doesn't exist

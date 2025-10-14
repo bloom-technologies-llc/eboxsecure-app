@@ -71,6 +71,8 @@ export default function ScannerScreen() {
           missing_identifier:
             "Order has neither a tracking number nor virtual address. Unable to uniquely identify the customer.",
           order_already_processed: "Order has already been processed.",
+          location_not_favorited:
+            "Customer does not have this location favorited.",
         };
         Alert.alert("Error", errorMessages[data.reason]);
       }
