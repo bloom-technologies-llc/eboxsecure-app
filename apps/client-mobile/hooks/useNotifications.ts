@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { EventSubscription } from "expo-modules-core";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
@@ -9,14 +10,16 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
 export function useNotifications() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<EventSubscription | null>(null);
+  const responseListener = useRef<EventSubscription | null>(null);
 
   const { mutate: registerPushToken } =
     api.notification.registerPushToken.useMutation();
@@ -62,16 +65,8 @@ export function useNotifications() {
       });
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current,
-        );
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(
-          responseListener.current,
-        );
-      }
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
     };
   }, [isSignedIn, registerPushToken, router]);
 }
