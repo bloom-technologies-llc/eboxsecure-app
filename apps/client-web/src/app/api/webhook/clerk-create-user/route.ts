@@ -95,6 +95,7 @@ export async function POST(req: Request) {
             emailEnabled: true,
             smsEnabled: false,
             phoneNumber,
+            notificationEmail: userEmail,
           },
         },
       },
