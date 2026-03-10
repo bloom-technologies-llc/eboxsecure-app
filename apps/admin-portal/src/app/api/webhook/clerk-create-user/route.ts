@@ -67,35 +67,59 @@ export async function POST(req: Request) {
     log.error("Unexpectedly missing user ID in clerk-create-user webhook");
     return new Response("Unexpectedly missing user ID", { status: 400 });
   }
-  const pendingAccount = await db.pendingAccount.findUnique({
+
+  // Extract primary email from Clerk event data
+  const primaryEmailObj = evt.data.email_addresses?.find(
+    (e) => e.id === evt.data.primary_email_address_id,
+  );
+  const email = primaryEmailObj?.email_address;
+
+  if (!email) {
+    log.error("Unexpectedly missing email in clerk-create-user webhook");
+    return new Response("Unexpectedly missing email", { status: 400 });
+  }
+
+  const pendingAccount = await db.pendingAdminAccount.findUnique({
     where: {
-      email: userId,
+      email: email,
     },
   });
 
   if (pendingAccount) {
+    // Only honor PENDING invitations (not REVOKED)
+    if (pendingAccount.status !== "PENDING") {
+      log.error(
+        `Pending account for ${email} has status ${pendingAccount.status}, skipping`,
+      );
+      return new Response("Invitation is no longer valid", { status: 400 });
+    }
+
     if (pendingAccount.accountType === "EMPLOYEE") {
-      // TODO: add employee location connection
       await db.user.create({
         data: {
           id: userId,
           userType: "EMPLOYEE",
           employeeAccount: {
+            create: {
+              employeeRole: pendingAccount.employeeRole ?? "ASSOCIATE",
+              locationId: pendingAccount.locationId!,
+            },
+          },
+        },
+      });
+    } else if (pendingAccount.accountType === "CORPORATE") {
+      await db.user.create({
+        data: {
+          id: userId,
+          userType: "CORPORATE",
+          corporateAccount: {
             create: {},
           },
         },
       });
     }
-    await db.user.create({
-      data: {
-        id: userId,
-        userType: "CORPORATE",
-        corporateAccount: {
-          create: {},
-        },
-      },
-    });
-    await db.pendingAccount.delete({
+
+    await db.pendingAdminAccount.delete({
       where: {
         id: pendingAccount.id,
       },

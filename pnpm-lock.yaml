@@ -748,6 +748,9 @@ importers:
       next-axiom:
         specifier: ^1.4.1
         version: 1.9.1(next@14.2.29)(react@19.1.0)
+      resend:
+        specifier: ^4.5.2
+        version: 4.5.2(react-dom@19.1.0)(react@19.1.0)
       superjson:
         specifier: 2.2.1
         version: 2.2.1

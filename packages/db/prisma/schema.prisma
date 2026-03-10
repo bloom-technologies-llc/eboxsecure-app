@@ -20,6 +20,7 @@ model User {
     sessions                 Session[]
     UserFavoriteLocation     UserFavoriteLocation[]
     Comment                  Comment[]
+    invitedAdmins            PendingAdminAccount[] @relation("InvitedAdmins")
 }
 
 model Session {
@@ -79,14 +80,19 @@ model CorporateAccount {
     user User   @relation(fields: [id], references: [id])
 }
 
-// TODO: This holds pending account creation for Employees and Corporate. 
-// Add an optional field for Employee Role, if the Pending Account is an Employee UserType. Modify the webhook accordingly.
 model PendingAdminAccount {
-    id          Int      @id @default(autoincrement())
-    email       String   @unique
-    accountType UserType
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id           Int                      @id @default(autoincrement())
+    email        String                   @unique
+    accountType  UserType
+    employeeRole EmployeeRole?
+    locationId   Int?
+    invitedById  String
+    status       PendingAdminAccountStatus @default(PENDING)
+    createdAt    DateTime                 @default(now())
+    updatedAt    DateTime                 @updatedAt
+
+    location  Location? @relation(fields: [locationId], references: [id])
+    invitedBy User      @relation("InvitedAdmins", fields: [invitedById], references: [id])
 }
 
 model OnboardingPhoneUploadLink {
@@ -164,8 +170,9 @@ model Location {
     locationComments LocationComment[]
     locationNotes    LocationNote[]
     orders           Order[]
-    employeeAccounts EmployeeAccount[]
-    favoritedBy      UserFavoriteLocation[]
+    employeeAccounts     EmployeeAccount[]
+    favoritedBy          UserFavoriteLocation[]
+    pendingAdminAccounts PendingAdminAccount[]
 }
 
 model LocationHours {
@@ -415,6 +422,11 @@ enum SubscriptionType {
 enum MeterEventType {
     OVERDUE_PACKAGE_HOLDING
     PACKAGE_ALLOWANCE
+}
+
+enum PendingAdminAccountStatus {
+    PENDING
+    REVOKED
 }
 
 enum NotificationType {
