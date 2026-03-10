@@ -4,6 +4,7 @@ import haversine from "haversine-distance";
 import Stripe from "stripe";
 import { z } from "zod";
 
+import { NotificationService } from "@ebox/notifications";
 import { hasValidSubscription } from "@ebox/stripe";
 
 import { createTRPCRouter, protectedEmployeeProcedure } from "../trpc";
@@ -380,7 +381,15 @@ export const scannerRouter = createTRPCRouter({
         },
       });
 
-      // TODO: send notification to customer. Email, push notification
+      // Send delivery notification to customer
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: customer.id,
+        type: "ORDER_DELIVERED",
+        message: `Your package has been delivered to ${location.address}.`,
+        orderId: orderId,
+      });
+
       return {
         status: "success",
         data: {

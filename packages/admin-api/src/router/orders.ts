@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
+import { NotificationService } from "@ebox/notifications";
 import { kv } from "@ebox/redis-client";
 import {
   getStripeCustomerId,
@@ -278,6 +279,15 @@ export const ordersRouter = createTRPCRouter({
         },
       });
 
+      // Send pickup notification to the order owner
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: order.customerId,
+        type: "ORDER_PICKED_UP",
+        message: `Your package (Order #${input.orderId}) has been picked up.`,
+        orderId: input.orderId,
+      });
+
       const subscriptionDataKv = await kv.get(
         `stripe:customer:${stripeCustomerId}`,
       );
@@ -334,6 +344,13 @@ export const ordersRouter = createTRPCRouter({
             customerId: customerId,
             orderId: order.id,
           },
+        });
+
+        await notificationService.send({
+          userId: order.customerId,
+          type: "ORDER_OVERDUE",
+          message: `Your package (Order #${input.orderId}) was overdue by ${overdueDays} day(s). An overdue holding fee has been applied.`,
+          orderId: input.orderId,
         });
       }
     }),

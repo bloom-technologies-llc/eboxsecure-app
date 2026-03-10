@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { env } from "@/env";
 import Stripe from "stripe";
 
+import { db } from "@ebox/db";
+import { NotificationService } from "@ebox/notifications";
 import { syncCustomerData } from "@ebox/stripe";
 
 export async function POST(req: Request) {
@@ -67,6 +69,12 @@ const allowedEvents: Stripe.Event.Type[] = [
   "billing_portal.session.created",
 ];
 
+const notificationEvents = [
+  "invoice.payment_failed",
+  "invoice.paid",
+  "customer.subscription.trial_will_end",
+] as const;
+
 async function processEvent(event: Stripe.Event) {
   if (!allowedEvents.includes(event.type)) return;
 
@@ -79,5 +87,57 @@ async function processEvent(event: Stripe.Event) {
       `[STRIPE HOOK][CANCER] ID isn't string. \nEvent type: ${event.type}`,
     );
   }
-  return await syncCustomerData(customerId);
+
+  // Sync customer data first
+  await syncCustomerData(customerId);
+
+  // Send notifications for specific events
+  if (
+    (notificationEvents as readonly string[]).includes(event.type)
+  ) {
+    try {
+      // Look up user by stripe customer ID
+      const customer = await db.customerAccount.findFirst({
+        where: { stripeCustomerId: customerId },
+        select: { id: true },
+      });
+
+      if (customer) {
+        const notificationService = new NotificationService(db);
+
+        switch (event.type) {
+          case "invoice.payment_failed":
+            await notificationService.send({
+              userId: customer.id,
+              type: "PAYMENT_FAILED",
+              message:
+                "A payment for your subscription has failed. Please update your payment method.",
+            });
+            break;
+
+          case "invoice.paid":
+            await notificationService.send({
+              userId: customer.id,
+              type: "INVOICE_PAID",
+              message: "Your invoice payment has been received. Thank you!",
+            });
+            break;
+
+          case "customer.subscription.trial_will_end":
+            await notificationService.send({
+              userId: customer.id,
+              type: "TRIAL_ENDING_SOON",
+              message:
+                "Your trial is ending soon. Make sure your payment method is up to date.",
+            });
+            break;
+        }
+      }
+    } catch (error) {
+      console.error(
+        `[STRIPE HOOK] Failed to send notification for ${event.type}:`,
+        error,
+      );
+    }
+  }
 }

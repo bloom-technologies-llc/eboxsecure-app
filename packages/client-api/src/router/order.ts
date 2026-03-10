@@ -1,6 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { NotificationService } from "@ebox/notifications";
+
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const orderRouter = createTRPCRouter({
@@ -196,6 +198,15 @@ export const orderRouter = createTRPCRouter({
         },
       });
 
+      // Notify the trusted contact that an order was shared with them
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: trustedContactId,
+        type: "ORDER_SHARED",
+        message: `An order (#${orderId}) has been shared with you.`,
+        orderId,
+      });
+
       return orderShare;
     }),
   unshare: protectedCustomerProcedure
@@ -249,6 +260,15 @@ export const orderRouter = createTRPCRouter({
             sharedWithId: trustedContactId,
           },
         },
+      });
+
+      // Notify the trusted contact that access was revoked
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: trustedContactId,
+        type: "ORDER_UNSHARED",
+        message: `Access to order (#${orderId}) has been revoked.`,
+        orderId,
       });
 
       return { success: true };

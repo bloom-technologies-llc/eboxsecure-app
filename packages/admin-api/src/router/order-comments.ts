@@ -3,6 +3,8 @@ import { CommentType, UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { NotificationService } from "@ebox/notifications";
+
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
 export const orderComments = createTRPCRouter({
@@ -60,7 +62,7 @@ export const orderComments = createTRPCRouter({
             message: "User is unauthorized to access this order",
           });
         }
-        await ctx.db.comment.create({
+        const comment = await ctx.db.comment.create({
           data: {
             text: input.text,
             commentType: CommentType.ORDER,
@@ -71,16 +73,23 @@ export const orderComments = createTRPCRouter({
                 orderId: input.orderId,
               },
             },
-            notifications: {
-              create: input.notifications?.map((notification) => ({
-                userId: notification.userId,
-                message: notification.message,
-              })),
-            },
           },
         });
+
+        if (input.notifications?.length) {
+          const notificationService = new NotificationService(ctx.db);
+          for (const notification of input.notifications) {
+            await notificationService.send({
+              userId: notification.userId,
+              type: "ORDER_COMMENT",
+              message: notification.message,
+              commentId: comment.id,
+              orderId: input.orderId,
+            });
+          }
+        }
       } else if (userType?.userType === UserType.CORPORATE) {
-        await ctx.db.comment.create({
+        const comment = await ctx.db.comment.create({
           data: {
             text: input.text,
             commentType: CommentType.ORDER,
@@ -91,14 +100,21 @@ export const orderComments = createTRPCRouter({
                 orderId: input.orderId,
               },
             },
-            notifications: {
-              create: input.notifications?.map((notification) => ({
-                userId: notification.userId,
-                message: notification.message,
-              })),
-            },
           },
         });
+
+        if (input.notifications?.length) {
+          const notificationService = new NotificationService(ctx.db);
+          for (const notification of input.notifications) {
+            await notificationService.send({
+              userId: notification.userId,
+              type: "ORDER_COMMENT",
+              message: notification.message,
+              commentId: comment.id,
+              orderId: input.orderId,
+            });
+          }
+        }
       }
     }),
 

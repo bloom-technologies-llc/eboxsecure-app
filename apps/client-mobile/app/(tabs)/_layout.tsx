@@ -4,10 +4,16 @@ import { BellIcon, ShoppingCartIcon, UserIcon } from "@/components/icons";
 import { useAuth } from "@clerk/clerk-expo";
 import { MapPin } from "phosphor-react-native";
 import { api } from "@/trpc/react";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
 
 export default function TabLayout() {
   const { isSignedIn, signOut } = useAuth();
+  useNotifications();
+  const { data: unreadData } = api.notification.getUnreadCount.useQuery(
+    undefined,
+    { enabled: !!isSignedIn },
+  );
   const { data: isSubscribed, isLoading } = api.subscription.isSubscribed.useQuery(
     undefined,
     {
@@ -71,6 +77,7 @@ export default function TabLayout() {
         options={{
           title: "Notifications",
           tabBarIcon: () => <BellIcon />,
+          tabBarBadge: (unreadData?.count ?? 0) > 0 ? unreadData!.count : undefined,
         }}
       />
       <Tabs.Screen

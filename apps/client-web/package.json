@@ -17,6 +17,7 @@
     "@clerk/nextjs": "^6.9.3",
     "@ebox/client-api": "workspace:*",
     "@ebox/db": "workspace:*",
+    "@ebox/notifications": "workspace:*",
     "@ebox/redis-client": "workspace:*",
     "@ebox/stripe": "workspace:*",
     "@ebox/ui": "workspace:*",

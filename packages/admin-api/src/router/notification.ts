@@ -46,6 +46,20 @@ export const notification = createTRPCRouter({
               },
             },
           },
+          order: {
+            select: {
+              id: true,
+              vendorOrderId: true,
+              shippedLocation: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
       return notifications;

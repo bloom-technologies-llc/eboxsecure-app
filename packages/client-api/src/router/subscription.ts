@@ -5,6 +5,7 @@ import Stripe from "stripe";
 import { z } from "zod";
 
 import { db } from "@ebox/db";
+import { NotificationService } from "@ebox/notifications";
 import { kv } from "@ebox/redis-client";
 import {
   getScheduledChangeType,
@@ -88,6 +89,13 @@ export const subscriptionRouter = createTRPCRouter({
     // Cancel at period end (soft cancel)
     await stripe.subscriptions.update(subscriptionData.subscriptionId, {
       cancel_at_period_end: true,
+    });
+
+    const notificationService = new NotificationService(ctx.db);
+    await notificationService.send({
+      userId: ctx.session.userId,
+      type: "SUBSCRIPTION_CANCELED",
+      message: "Your subscription has been canceled. It will remain active until the end of the current billing period.",
     });
 
     return { success: true };
@@ -247,6 +255,13 @@ export const subscriptionRouter = createTRPCRouter({
             proration_date: proration_date,
           },
         );
+
+        const notificationService = new NotificationService(ctx.db);
+        await notificationService.send({
+          userId: ctx.session.userId,
+          type: "SUBSCRIPTION_UPGRADED",
+          message: `Your subscription has been upgraded to ${targetTier}.`,
+        });
 
         return {
           success: true,
@@ -439,6 +454,13 @@ export const subscriptionRouter = createTRPCRouter({
           });
         }
 
+        const notificationService = new NotificationService(ctx.db);
+        await notificationService.send({
+          userId: ctx.session.userId,
+          type: "SUBSCRIPTION_DOWNGRADED",
+          message: `Your subscription downgrade to ${targetTier} has been scheduled for your next billing cycle.`,
+        });
+
         return {
           success: true,
           message: `Downgrade to ${targetTier} scheduled for next billing cycle`,
@@ -488,6 +510,13 @@ export const subscriptionRouter = createTRPCRouter({
       // Remove cancellation
       await stripe.subscriptions.update(subscriptionData.subscriptionId, {
         cancel_at_period_end: false,
+      });
+
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: ctx.session.userId,
+        type: "SUBSCRIPTION_REACTIVATED",
+        message: "Your subscription has been reactivated.",
       });
 
       return { success: true };

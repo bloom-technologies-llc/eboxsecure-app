@@ -1,0 +1,21 @@
+{
+  "name": "@ebox/notifications",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@ebox/db": "workspace:*",
+    "resend": "^4.5.2",
+    "twilio": "^5.4.2"
+  },
+  "devDependencies": {
+    "@ebox/eslint-config": "workspace:*",
+    "@ebox/tsconfig": "workspace:*",
+    "eslint": "latest",
+    "typescript": "latest"
+  }
+}
