@@ -484,7 +484,72 @@ export function PrivacyContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">11. Children's Privacy</h2>
+            <h2 className="mb-4 text-2xl font-bold">
+              11. SMS Communications
+            </h2>
+            <p>
+              If you opt in to receive SMS text messages from EboxSecure, we
+              collect and process the following information specifically for
+              the operation of the SMS program:
+            </p>
+            <ul className="mt-4 list-disc space-y-2 pl-6">
+              <li>Your mobile phone number</li>
+              <li>
+                A record of your opt-in, including timestamp, IP address, and
+                the version of the opt-in interface you used
+              </li>
+              <li>
+                A record of any opt-out request (for example, STOP replies or
+                toggling the SMS setting off)
+              </li>
+              <li>
+                SMS delivery metadata, including message status, timestamps,
+                and carrier delivery receipts
+              </li>
+            </ul>
+
+            <p className="mt-4">We use this information solely to:</p>
+            <ul className="mt-4 list-disc space-y-2 pl-6">
+              <li>
+                Deliver the transactional SMS notifications you have requested,
+                including package delivery, pickup reminder, overdue holding
+                fee, shared order, and trusted-contact invitation notifications
+              </li>
+              <li>
+                Maintain legally required records of SMS consent and opt-out
+              </li>
+              <li>
+                Troubleshoot delivery issues and monitor program compliance
+              </li>
+            </ul>
+
+            <p className="mt-4">
+              We share mobile phone numbers and SMS consent data only with our
+              telecommunications subprocessor (currently Twilio, Inc.) for the
+              sole purpose of transmitting the SMS messages you have requested.
+              <strong>
+                {" "}
+                Mobile phone numbers and SMS opt-in data are never sold,
+                rented, leased, or shared with third parties or affiliates for
+                their own marketing or promotional purposes, and are not shared
+                with any party for any purpose unrelated to delivering the SMS
+                notifications you have requested.
+              </strong>
+            </p>
+
+            <p className="mt-4">
+              You may withdraw your consent to receive SMS messages at any time
+              by replying <strong>STOP</strong> to any SMS message from us, or
+              by toggling "SMS notifications" off in Settings → Notifications
+              in your EboxSecure account. For help, reply{" "}
+              <strong>HELP</strong> or contact support@eboxsecure.com. See
+              Section 9 of our Terms of Service for additional details about
+              the SMS program.
+            </p>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="mb-4 text-2xl font-bold">12. Children's Privacy</h2>
             <p>
               Our Services are not intended for individuals under the age of 18,
               and we do not knowingly collect personal information from children
@@ -498,7 +563,7 @@ export function PrivacyContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              12. Contact Information and Complaints
+              13. Contact Information and Complaints
             </h2>
             <p>
               If you have any questions, concerns, or complaints about this
@@ -529,7 +594,7 @@ export function PrivacyContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              13. Changes to This Privacy Policy
+              14. Changes to This Privacy Policy
             </h2>
             <p>
               We may update this Privacy Policy periodically to reflect changes
@@ -556,7 +621,7 @@ export function PrivacyContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">14. Effective Date</h2>
+            <h2 className="mb-4 text-2xl font-bold">15. Effective Date</h2>
             <p>
               This Privacy Policy is effective as of the "Last Updated" date
               indicated at the top of this page and applies to all information
