@@ -57,6 +57,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             try {
               const token = await getToken();
               if (token) {
+                // TODO: this may be stripped in production
                 headers.set("authorization", `Bearer ${token}`);
               }
             } catch (error) {
@@ -81,6 +82,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 
 const getBaseUrl = () => {
   // if (typeof window !== "undefined") return window.location.origin;
+  // TODO: change to real base url
   return `https://app-qa.eboxsecure.com`;
   // return `http://localhost:3000`;
 };

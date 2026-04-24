@@ -76,6 +76,7 @@ export async function POST(req: Request) {
 
   // Create user
   try {
+    const phoneNumber = evt.data.phone_numbers?.[0]?.phone_number ?? null;
     await db.user.create({
       data: {
         id: userId,
@@ -85,7 +86,16 @@ export async function POST(req: Request) {
             firstName: first_name,
             lastName: last_name,
             email: userEmail,
-            phoneNumber: evt.data.phone_numbers?.[0]?.phone_number ?? null,
+            phoneNumber,
+          },
+        },
+        notificationPreference: {
+          create: {
+            pushEnabled: true,
+            emailEnabled: true,
+            smsEnabled: false,
+            phoneNumber,
+            notificationEmail: userEmail,
           },
         },
       },

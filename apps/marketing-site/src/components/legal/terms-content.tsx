@@ -431,11 +431,132 @@ export function TermsContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              9. Disclaimers and Limitation of Liability
+              9. SMS Text Messaging Program
             </h2>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              9.1 Service Disclaimers
+              9.1 Opt-In and Consent
+            </h3>
+            <p>
+              Our SMS text messaging program is strictly opt-in. SMS
+              notifications are disabled by default for all accounts. To receive
+              SMS messages from EboxSecure, you must affirmatively enable the
+              "SMS notifications" toggle and enter your mobile phone number in
+              your EboxSecure account at Settings → Notifications (accessible at
+              app.eboxsecure.com/settings/notifications), then save your
+              preferences. By enabling this toggle and submitting your phone
+              number, you expressly consent to receive recurring transactional
+              SMS text messages from EboxSecure at the number you provided, sent
+              using automated technology. Consent to receive SMS messages is not
+              a condition of purchase or use of our Services.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.2 Types of Messages
+            </h3>
+            <p>
+              Messages sent under this program are transactional and relate
+              solely to your use of the Services, including but not limited to:
+              package delivery and receipt notifications, package pickup
+              reminders, overdue package and storage fee alerts, shared order
+              notifications, and trusted-contact invitations. We do not send
+              marketing or promotional SMS messages under this program.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.3 Message Frequency
+            </h3>
+            <p>
+              Message frequency varies based on your package activity, account
+              configuration, and the number of trusted contacts or shared
+              recipients associated with your account. Users with higher
+              delivery volume will receive more messages.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.4 Message and Data Rates
+            </h3>
+            <p>
+              Message and data rates may apply in accordance with your mobile
+              carrier plan. EboxSecure is not responsible for any charges
+              assessed by your wireless carrier in connection with your receipt
+              of SMS messages from us.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">9.5 Opt-Out</h3>
+            <p>
+              You may opt out of SMS messages at any time by either:
+            </p>
+            <ul className="mt-4 list-disc space-y-2 pl-6">
+              <li>
+                Replying <strong>STOP</strong> to any SMS message from
+                EboxSecure, which will unsubscribe you from the SMS program; or
+              </li>
+              <li>
+                Toggling the "SMS notifications" switch to the Off position in
+                Settings → Notifications within your EboxSecure account.
+              </li>
+            </ul>
+            <p className="mt-4">
+              After opting out, you may receive a final confirmation message
+              acknowledging your opt-out. To resume SMS notifications, you must
+              re-enable the "SMS notifications" toggle in your account settings.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">9.6 Help</h3>
+            <p>
+              For help with the SMS program, reply <strong>HELP</strong> to any
+              SMS message from EboxSecure or contact us at
+              support@eboxsecure.com.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.7 Your Representations
+            </h3>
+            <p>
+              By providing your mobile phone number and opting in to the SMS
+              program, you represent and warrant that: (a) you are the
+              subscriber or customary user of the phone number you provide, or
+              you have authority from the subscriber to consent to receive
+              messages at that number; (b) you will promptly update your
+              EboxSecure account or opt out if you cease using that phone number
+              or transfer it to another person; and (c) all information you
+              provide is accurate and truthful.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.8 Supported Carriers and Carrier Disclaimer
+            </h3>
+            <p>
+              The SMS program is available on major U.S. wireless carriers,
+              including but not limited to AT&amp;T, T-Mobile, Verizon Wireless,
+              Sprint, Boost Mobile, Cricket Wireless, MetroPCS, U.S. Cellular,
+              and Virgin Mobile. Carriers are not liable for delayed or
+              undelivered messages. Message delivery is not guaranteed and may
+              be affected by factors outside our control.
+            </p>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              9.9 No Third-Party Sharing of SMS Data
+            </h3>
+            <p>
+              We will not sell, rent, lease, or share mobile phone numbers or
+              SMS opt-in or consent data with any third party or affiliate for
+              that party's marketing or promotional purposes. Mobile phone
+              numbers and consent records are disclosed only to our
+              telecommunications subprocessor(s) for the sole purpose of
+              transmitting the SMS messages you have requested, as further
+              described in our Privacy Policy.
+            </p>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="mb-4 text-2xl font-bold">
+              10. Disclaimers and Limitation of Liability
+            </h2>
+
+            <h3 className="mb-3 mt-6 text-xl font-semibold">
+              10.1 Service Disclaimers
             </h3>
             <p>
               OUR SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
@@ -447,7 +568,7 @@ export function TermsContent() {
             </p>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              9.2 Limitation of Liability
+              10.2 Limitation of Liability
             </h3>
             <p>
               TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, EBOXSECURE
@@ -476,7 +597,7 @@ export function TermsContent() {
             </ul>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              9.3 Maximum Aggregate Liability
+              10.3 Maximum Aggregate Liability
             </h3>
             <p>
               IN NO EVENT SHALL OUR TOTAL LIABILITY TO YOU FOR ALL DAMAGES,
@@ -487,7 +608,7 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">10. Indemnification</h2>
+            <h2 className="mb-4 text-2xl font-bold">11. Indemnification</h2>
             <p>
               You agree to defend, indemnify, and hold harmless EboxSecure, its
               affiliates, officers, directors, employees, agents, and
@@ -513,11 +634,11 @@ export function TermsContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              11. Dispute Resolution and Arbitration
+              12. Dispute Resolution and Arbitration
             </h2>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              11.1 Mandatory Arbitration
+              12.1 Mandatory Arbitration
             </h3>
             <p>
               Any dispute, controversy, or claim arising out of or relating to
@@ -527,7 +648,7 @@ export function TermsContent() {
             </p>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              11.2 Arbitration Procedures
+              12.2 Arbitration Procedures
             </h3>
             <p>
               Arbitration will be conducted by the American Arbitration
@@ -538,7 +659,7 @@ export function TermsContent() {
             </p>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              11.3 Class Action Waiver
+              12.3 Class Action Waiver
             </h3>
             <p>
               YOU AGREE THAT DISPUTES WILL BE RESOLVED ON AN INDIVIDUAL BASIS
@@ -548,10 +669,10 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">12. Termination</h2>
+            <h2 className="mb-4 text-2xl font-bold">13. Termination</h2>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              12.1 Termination by You
+              13.1 Termination by You
             </h3>
             <p>
               You may terminate your account at any time by contacting us or
@@ -561,7 +682,7 @@ export function TermsContent() {
             </p>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              12.2 Termination by Us
+              13.2 Termination by Us
             </h3>
             <p>
               We may terminate or suspend your account immediately, without
@@ -571,7 +692,7 @@ export function TermsContent() {
             </p>
 
             <h3 className="mb-3 mt-6 text-xl font-semibold">
-              12.3 Effect of Termination
+              13.3 Effect of Termination
             </h3>
             <p>
               Upon termination, you must retrieve all packages within 7 days.
@@ -582,7 +703,7 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">13. Force Majeure</h2>
+            <h2 className="mb-4 text-2xl font-bold">14. Force Majeure</h2>
             <p>
               We shall not be liable for any failure or delay in performance
               under these Terms which is due to fire, flood, earthquake,
@@ -594,7 +715,7 @@ export function TermsContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              14. Modifications to Terms
+              15. Modifications to Terms
             </h2>
             <p>
               We reserve the right to modify these Terms at any time in our sole
@@ -620,7 +741,7 @@ export function TermsContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              15. Governing Law and Jurisdiction
+              16. Governing Law and Jurisdiction
             </h2>
             <p>
               These Terms shall be governed by and construed in accordance with
@@ -634,7 +755,7 @@ export function TermsContent() {
 
           <section className="mb-12">
             <h2 className="mb-4 text-2xl font-bold">
-              16. Severability and Waiver
+              17. Severability and Waiver
             </h2>
             <p>
               If any provision of these Terms is held to be invalid or
@@ -646,7 +767,7 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">17. Entire Agreement</h2>
+            <h2 className="mb-4 text-2xl font-bold">18. Entire Agreement</h2>
             <p>
               These Terms, together with our Privacy Policy and any other legal
               notices published by us on our Services, constitute the entire
@@ -657,7 +778,7 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">18. Contact Information</h2>
+            <h2 className="mb-4 text-2xl font-bold">19. Contact Information</h2>
             <p>
               If you have any questions, concerns, or legal inquiries regarding
               these Terms, please contact us:
@@ -684,7 +805,7 @@ export function TermsContent() {
           </section>
 
           <section className="mb-12">
-            <h2 className="mb-4 text-2xl font-bold">19. Effective Date</h2>
+            <h2 className="mb-4 text-2xl font-bold">20. Effective Date</h2>
             <p>
               These Terms are effective as of the "Last Updated" date indicated
               on our website and apply to all access to and use of our Services.

@@ -1,6 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { canUserAddMoreFavorites, getStripeCustomerId } from "@ebox/stripe";
+
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 export const favoritesRouter = createTRPCRouter({
@@ -30,6 +32,13 @@ export const favoritesRouter = createTRPCRouter({
   addFavorite: protectedCustomerProcedure
     .input(z.object({ locationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
+      if (!stripeCustomerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User does not have a Stripe customer ID",
+        });
+      }
       // Check if location exists
       const location = await ctx.db.location.findUnique({
         where: { id: input.locationId },
@@ -59,11 +68,24 @@ export const favoritesRouter = createTRPCRouter({
         });
       }
 
-      // Check if this will be the user's first favorite (make it primary)
       const userFavoritesCount = await ctx.db.userFavoriteLocation.count({
         where: { userId: ctx.session.userId },
       });
 
+      // Check subscription limits
+      const { canAdd } = await canUserAddMoreFavorites(
+        userFavoritesCount,
+        stripeCustomerId,
+      );
+
+      if (!canAdd) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `You have reached the maximum number of favorite locations for your subscription plan. Please upgrade to add more favorites.`,
+        });
+      }
+
+      // Check if this will be the user's first favorite (make it primary)
       const isPrimary = userFavoritesCount === 0;
 
       return ctx.db.userFavoriteLocation.create({
@@ -240,4 +262,29 @@ export const favoritesRouter = createTRPCRouter({
         isPrimary: favorite?.isPrimary || false,
       };
     }),
+
+  // Get user's favorites count and subscription limits
+  getFavoritesLimits: protectedCustomerProcedure.query(async ({ ctx }) => {
+    const favoritesCount = await ctx.db.userFavoriteLocation.count({
+      where: { userId: ctx.session.userId },
+    });
+    const stripeCustomerId = await getStripeCustomerId(ctx.session.userId);
+    if (!stripeCustomerId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User does not have a Stripe customer ID",
+      });
+    }
+    const { canAdd, limit, remaining } = await canUserAddMoreFavorites(
+      favoritesCount,
+      stripeCustomerId,
+    );
+
+    return {
+      current: favoritesCount,
+      limit,
+      remaining,
+      canAdd,
+    };
+  }),
 });

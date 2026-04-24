@@ -71,3 +71,67 @@ Note the `'use client'` directive at the top of the file. This is required for R
 ### Logging
 
 We use Axiom for logging. In order to log to Axiom's log streams, use the `log` object for server-side Next.js logging or the `useLogger` hook for client-side logging, sourced by whatever application you're in. To log within a tRPC server, use the `ctx.log` object.
+
+### Stripe
+
+The lookup key for the meter `package_allowance` is `<tier>_allowance`. More explicitly:
+
+1. basic_allowance
+2. basic_plus_allowance
+3. premium_allowance
+4. business_pro_allowance
+
+The lookup key for the meter `overdue_package_holding` is `<tier>_overdue_holding`. More explicitly:
+
+1. basic_overdue_holding
+2. basic_plus_overdue_holding
+3. premium_overdue_holding
+4. business_pro_overdue_holding
+
+If the tier is yearly, all tiers are appended with `_yearly`. Therefore, the entire repository of prices is:
+
+Basic:
+
+- month:
+  - basic
+  - basic_allowance
+  - basic_overdue_holding
+- year:
+  - basic_yearly
+  - basic_yearly_allowance
+  - basic_yearly_overdue_holding
+
+Basic+:
+
+- month:
+  - basic_plus
+  - basic_plus_allowance
+  - basic_plus_overdue_holding
+- year:
+  - basic_plus_yearly
+  - basic_plus_yearly_allowance
+  - basic_plus_yearly_overdue_holding
+
+Premium:
+
+- month:
+  - premium
+  - premium_allowance
+  - premium_overdue_holding
+- year:
+  - premium_yearly
+  - premium_yearly_allowance
+  - premium_yearly_overdue_holding
+
+Business Pro:
+
+- month:
+  - business_pro
+  - business_pro_allowance
+  - business_pro_overdue_holding
+- year:
+  - business_pro_yearly
+  - business_pro_yearly_allowance
+  - business_pro_yearly_overdue_holding
+
+In general, the way we do this is quite confusing, because our SubscriptionTypes are one of the four subscription plans, and then we append `_yearly` if it's a yearly subscription. Perhaps in the future we refactor everything within the `subscription.ts` client api routes.

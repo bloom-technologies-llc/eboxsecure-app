@@ -1,6 +1,15 @@
 import { UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import Stripe from "stripe";
 import { z } from "zod";
+
+import { NotificationService } from "@ebox/notifications";
+import { kv } from "@ebox/redis-client";
+import {
+  getStripeCustomerId,
+  priceIdsToPlan,
+  subscriptionDataSchema,
+} from "@ebox/stripe";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
@@ -207,6 +216,13 @@ export const ordersRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { orderId, customerId } = input;
+      const stripeCustomerId = await getStripeCustomerId(customerId);
+      if (!stripeCustomerId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User does not have a Stripe customer ID",
+        });
+      }
       const order = await ctx.db.order.findUniqueOrThrow({
         where: {
           id: orderId,
@@ -241,6 +257,14 @@ export const ordersRouter = createTRPCRouter({
         });
       }
 
+      if (!order.deliveredDate) {
+        console.error(`Order ID ${input.orderId} was not delivered.`);
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This order was not delivered.",
+        });
+      }
+
       await ctx.db.order.update({
         where: {
           id: input.orderId,
@@ -254,5 +278,80 @@ export const ordersRouter = createTRPCRouter({
           },
         },
       });
+
+      // Send pickup notification to the order owner
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: order.customerId,
+        type: "ORDER_PICKED_UP",
+        message: `Your package (Order #${input.orderId}) has been picked up.`,
+        orderId: input.orderId,
+      });
+
+      const subscriptionDataKv = await kv.get(
+        `stripe:customer:${stripeCustomerId}`,
+      );
+
+      const parsedSubData =
+        subscriptionDataSchema.safeParse(subscriptionDataKv);
+
+      if (!parsedSubData.success) {
+        return false;
+      }
+
+      const subscriptionData = parsedSubData.data;
+      const plan = await priceIdsToPlan(subscriptionData.priceIds);
+      if (!plan) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Unable to determine subscription tier from price IDs",
+        });
+      }
+      const allowedHoldingPeriod =
+        await ctx.db.subscriptionLimit.findUniqueOrThrow({
+          where: {
+            type: plan.subscriptionType,
+          },
+          select: {
+            maxPackageHolding: true,
+          },
+        });
+      const maxHoldingDays = allowedHoldingPeriod.maxPackageHolding;
+
+      const numDaysHeld = Math.ceil(
+        (new Date().getTime() - order.deliveredDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+      const overdueDays = numDaysHeld - maxHoldingDays;
+      if (overdueDays > 0) {
+        console.log(
+          `Order ID ${input.orderId} is overdue by ${overdueDays} days. Sending Stripe metering event.`,
+        );
+        // Send Stripe metering event
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+        const meterEvent = await stripe.billing.meterEvents.create({
+          event_name: "overdue_package_holding",
+          payload: {
+            value: overdueDays.toString(),
+            stripe_customer_id: stripeCustomerId,
+          },
+        });
+        await ctx.db.meterEvent.create({
+          data: {
+            eventType: "OVERDUE_PACKAGE_HOLDING",
+            value: overdueDays,
+            customerId: customerId,
+            orderId: order.id,
+          },
+        });
+
+        await notificationService.send({
+          userId: order.customerId,
+          type: "ORDER_OVERDUE",
+          message: `Your package (Order #${input.orderId}) was overdue by ${overdueDays} day(s). An overdue holding fee has been applied.`,
+          orderId: input.orderId,
+        });
+      }
     }),
 });

@@ -14,7 +14,10 @@ import { ZodError } from "zod";
 
 import { db } from "@ebox/db";
 
-export type NonMachineAuthObject = Extract<AuthObject, { tokenType: "session_token" }>;
+export type NonMachineAuthObject = Extract<
+  AuthObject,
+  { tokenType: "session_token" }
+>;
 /**
  * 1. CONTEXT
  *
@@ -120,7 +123,6 @@ export const protectedCustomerProcedure = protectedProcedure.use(
         userType: true,
       },
     });
-    console.log("userType", userType);
     if (!userType || userType.userType !== "CUSTOMER") {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }

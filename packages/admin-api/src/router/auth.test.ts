@@ -390,8 +390,8 @@ describe("auth router", () => {
         pickedUpById: null,
         processedAt: null,
         carrierId: null,
-        meteredAt: null,
-        meterEventId: null,
+        trackingNumber: null,
+        rawDeliveryJson: null,
       });
 
       await expect(
@@ -458,8 +458,8 @@ describe("auth router", () => {
         pickedUpById: "mock-user-id",
         processedAt: null,
         carrierId: null,
-        meteredAt: null,
-        meterEventId: null,
+        trackingNumber: null,
+        rawDeliveryJson: null,
       });
 
       await expect(

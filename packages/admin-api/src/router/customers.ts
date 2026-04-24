@@ -428,6 +428,7 @@ export const customersRouter = createTRPCRouter({
               create: input.notifications?.map((notification) => ({
                 userId: notification.userId,
                 message: notification.message,
+                type: "ORDER_COMMENT" as const,
               })),
             },
           },

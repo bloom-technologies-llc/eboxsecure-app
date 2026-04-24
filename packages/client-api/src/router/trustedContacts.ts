@@ -2,6 +2,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { NotificationService } from "@ebox/notifications";
+
 import { emailService } from "../services/emailService";
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
@@ -160,6 +162,14 @@ export const trustedContactsRouter = createTRPCRouter({
           },
         });
 
+        // Send in-app notification to the invited user
+        const notificationService = new NotificationService(ctx.db);
+        await notificationService.send({
+          userId: targetUserId,
+          type: "TRUSTED_CONTACT_INVITATION_RECEIVED",
+          message: `${inviterName} has invited you to be their trusted contact.`,
+        });
+
         // Send notification email to existing user
         await emailService.sendTrustedContactInvitationToExistingUser({
           recipientEmail: input.email,
@@ -220,6 +230,14 @@ export const trustedContactsRouter = createTRPCRouter({
         });
       }
 
+      // Notify the account holder that their invitation was accepted
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: input.trustedContactId,
+        type: "TRUSTED_CONTACT_ACCEPTED",
+        message: "Your trusted contact invitation has been accepted.",
+      });
+
       return { success: true };
     }),
 
@@ -241,6 +259,14 @@ export const trustedContactsRouter = createTRPCRouter({
           message: "Invitation not found",
         });
       }
+
+      // Notify the account holder that their invitation was declined
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: input.trustedContactId,
+        type: "TRUSTED_CONTACT_DECLINED",
+        message: "Your trusted contact invitation has been declined.",
+      });
 
       return { success: true };
     }),
@@ -284,6 +310,15 @@ export const trustedContactsRouter = createTRPCRouter({
           },
         }),
       ]);
+
+      // Notify the removed contact
+      const notificationService = new NotificationService(ctx.db);
+      await notificationService.send({
+        userId: input.trustedContactId,
+        type: "TRUSTED_CONTACT_REMOVED",
+        message: "You have been removed as a trusted contact.",
+      });
+
       return {
         success: true,
       };

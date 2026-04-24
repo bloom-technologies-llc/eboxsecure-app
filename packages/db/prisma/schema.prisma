@@ -15,10 +15,12 @@ model User {
     corporateAccount     CorporateAccount?
     customerAccount      CustomerAccount?
     employeeAccount      EmployeeAccount?
-    notifications        Notification[]
-    sessions             Session[]
-    UserFavoriteLocation UserFavoriteLocation[]
-    Comment              Comment[]
+    notifications            Notification[]
+    notificationPreference   NotificationPreference?
+    sessions                 Session[]
+    UserFavoriteLocation     UserFavoriteLocation[]
+    Comment                  Comment[]
+    invitedAdmins            PendingAdminAccount[] @relation("InvitedAdmins")
 }
 
 model Session {
@@ -34,9 +36,11 @@ model CustomerAccount {
     firstName        String
     lastName         String
     email            String
+    virtualAddress   String?                    @unique
     phoneNumber      String?
     shippingAddress  String?
     photoLink        String? // UploadThing URL for portrait photo
+    stripeCustomerId String?
     subscription     SubscriptionType?          @default(BASIC)
     customerComments CustomerComment[]
     customerNotes    CustomerNote[]
@@ -76,14 +80,19 @@ model CorporateAccount {
     user User   @relation(fields: [id], references: [id])
 }
 
-// TODO: This holds pending account creation for Employees and Corporate. 
-// Add an optional field for Employee Role, if the Pending Account is an Employee UserType. Modify the webhook accordingly.
 model PendingAdminAccount {
-    id          Int      @id @default(autoincrement())
-    email       String   @unique
-    accountType UserType
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id           Int                      @id @default(autoincrement())
+    email        String                   @unique
+    accountType  UserType
+    employeeRole EmployeeRole?
+    locationId   Int?
+    invitedById  String
+    status       PendingAdminAccountStatus @default(PENDING)
+    createdAt    DateTime                 @default(now())
+    updatedAt    DateTime                 @updatedAt
+
+    location  Location? @relation(fields: [locationId], references: [id])
+    invitedBy User      @relation("InvitedAdmins", fields: [invitedById], references: [id])
 }
 
 model OnboardingPhoneUploadLink {
@@ -109,8 +118,8 @@ model Order {
     pickedUpById      String?
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
-    meteredAt         DateTime?
-    meterEventId      String?         @unique
+    trackingNumber    String? // Provided by Shopify. TODO: may need to modify for better Shopify handling during integration
+    rawDeliveryJson   Json?
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
@@ -119,7 +128,7 @@ model Order {
     orderComments     OrderComment[]
     meterEvent        MeterEvent?
     OrderSharedAccess OrderSharedAccess[]
-
+    notifications     Notification[]
 }
 
 model MeterEvent {
@@ -161,8 +170,9 @@ model Location {
     locationComments LocationComment[]
     locationNotes    LocationNote[]
     orders           Order[]
-    employeeAccounts EmployeeAccount[]
-    favoritedBy      UserFavoriteLocation[]
+    employeeAccounts     EmployeeAccount[]
+    favoritedBy          UserFavoriteLocation[]
+    pendingAdminAccounts PendingAdminAccount[]
 }
 
 model LocationHours {
@@ -257,15 +267,35 @@ model OrderComment {
 }
 
 model Notification {
-    id        String   @id @default(cuid())
+    id        String           @id @default(cuid())
     userId    String
     message   String
-    read      Boolean  @default(false)
+    read      Boolean          @default(false)
+    type      NotificationType
     commentId String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    comment   Comment? @relation(fields: [commentId], references: [id])
-    user      User     @relation(fields: [userId], references: [id])
+    orderId   Int?
+    metadata  Json?
+    createdAt DateTime         @default(now())
+    updatedAt DateTime         @updatedAt
+
+    comment Comment? @relation(fields: [commentId], references: [id])
+    order   Order?   @relation(fields: [orderId], references: [id])
+    user    User     @relation(fields: [userId], references: [id])
+}
+
+model NotificationPreference {
+    id                String   @id @default(cuid())
+    userId            String   @unique
+    pushEnabled       Boolean  @default(true)
+    emailEnabled      Boolean  @default(true)
+    smsEnabled        Boolean  @default(false)
+    notificationEmail String?
+    phoneNumber       String?
+    expoPushToken     String?
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserFavoriteLocation {
@@ -331,6 +361,13 @@ model OrderSharedAccess {
     @@index([grantedById])
 }
 
+model SubscriptionLimit {
+    type              SubscriptionType @unique
+    packageAllowance  Int
+    maxPackageHolding Int
+    locationLimit     Int
+}
+
 enum UserType {
     CUSTOMER
     EMPLOYEE
@@ -383,6 +420,32 @@ enum SubscriptionType {
 }
 
 enum MeterEventType {
-    PACKAGE_HOLDING
+    OVERDUE_PACKAGE_HOLDING
     PACKAGE_ALLOWANCE
+}
+
+enum PendingAdminAccountStatus {
+    PENDING
+    REVOKED
+}
+
+enum NotificationType {
+    ORDER_DELIVERED
+    ORDER_PICKED_UP
+    ORDER_OVERDUE
+    ORDER_SHARED
+    ORDER_UNSHARED
+    ORDER_COMMENT
+    SUBSCRIPTION_UPGRADED
+    SUBSCRIPTION_DOWNGRADED
+    SUBSCRIPTION_CANCELED
+    SUBSCRIPTION_REACTIVATED
+    PAYMENT_FAILED
+    INVOICE_PAID
+    TRIAL_ENDING_SOON
+    TRUSTED_CONTACT_INVITATION_RECEIVED
+    TRUSTED_CONTACT_ACCEPTED
+    TRUSTED_CONTACT_DECLINED
+    TRUSTED_CONTACT_REMOVED
+    PACKAGE_ALLOWANCE_EXCEEDED
 }

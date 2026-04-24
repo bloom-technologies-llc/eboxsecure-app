@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SettingsLayout from "@/components/settings-layout";
-import { Bell, Mail, Smartphone } from "lucide-react";
+import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 import {
@@ -15,22 +15,73 @@ import {
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
 import { Switch } from "@ebox/ui/switch";
+import { useToast } from "@ebox/ui/hooks/use-toast";
+
+import { api } from "@/trpc/react";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState({
-    desktop: false,
-    unreadBadge: true,
-    email: true,
+  const { toast } = useToast();
+  const { data: preferences, isLoading } =
+    api.notification.getPreferences.useQuery();
+  const utils = api.useUtils();
+
+  const { mutate: updatePreferences, isPending } =
+    api.notification.updatePreferences.useMutation({
+      onSuccess: () => {
+        utils.notification.getPreferences.invalidate();
+        toast({ description: "Notification settings saved" });
+      },
+      onError: () => {
+        toast({
+          description: "Failed to save settings",
+          variant: "destructive",
+        });
+      },
+    });
+
+  const [settings, setSettings] = useState({
+    pushEnabled: true,
+    emailEnabled: true,
+    smsEnabled: false,
+    notificationEmail: "",
+    phoneNumber: "",
   });
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications((prev) => ({ ...prev, [key]: value }));
+  useEffect(() => {
+    if (preferences) {
+      setSettings({
+        pushEnabled: preferences.pushEnabled,
+        emailEnabled: preferences.emailEnabled,
+        smsEnabled: preferences.smsEnabled,
+        notificationEmail: preferences.notificationEmail ?? "",
+        phoneNumber: preferences.phoneNumber ?? "",
+      });
+    }
+  }, [preferences]);
+
+  const handleSave = () => {
+    updatePreferences({
+      pushEnabled: settings.pushEnabled,
+      emailEnabled: settings.emailEnabled,
+      smsEnabled: settings.smsEnabled,
+      notificationEmail: settings.notificationEmail || null,
+      phoneNumber: settings.phoneNumber || null,
+    });
   };
+
+  if (isLoading) {
+    return (
+      <SettingsLayout>
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </SettingsLayout>
+    );
+  }
 
   return (
     <SettingsLayout>
       <div className="space-y-6">
-        {/* Page Header */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -43,15 +94,14 @@ export default function NotificationsPage() {
           </CardHeader>
         </Card>
 
-        {/* Desktop Notifications */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
-              Desktop Notifications
+              Push Notifications
             </CardTitle>
             <CardDescription>
-              Control push notifications on your desktop
+              Control push notifications on your devices
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -59,48 +109,20 @@ export default function NotificationsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">Push Notifications</p>
                 <p className="text-sm text-muted-foreground">
-                  Get desktop notifications for recent updates and important
+                  Get push notifications for order updates and important
                   information
                 </p>
               </div>
               <Switch
-                checked={notifications.desktop}
+                checked={settings.pushEnabled}
                 onCheckedChange={(checked) =>
-                  handleNotificationChange("desktop", checked)
+                  setSettings((prev) => ({ ...prev, pushEnabled: checked }))
                 }
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Badge Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Unread Message Badge</CardTitle>
-            <CardDescription>
-              Visual indicators for unread notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Show Unread Badge</p>
-                <p className="text-sm text-muted-foreground">
-                  Display a red badge on the notification bell when you have
-                  unread messages
-                </p>
-              </div>
-              <Switch
-                checked={notifications.unreadBadge}
-                onCheckedChange={(checked) =>
-                  handleNotificationChange("unreadBadge", checked)
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Email Notifications */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -119,14 +141,14 @@ export default function NotificationsPage() {
                 </p>
               </div>
               <Switch
-                checked={notifications.email}
+                checked={settings.emailEnabled}
                 onCheckedChange={(checked) =>
-                  handleNotificationChange("email", checked)
+                  setSettings((prev) => ({ ...prev, emailEnabled: checked }))
                 }
               />
             </div>
 
-            {notifications.email && (
+            {settings.emailEnabled && (
               <div className="border-t pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="notificationEmail">Notification Email</Label>
@@ -134,9 +156,16 @@ export default function NotificationsPage() {
                     id="notificationEmail"
                     type="email"
                     placeholder="Enter email for notifications"
+                    value={settings.notificationEmail}
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        notificationEmail: e.target.value,
+                      }))
+                    }
                   />
                   <p className="text-xs text-muted-foreground">
-                    This email will be used for all notification emails
+                    Leave blank to use your account email
                   </p>
                 </div>
               </div>
@@ -144,7 +173,55 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
 
-        {/* Save Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              SMS Notifications
+            </CardTitle>
+            <CardDescription>Receive notifications via text message</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">SMS Updates</p>
+                <p className="text-sm text-muted-foreground">
+                  Receive text message notifications for order updates
+                </p>
+              </div>
+              <Switch
+                checked={settings.smsEnabled}
+                onCheckedChange={(checked) =>
+                  setSettings((prev) => ({ ...prev, smsEnabled: checked }))
+                }
+              />
+            </div>
+
+            {settings.smsEnabled && (
+              <div className="border-t pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={settings.phoneNumber}
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        phoneNumber: e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Phone number for SMS notifications
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -156,7 +233,9 @@ export default function NotificationsPage() {
                   Your preferences will be applied immediately
                 </p>
               </div>
-              <Button>Save Settings</Button>
+              <Button onClick={handleSave} disabled={isPending}>
+                {isPending ? "Saving..." : "Save Settings"}
+              </Button>
             </div>
           </CardContent>
         </Card>

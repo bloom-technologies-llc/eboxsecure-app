@@ -54,6 +54,9 @@ export default function LocationDetailPage() {
     { enabled: !isNaN(locationId) },
   );
 
+  const { data: favoritesLimits, refetch: refetchLimits } =
+    api.favorites.getFavoritesLimits.useQuery();
+
   const addFavoriteMutation = api.favorites.addFavorite.useMutation({
     onSuccess: () => {
       toast({
@@ -61,6 +64,7 @@ export default function LocationDetailPage() {
         description: "Location added to favorites!",
       });
       refetch();
+      refetchLimits();
     },
     onError: (error) => {
       toast({
@@ -78,6 +82,7 @@ export default function LocationDetailPage() {
         description: "Location removed from favorites!",
       });
       refetch();
+      refetchLimits();
     },
     onError: (error) => {
       toast({
@@ -212,7 +217,15 @@ export default function LocationDetailPage() {
             {!location.isFavorited ? (
               <Button
                 onClick={() => addFavoriteMutation.mutate({ locationId })}
-                disabled={addFavoriteMutation.isPending}
+                disabled={
+                  addFavoriteMutation.isPending ||
+                  favoritesLimits?.canAdd === false
+                }
+                title={
+                  favoritesLimits?.canAdd === false
+                    ? `You've reached your limit of ${favoritesLimits?.limit} favorite locations`
+                    : ""
+                }
               >
                 <Heart className="mr-2 h-4 w-4" />
                 {addFavoriteMutation.isPending

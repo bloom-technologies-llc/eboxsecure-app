@@ -96,9 +96,6 @@ export default function CameraInterface({
             <div className="relative">
               {/* Face outline guide */}
               <div className="h-64 w-48 rounded-full border-2 border-dashed border-white/80" />
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 transform rounded-full bg-black/50 px-3 py-1 text-sm font-medium text-white">
-                Position your face here
-              </div>
             </div>
           </div>
         </div>

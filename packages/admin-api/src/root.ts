@@ -4,10 +4,12 @@ import { carriersRouter } from "./router/carriers";
 import { customersRouter } from "./router/customers";
 import { employeeCommentsRouter } from "./router/employee-comments";
 import { employeesRouter } from "./router/employees";
+import { invitationsRouter } from "./router/invitations";
 import { locationsRouter } from "./router/locations";
 import { notification } from "./router/notification";
 import { orderComments } from "./router/order-comments";
 import { ordersRouter } from "./router/orders";
+import { scannerRouter } from "./router/scanner";
 import { userRouter } from "./router/user";
 import { createTRPCRouter } from "./trpc";
 
@@ -18,11 +20,13 @@ export const appRouter = createTRPCRouter({
   locations: locationsRouter,
   carriers: carriersRouter,
   employees: employeesRouter,
+  invitations: invitationsRouter,
   user: userRouter,
   orderComments: orderComments,
   employeeComments: employeeCommentsRouter,
   notification: notification,
   analytics: analyticsRouter,
+  scanner: scannerRouter,
 });
 
 // export type definition of API

@@ -7,9 +7,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
+import VirtualAddressBanner from "@/components/VirtualAddressBanner";
 import { api } from "@/trpc/react";
 
-import { RouterOutput } from "@ebox/client-api";
+import type { RouterOutput } from "@ebox/client-api";
 
 import QRModal from "./qr-modal";
 
@@ -70,6 +71,8 @@ export default function Page() {
     <SafeAreaView style={{ backgroundColor: "#ffffff", flex: 1 }}>
       <View>
         <Text className="mb-4 text-2xl font-semibold">Order History</Text>
+
+        <VirtualAddressBanner />
 
         {isLoading && <ActivityIndicator size="large" color="#000" />}
         {error && <Text className="text-red-500">Failed to load orders.</Text>}

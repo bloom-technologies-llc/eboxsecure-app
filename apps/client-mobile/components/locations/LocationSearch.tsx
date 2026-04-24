@@ -18,6 +18,7 @@ interface LocationSearchProps {
   onAddFavorite: (locationId: number) => void;
   onResultPress: (locationId: number) => void;
   isAddingFavorite: boolean;
+  canAddFavorite?: boolean;
 }
 
 export function LocationSearch({
@@ -26,6 +27,7 @@ export function LocationSearch({
   onAddFavorite,
   onResultPress,
   isAddingFavorite,
+  canAddFavorite = true,
 }: LocationSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -105,6 +107,7 @@ export function LocationSearch({
           isLoading={isAddingFavorite}
           onToggle={() => handleFavoritePress(item.id)}
           variant="small"
+          disabled={!canAddFavorite && !item.isFavorited}
         />
       </View>
     </View>
