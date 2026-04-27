@@ -538,6 +538,21 @@ export function PrivacyContent() {
             </p>
 
             <p className="mt-4">
+              <strong>Message frequency.</strong> Message frequency varies
+              based on your package activity, account configuration, and the
+              number of trusted contacts or shared recipients associated with
+              your account.
+            </p>
+
+            <p className="mt-4">
+              <strong>Message and data rates.</strong> Message and data rates
+              may apply in accordance with your mobile carrier plan.
+              EboxSecure is not responsible for any charges assessed by your
+              wireless carrier in connection with your receipt of SMS
+              messages from us.
+            </p>
+
+            <p className="mt-4">
               You may withdraw your consent to receive SMS messages at any time
               by replying <strong>STOP</strong> to any SMS message from us, or
               by toggling "SMS notifications" off in Settings → Notifications
