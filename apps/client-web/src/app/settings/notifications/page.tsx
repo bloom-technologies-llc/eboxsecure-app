@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SettingsLayout from "@/components/settings-layout";
+import { api } from "@/trpc/react";
 import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -12,12 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@ebox/ui/card";
+import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
 import { Switch } from "@ebox/ui/switch";
-import { useToast } from "@ebox/ui/hooks/use-toast";
-
-import { api } from "@/trpc/react";
 
 export default function NotificationsPage() {
   const { toast } = useToast();
@@ -179,14 +178,84 @@ export default function NotificationsPage() {
               <MessageSquare className="h-5 w-5" />
               SMS Notifications
             </CardTitle>
-            <CardDescription>Receive notifications via text message</CardDescription>
+            <CardDescription>
+              EboxSecure SMS Notifications &mdash; transactional text messages
+              about your packages
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="space-y-2 rounded-md border border-muted bg-muted/30 p-4 text-sm text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">
+                  Program description:
+                </span>{" "}
+                If you opt in, EboxSecure will send you transactional SMS text
+                messages related to your account, including package delivery and
+                pickup notifications, overdue holding fee alerts, shared order
+                notifications, and trusted-contact invitations.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Frequency:</span>{" "}
+                Message frequency varies based on your package activity.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Cost:</span>{" "}
+                Message and data rates may apply. EboxSecure does not charge for
+                SMS messages; charges from your wireless carrier may apply.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Opt out:</span>{" "}
+                Reply <span className="font-semibold">STOP</span> to any
+                message, or toggle SMS notifications off on this page, to
+                unsubscribe at any time.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Help:</span> Reply{" "}
+                <span className="font-semibold">HELP</span> to any message, or
+                contact{" "}
+                <a
+                  href="mailto:support@eboxsecure.com"
+                  className="underline underline-offset-2"
+                >
+                  support@eboxsecure.com
+                </a>
+                .
+              </p>
+              <p>
+                By enabling SMS notifications and submitting your phone number,
+                you agree to receive recurring transactional SMS text messages
+                from EboxSecure at the number provided, sent using automated
+                technology. Consent to receive SMS messages is not a condition
+                of any purchase. We will not share your mobile number or SMS
+                opt-in data with third parties or affiliates for their marketing
+                or promotional purposes. See our{" "}
+                <a
+                  href="https://eboxsecure.com/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  Privacy Policy
+                </a>{" "}
+                and{" "}
+                <a
+                  href="https://eboxsecure.com/terms"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  Terms of Service
+                </a>{" "}
+                for details.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium">SMS Updates</p>
+                <p className="text-sm font-medium">Enable SMS notifications</p>
                 <p className="text-sm text-muted-foreground">
-                  Receive text message notifications for order updates
+                  Off by default. Toggle on to receive transactional SMS
+                  messages about your packages.
                 </p>
               </div>
               <Switch
@@ -200,7 +269,7 @@ export default function NotificationsPage() {
             {settings.smsEnabled && (
               <div className="border-t pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Label htmlFor="phoneNumber">Mobile phone number</Label>
                   <Input
                     id="phoneNumber"
                     type="tel"
@@ -214,7 +283,9 @@ export default function NotificationsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Phone number for SMS notifications
+                    U.S. mobile number that can receive SMS. By providing this
+                    number you confirm you are the subscriber or are authorized
+                    by the subscriber to opt in.
                   </p>
                 </div>
               </div>
