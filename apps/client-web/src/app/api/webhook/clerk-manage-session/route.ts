@@ -71,18 +71,31 @@ export async function POST(req: Request) {
   }
   const { id: sessionId, status: sessionStatus, user_id: userId } = evt.data;
 
-  await db.session.upsert({
-    where: {
-      id: sessionId,
-    },
-    update: {
-      status: sessionStatus.toUpperCase() as SessionStatus,
-    },
-    create: {
-      id: sessionId,
-      userId,
-      status: sessionStatus.toUpperCase() as SessionStatus,
-    },
-  });
+  try {
+    await db.session.upsert({
+      where: {
+        id: sessionId,
+      },
+      update: {
+        status: sessionStatus.toUpperCase() as SessionStatus,
+      },
+      create: {
+        id: sessionId,
+        userId,
+        status: sessionStatus.toUpperCase() as SessionStatus,
+      },
+    });
+  } catch (err: any) {
+    // Race with clerk-create-user webhook: session.created can arrive before
+    // user.created has finished writing the User row. Return 503 so Clerk
+    // retries with backoff, by which time the User row will exist.
+    if (err?.code === "P2003") {
+      log.warn(
+        `Session webhook arrived before user ${userId} was provisioned; signaling retry`,
+      );
+      return new Response("User not yet provisioned", { status: 503 });
+    }
+    throw err;
+  }
   return new Response("", { status: 200 });
 }

@@ -106,11 +106,11 @@ model OnboardingPhoneUploadLink {
 }
 
 model Order {
-    id                Int       @id @default(autoincrement())
+    id                Int                @id @default(autoincrement())
     customerId        String
     vendorOrderId     String
-    createdAt         DateTime  @default(now())
-    updatedAt         DateTime  @updatedAt
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
     total             Float
     shippedLocationId Int
     deliveredDate     DateTime?
@@ -118,8 +118,11 @@ model Order {
     pickedUpById      String?
     processedAt       DateTime?
     carrierId         Int? // Optional relationship to Carrier
-    trackingNumber    String? // Provided by Shopify. TODO: may need to modify for better Shopify handling during integration
+    trackingNumber    String?
     rawDeliveryJson   Json?
+    shopifyOrderId    String?            @unique
+    shopifyShop       String?
+    sourceChannel     OrderSourceChannel @default(SCAN)
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
@@ -160,6 +163,12 @@ model Location {
     id              Int          @id @default(autoincrement())
     name            String
     address         String
+    address1        String?
+    address2        String?
+    city            String?
+    state           String?
+    zip             String?
+    countryCode     String? // ISO 3166 Alpha-2
     email           String?
     storageCapacity Int          @default(500)
     createdAt       DateTime     @default(now())
@@ -448,4 +457,53 @@ enum NotificationType {
     TRUSTED_CONTACT_DECLINED
     TRUSTED_CONTACT_REMOVED
     PACKAGE_ALLOWANCE_EXCEEDED
+}
+
+enum OrderSourceChannel {
+    SCAN
+    SHOPIFY
+}
+
+// Shopify OAuth session storage (used by @shopify/shopify-app-session-storage-prisma)
+model ShopifySession {
+    id            String    @id
+    shop          String
+    state         String
+    isOnline      Boolean   @default(false)
+    scope         String?
+    expires       DateTime?
+    accessToken   String
+    userId        BigInt?
+    firstName     String?
+    lastName      String?
+    email         String?
+    accountOwner  Boolean   @default(false)
+    locale        String?
+    collaborator  Boolean?  @default(false)
+    emailVerified Boolean?  @default(false)
+
+    @@map("shopify_session")
+}
+
+// Webhook idempotency tracking for Shopify webhooks
+model ShopifyWebhookEvent {
+    id             String   @id @default(cuid())
+    webhookEventId String   @unique
+    topic          String
+    shop           String
+    createdAt      DateTime @default(now())
+
+    @@map("shopify_webhook_event")
+}
+
+// Dead-letter table for failed monorepo API calls from webhook handlers
+model FailedWebhookForward {
+    id        String   @id @default(cuid())
+    topic     String
+    payload   Json
+    error     String
+    retries   Int      @default(0)
+    createdAt DateTime @default(now())
+
+    @@map("failed_webhook_forward")
 }

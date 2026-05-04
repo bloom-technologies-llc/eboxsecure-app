@@ -5,10 +5,13 @@
   "types": "./index.ts",
   "license": "MIT",
   "scripts": {
-    "studio": "dotenv -e ../../.env prisma studio",
-    "push": "dotenv -e ../../.env prisma db push",
-    "postinstall": "prisma generate",
-    "seed-analytics": "dotenv -e ../../.env tsx seed-analytics.ts"
+    "prisma": "dotenv -e ../../.env -- prisma",
+    "studio": "dotenv -e ../../.env -- prisma studio",
+    "push": "dotenv -e ../../.env -- prisma db push",
+    "generate": "dotenv -e ../../.env -- prisma generate",
+    "migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "postinstall": "dotenv -e ../../.env -- prisma generate",
+    "seed-analytics": "dotenv -e ../../.env -- tsx seed-analytics.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
