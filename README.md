@@ -135,3 +135,22 @@ Business Pro:
   - business_pro_yearly_overdue_holding
 
 In general, the way we do this is quite confusing, because our SubscriptionTypes are one of the four subscription plans, and then we append `_yearly` if it's a yearly subscription. Perhaps in the future we refactor everything within the `subscription.ts` client api routes.
+
+## Bypass Payments
+
+Key: `stripe:customer:cus_<id>`
+
+```
+{
+  "subscriptionId": "sub_1TOSJhPFcJwvZfVCJdcrXRPQ",
+  "status": "active",
+  "priceIds": [
+    "price_1S9S9JPFcJwvZfVC2PCZ57Ld",
+    "price_1S9STAPFcJwvZfVCQlUJUGW0",
+    "price_1S9SSTPFcJwvZfVCIIjWxOn7"
+  ],
+  "currentPeriodEnd": 2377519679,
+  "currentPeriodStart": 2477519679,
+  "cancelAtPeriodEnd": false
+}
+```
