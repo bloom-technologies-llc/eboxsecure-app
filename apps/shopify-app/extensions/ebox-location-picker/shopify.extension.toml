@@ -1,0 +1,30 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "ebox-location-picker"
+handle = "ebox-location-picker"
+type = "ui_extension"
+
+    [[extensions.targeting]]
+    module = "./src/Checkout.tsx"
+    target = "purchase.checkout.delivery-address.render-before"
+
+        [[extensions.targeting.metafields]]
+        namespace = "ebox"
+        key = "eboxOrder"
+
+    [extensions.capabilities]
+    api_access = true
+    network_access = true
+    block_progress = true
+
+# Defines settings that will be collected from merchants installing
+# your extension. Learn more:
+# https://shopify.dev/docs/api/checkout-ui-extensions/unstable/configuration#settings-definition
+
+# [extensions.settings]
+# [[extensions.settings.fields]]
+# key = "banner_title"
+# type = "single_line_text_field"
+# name = "Banner title"
+# description = "Enter a title for the banner"

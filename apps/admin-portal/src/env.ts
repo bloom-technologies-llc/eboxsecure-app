@@ -16,6 +16,8 @@ export const env = createEnv({
     PICKUP_TOKEN_AUDIENCE: z.string(),
     PICKUP_TOKEN_ISSUER: z.string(),
     IMAGE_CDN_HOST: z.string(),
+    SHOPIFY_INTEGRATION_API_KEY: z.string().optional(),
+    SHOPIFY_INTEGRATION_JWT_SECRET: z.string().optional(),
   },
   /**
    * Specify your client-side environment variables schema here.

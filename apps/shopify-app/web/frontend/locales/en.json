@@ -1,0 +1,20 @@
+{
+  "HomePage": {
+    "heading": "Your EboxSecure App is Active.",
+    "title": "EboxSecure",
+    "paragraph": "Be sure to add the Ebox Checkout extension using the Checkout Editor. No other configuration is needed—your app runs seamlessly in the background.",
+    "trophyAltText": "Trophy Image"
+  },
+  "NotFound": {
+    "description": "Check the URL and try again, or use the search bar to find what you need.",
+    "heading": "There is no page at this address"
+  },
+  "OrdersCard": {
+    "description": "The amount of orders made to an EboxSecure location.",
+    "title": "EboxSecure Order Counter",
+    "totalOrdersHeading": "TOTAL ORDERS",
+    "loading": "Loading...",
+    "errorFetchingOrdersToast": "Unable to fetch the number of ebox orders.",
+    "errorFetchingOrders": "Please try again later."
+  }
+}
