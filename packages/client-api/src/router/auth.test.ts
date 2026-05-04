@@ -174,6 +174,9 @@ describe("auth router", () => {
         carrierId: null,
         trackingNumber: null,
         rawDeliveryJson: null,
+        shopifyOrderId: null,
+        shopifyShop: null,
+        sourceChannel: "SCAN",
       });
 
       await expect(
@@ -221,6 +224,9 @@ describe("auth router", () => {
         carrierId: null,
         trackingNumber: null,
         rawDeliveryJson: null,
+        shopifyOrderId: null,
+        shopifyShop: null,
+        sourceChannel: "SCAN",
       });
 
       const token = await caller.auth.getAuthorizedPickupToken(input);
