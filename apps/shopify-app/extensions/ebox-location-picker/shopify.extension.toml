@@ -1,8 +1,9 @@
-api_version = "2025-01"
+api_version = "2025-07"
 
 [[extensions]]
 name = "ebox-location-picker"
 handle = "ebox-location-picker"
+uid = "5571ec68-ceef-cba3-bcf3-2610061a570d6db4e875"
 type = "ui_extension"
 
     [[extensions.targeting]]

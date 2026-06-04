@@ -6,10 +6,13 @@ One story: **Sarah** discovers EboxSecure, signs up, orders from a partnered Sho
 
 ## Prep (before demo day)
 
-- [ ] Production apps deployed & healthy: marketing site, client web, admin portal, Shopify POC store
-- [ ] Phone 1 (Sarah): client-mobile installed, FaceID enrolled. Phone 2 (employee): mobile-scanner installed
-- [ ] Stripe live in test-safe state; test card ready
-- [ ] Admin portal seeded with analytics data (`seed-analytics` / `seed-carriers`) so dashboard isn't empty
+**Everything runs PROD — no QA anywhere: web apps, mobile builds, Shopify store, data.**
+
+- [ ] Production apps deployed & healthy: marketing site, client web (app.eboxsecure.com), admin portal, Shopify POC store
+- [ ] Mobile **production builds** cut via EAS `production` profile (points at prod URLs — requires `mobile-env-profiles` PR merged + live Clerk publishable key set in EAS production env: `eas env:create --environment production --name EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`)
+- [ ] Phone 1 (Sarah): client-mobile **prod build** installed, FaceID enrolled. Phone 2 (employee): mobile-scanner **prod build** installed
+- [ ] Payment path confirmed on prod: Stripe is live mode, so test cards won't work — use the payment-bypass flow or a real card (refund after)
+- [ ] Prod admin portal has analytics data so dashboard isn't empty (run `seed-analytics` / `seed-carriers` against prod DB if needed)
 - [ ] Accounts ready: corporate admin login, location employee login (same location used in demo)
 - [ ] Two physical shipping labels printed: (1) addressed to Sarah's order from Shopify store, (2) a "non-partnered retailer" label using Sarah's **virtual address**
 - [ ] One extra label for the **wrong-location / unwanted package** scan
