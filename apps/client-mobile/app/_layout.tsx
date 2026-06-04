@@ -31,10 +31,11 @@ export default function RootLayout() {
     // Async font loading only occurs in development.
     return null;
   }
-  // TODO: add qa/prod publishable keys
+  // Set per build profile in eas.json (EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY); falls back to QA.
   return (
     <ClerkProvider
       publishableKey={
+        process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
         "pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk"
       }
       tokenCache={tokenCache}

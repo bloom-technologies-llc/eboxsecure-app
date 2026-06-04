@@ -9,13 +9,25 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://admin-qa.eboxsecure.com",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YmVsb3ZlZC1nbmF0LTM3LmNsZXJrLmFjY291bnRzLmRldiQ"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://admin-qa.eboxsecure.com",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YmVsb3ZlZC1nbmF0LTM3LmNsZXJrLmFjY291bnRzLmRldiQ"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://admin.eboxsecure.com"
+      }
     }
   },
   "submit": {

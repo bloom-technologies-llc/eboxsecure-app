@@ -21,10 +21,13 @@ export default function RootLayout() {
     return null;
   }
 
-  // TODO: add qa/prod publishable keys
+  // Set per build profile in eas.json (EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY); falls back to QA.
   return (
     <ClerkProvider
-      publishableKey={"pk_test_YmVsb3ZlZC1nbmF0LTM3LmNsZXJrLmFjY291bnRzLmRldiQ"}
+      publishableKey={
+        process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
+        "pk_test_YmVsb3ZlZC1nbmF0LTM3LmNsZXJrLmFjY291bnRzLmRldiQ"
+      }
       tokenCache={tokenCache}
     >
       <SessionTimeoutWrapper>
