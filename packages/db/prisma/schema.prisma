@@ -123,6 +123,8 @@ model Order {
     shopifyOrderId    String?            @unique
     shopifyShop       String?
     sourceChannel     OrderSourceChannel @default(SCAN)
+    cancelledAt       DateTime?
+    cancelReason      String?
 
     pickedUpBy        CustomerAccount?    @relation("OrderPickedUpBy", fields: [pickedUpById], references: [id])
     customer          CustomerAccount     @relation("OrderCustomer", fields: [customerId], references: [id])
@@ -494,16 +496,4 @@ model ShopifyWebhookEvent {
     createdAt      DateTime @default(now())
 
     @@map("shopify_webhook_event")
-}
-
-// Dead-letter table for failed monorepo API calls from webhook handlers
-model FailedWebhookForward {
-    id        String   @id @default(cuid())
-    topic     String
-    payload   Json
-    error     String
-    retries   Int      @default(0)
-    createdAt DateTime @default(now())
-
-    @@map("failed_webhook_forward")
 }

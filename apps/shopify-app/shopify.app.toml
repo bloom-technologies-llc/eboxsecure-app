@@ -12,6 +12,27 @@ automatically_update_urls_on_dev = true
 [webhooks]
 api_version = "2025-01"
 
+  # Lifecycle webhooks that drive Order creation/updates. orders/create carries
+  # the ebox.eboxOrder metafield used for deterministic linking.
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/api/webhooks"
+  metafield_namespaces = [ "ebox" ]
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/cancelled", "fulfillments/create", "fulfillments/update" ]
+  uri = "/api/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/api/webhooks"
+
+  # Mandatory GDPR compliance webhooks (ADR 0003).
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "/api/webhooks"
+  customer_deletion_url = "/api/webhooks"
+  shop_deletion_url = "/api/webhooks"
+
 
 [access_scopes]
 scopes = "read_orders,read_customers,read_fulfillments"
