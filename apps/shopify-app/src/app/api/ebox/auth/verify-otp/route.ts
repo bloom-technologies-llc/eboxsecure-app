@@ -5,8 +5,8 @@ import { db } from "@ebox/db";
 import { kv } from "@ebox/redis-client";
 
 import { env } from "~/env";
-import { rateLimit } from "~/lib/shopify/rate-limit";
 import { OtpError, verifyOtp } from "~/lib/shopify/otp";
+import { rateLimit } from "~/lib/shopify/rate-limit";
 
 export const runtime = "nodejs";
 

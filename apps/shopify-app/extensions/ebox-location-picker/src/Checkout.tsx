@@ -80,13 +80,23 @@ function Extension() {
   }
 
   const handleLocationChange = async (location: EboxLocation) => {
+    if (!eboxUser.customerId) {
+      setError('Please sign in before choosing a location.')
+      return
+    }
     setLocation(location)
 
+    // The webhook ingestor links a Shopify order to an EboxSecure order purely
+    // from this metafield (ADR 0001): it must carry the authenticated shopper's
+    // customerId and the chosen locationId as JSON, not a bare email string.
     applyMetaFields({
       type: 'updateMetafield',
       key: 'eboxOrder',
       namespace: 'ebox',
-      value: eboxUser.email,
+      value: JSON.stringify({
+        customerId: eboxUser.customerId,
+        locationId: location.id,
+      }),
       valueType: 'string',
     }).catch(() => setError('Unable to apply ebox order.'))
 

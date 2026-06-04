@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Banner, Select, Spinner } from '@shopify/ui-extensions-react/checkout'
-import { ShippingAddress } from '@shopify/ui-extensions/checkout'
 import { EboxLocation } from '../types'
 import { BASE_URL } from '../constants'
 
 type LocationSelectProps = {
   token: string
   location?: EboxLocation
-  handleLocationChange: (address: ShippingAddress) => void
+  handleLocationChange: (location: EboxLocation) => void
 }
 
 export const LocationSelect = ({

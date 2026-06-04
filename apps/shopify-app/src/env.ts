@@ -16,6 +16,15 @@ const schema = z.object({
   SHOPIFY_API_KEY: z.string().min(1),
   SHOPIFY_API_SECRET: z.string().min(1),
 
+  // Absolute base URL of this deployed app (e.g. https://app.example.com).
+  // Used to build the OAuth redirect_uri registered in shopify.app.toml.
+  // Optional: when unset the auth routes derive the origin from request headers.
+  SHOPIFY_APP_URL: z.string().url().optional(),
+
+  // Client-exposed API key for the embedded App Bridge CDN script on the status
+  // page. Optional — the page renders fine without App Bridge if it's unset.
+  NEXT_PUBLIC_SHOPIFY_API_KEY: z.string().optional(),
+
   // Shopper OTP sign-in: HS256 secret for the 1h checkout JWT.
   SHOPIFY_INTEGRATION_JWT_SECRET: z.string().min(1),
 

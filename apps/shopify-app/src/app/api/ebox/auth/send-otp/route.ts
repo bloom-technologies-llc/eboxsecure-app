@@ -5,8 +5,8 @@ import { db } from "@ebox/db";
 import { kv } from "@ebox/redis-client";
 
 import { sendOtpEmail } from "~/lib/email";
-import { rateLimit } from "~/lib/shopify/rate-limit";
 import { sendOtp } from "~/lib/shopify/otp";
+import { rateLimit } from "~/lib/shopify/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -27,16 +27,24 @@ export async function POST(request: Request) {
   const { email } = parsed.data;
 
   // Code-spam protection: per-email and per-IP fixed windows.
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const [perEmail, perIp] = await Promise.all([
-    rateLimit(kv, `send-otp:email:${email.toLowerCase()}`, { limit: 5, windowSeconds: 600 }),
+    rateLimit(kv, `send-otp:email:${email.toLowerCase()}`, {
+      limit: 5,
+      windowSeconds: 600,
+    }),
     rateLimit(kv, `send-otp:ip:${ip}`, { limit: 20, windowSeconds: 600 }),
   ]);
   if (!perEmail.allowed || !perIp.allowed) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const result = await sendOtp(email, { db, redis: kv, sendEmail: sendOtpEmail });
+  const result = await sendOtp(email, {
+    db,
+    redis: kv,
+    sendEmail: sendOtpEmail,
+  });
 
   if (!result.accountExists) {
     // Relaxed anti-enumeration: tell the shopper to sign up rather than leave
@@ -44,7 +52,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       sent: false,
       accountExists: false,
-      message: "No EboxSecure account found for this email. Please sign up first.",
+      message:
+        "No EboxSecure account found for this email. Please sign up first.",
     });
   }
 

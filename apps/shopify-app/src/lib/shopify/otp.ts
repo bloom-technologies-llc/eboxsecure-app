@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 
 import type { Db, RedisLike } from "./types";
 
@@ -15,9 +15,7 @@ export interface OtpDeps {
   sendEmail: (params: { to: string; code: string }) => Promise<void>;
 }
 
-export type SendOtpResult =
-  | { accountExists: true }
-  | { accountExists: false };
+export type SendOtpResult = { accountExists: true } | { accountExists: false };
 
 /**
  * Look up an existing `CustomerAccount` by email (case-insensitive); if found,
@@ -89,11 +87,43 @@ export async function verifyOtp(
   if (!customer) throw new OtpError("No account found for this email");
 
   const secret = new TextEncoder().encode(deps.jwtSecret);
-  const token = await new SignJWT({ customerId: customer.id, email: customer.email })
+  const token = await new SignJWT({
+    customerId: customer.id,
+    email: customer.email,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(JWT_TTL)
     .sign(secret);
 
   return { token, customerId: customer.id };
+}
+
+export interface ShopperClaims {
+  customerId: string;
+  email?: string;
+}
+
+/**
+ * Verify a shopper JWT issued by {@link verifyOtp} (HS256, 1h). Returns the
+ * claims on success; throws {@link OtpError} for a missing/tampered/expired
+ * token so route handlers can answer 401 uniformly. Used to gate the locations
+ * endpoint to authenticated shoppers.
+ */
+export async function verifyShopperToken(
+  token: string,
+  jwtSecret: string,
+): Promise<ShopperClaims> {
+  const secret = new TextEncoder().encode(jwtSecret);
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    const customerId =
+      typeof payload.customerId === "string" ? payload.customerId : "";
+    if (!customerId) throw new OtpError("Invalid token");
+    const email = typeof payload.email === "string" ? payload.email : undefined;
+    return { customerId, email };
+  } catch (err) {
+    if (err instanceof OtpError) throw err;
+    throw new OtpError("Invalid or expired token");
+  }
 }

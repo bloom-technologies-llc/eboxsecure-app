@@ -34,7 +34,7 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
   const handleSendCode = async () => {
     if (!email) return
     try {
-      const response = await fetch(`${BASE_URL}/api/ebox/auth/signin`, {
+      const response = await fetch(`${BASE_URL}/api/ebox/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +46,21 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      setEboxUser(prev => ({ ...prev, email: prev.email, emailSent: true }))
+      // send-otp returns 200 even when no account exists (relaxed
+      // anti-enumeration); surface that instead of showing a code field for a
+      // code that will never arrive.
+      const result = (await response.json()) as {
+        sent: boolean
+        accountExists: boolean
+        message?: string
+      }
+      if (!result.accountExists) {
+        setError(
+          result.message ?? 'No EboxSecure account found for this email.',
+        )
+        return
+      }
+      setEboxUser(prev => ({ ...prev, emailSent: true }))
       setError(undefined)
     } catch (e) {
       setError(e.message)
@@ -69,10 +83,11 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const { token } = (await response.json()) as {
+      const { token, customerId } = (await response.json()) as {
         token: string
+        customerId: string
       }
-      setEboxUser(prev => ({ ...prev, token, authorized: true }))
+      setEboxUser(prev => ({ ...prev, token, customerId, authorized: true }))
     } catch (e) {
       setError(e.message)
     }
