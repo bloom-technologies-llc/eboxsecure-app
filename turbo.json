@@ -17,6 +17,13 @@
         ".vercel/output/**"
       ]
     },
+    "@ebox/db#migrate:prod": {
+      "cache": false
+    },
+    "@ebox/client-web#build": {
+      "dependsOn": ["@ebox/db#migrate:prod", "^build"],
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts"]
+    },
     "dev": {
       "persistent": true,
       "cache": false
