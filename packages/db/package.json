@@ -10,6 +10,7 @@
     "push": "dotenv -e ../../.env -- prisma db push",
     "generate": "dotenv -e ../../.env -- prisma generate",
     "migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "migrate:prod": "if [ \"$VERCEL_ENV\" = \"production\" ]; then DATABASE_URL=$(node -e 'process.stdout.write(process.env.DATABASE_URL.replace(\"-pooler.\", \".\"))') prisma migrate deploy; else echo \"Skipping prisma migrate deploy (VERCEL_ENV is not production)\"; fi",
     "postinstall": "dotenv -e ../../.env -- prisma generate",
     "seed-analytics": "dotenv -e ../../.env -- tsx seed-analytics.ts"
   },

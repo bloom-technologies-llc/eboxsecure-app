@@ -81,8 +81,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 const getBaseUrl = () => {
-  // if (typeof window !== "undefined") return window.location.origin;
-  // TODO: change to real base url
-  return `https://admin-qa.eboxsecure.com`;
+  // Set per build profile in eas.json (EXPO_PUBLIC_API_URL); falls back to QA.
+  return process.env.EXPO_PUBLIC_API_URL ?? `https://admin-qa.eboxsecure.com`;
   // return `http://localhost:3000`;
 };

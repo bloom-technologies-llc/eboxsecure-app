@@ -1,0 +1,48 @@
+client_id = "03ef9b21116ead9e510aa63603be865b"
+application_url = "https://locks-shoes-approval-vids.trycloudflare.com"
+embedded = true
+name = "EboxSecure"
+handle = "ebox-secure"
+
+[build]
+dev_store_url = "bloom-dev-store1.myshopify.com"
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-01"
+
+  # Lifecycle webhooks that drive Order creation/updates. orders/create carries
+  # the ebox.eboxOrder metafield used for deterministic linking.
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/api/webhooks"
+  metafield_namespaces = [ "ebox" ]
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/cancelled", "fulfillments/create", "fulfillments/update" ]
+  uri = "/api/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/api/webhooks"
+
+  # Mandatory GDPR compliance webhooks (ADR 0003).
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "/api/webhooks"
+  customer_deletion_url = "/api/webhooks"
+  shop_deletion_url = "/api/webhooks"
+
+
+[access_scopes]
+scopes = "read_orders,read_customers,read_fulfillments"
+
+[auth]
+redirect_urls = [
+  "https://locks-shoes-approval-vids.trycloudflare.com/auth/callback",
+  "https://locks-shoes-approval-vids.trycloudflare.com/auth/shopify/callback",
+  "https://locks-shoes-approval-vids.trycloudflare.com/api/auth/callback"
+]
+
+[pos]
+embedded = false
