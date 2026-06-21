@@ -1,6 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const CLERK_PUBLISHABLE_KEY =
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
   "pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({

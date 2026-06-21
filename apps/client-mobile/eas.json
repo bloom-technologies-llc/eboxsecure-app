@@ -6,13 +6,25 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app-qa.eboxsecure.com",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app-qa.eboxsecure.com",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bW9kZXJuLWZlbGluZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app.eboxsecure.com"
+      }
     }
   },
   "submit": {
