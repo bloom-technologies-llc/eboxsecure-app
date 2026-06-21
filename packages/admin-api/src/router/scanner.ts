@@ -308,8 +308,30 @@ export const scannerRouter = createTRPCRouter({
 
       const now = new Date();
       let orderId = null;
-      // Create order if it doesn't exist
-      if (customer.orders.length === 0) {
+
+      // Check for a pre-created Shopify order matching this tracking number
+      const shopifyOrder = await ctx.db.order.findFirst({
+        where: {
+          trackingNumber,
+          sourceChannel: "SHOPIFY",
+          processedAt: null,
+        },
+      });
+
+      if (shopifyOrder) {
+        // Shopify-originated order: mark as delivered/processed
+        const updatedOrder = await ctx.db.order.update({
+          where: { id: shopifyOrder.id },
+          data: {
+            deliveredDate: now,
+            processedAt: now,
+            rawDeliveryJson: rawDeliveryJson,
+            shippedLocationId: location.id,
+          },
+        });
+        orderId = updatedOrder.id;
+      } else if (customer.orders.length === 0) {
+        // No existing order — create a new scan-originated order
         // generate unique vendor order id
         let uniqueId = "DEFAULT_" + customer.id + "_" + crypto.randomUUID();
         let isUnique = false;
@@ -334,6 +356,7 @@ export const scannerRouter = createTRPCRouter({
             deliveredDate: now,
             processedAt: now,
             rawDeliveryJson: rawDeliveryJson,
+            sourceChannel: "SCAN",
           },
         });
         orderId = order.id;
