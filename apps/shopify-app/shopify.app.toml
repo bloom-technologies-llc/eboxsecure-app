@@ -36,6 +36,9 @@ api_version = "2025-01"
 
 [access_scopes]
 scopes = "read_orders,read_customers,read_fulfillments"
+# Managed installation: Shopify grants scopes at install; the app obtains an
+# offline token via App Bridge token exchange (no OAuth redirect/callback).
+use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
