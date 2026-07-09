@@ -117,26 +117,21 @@ export default function OrderCard({
 
                 {/*
                   Product image/name come from the order's line items (Shopify).
-                  Scan orders have no line items, and Shopify items may lack an
-                  image, so both fall back to a neutral placeholder rather than a
-                  misleading stock photo.
+                  We only render an image when we actually have one — no
+                  placeholder stand-in. Scan orders have no line items, so this
+                  block is omitted entirely.
                 */}
-                {lineItems.length > 0 ? (
+                {lineItems.length > 0 && (
                   <div className="flex flex-col gap-y-4">
                     {lineItems.slice(0, 3).map((item) => (
                       <div key={item.id} className="flex items-center gap-x-6">
-                        {item.imageUrl ? (
+                        {item.imageUrl && (
                           <Image
                             src={item.imageUrl}
                             alt={item.title}
                             height={100}
                             width={100}
                             className="h-[100px] w-[100px] rounded-md object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="h-[100px] w-[100px] rounded-md bg-[#ebebeb]"
-                            aria-hidden="true"
                           />
                         )}
                         <p className="">
@@ -151,13 +146,6 @@ export default function OrderCard({
                         {lineItems.length - 3 === 1 ? "item" : "items"}
                       </p>
                     )}
-                  </div>
-                ) : (
-                  <div className="flex gap-x-6">
-                    <div
-                      className="h-[100px] w-[100px] rounded-md bg-[#ebebeb]"
-                      aria-hidden="true"
-                    />
                   </div>
                 )}
               </div>
@@ -184,12 +172,6 @@ export default function OrderCard({
                   Share Order
                 </Button>
               )}
-              <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">
-                View order
-              </Button>
-              <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">
-                Pickup info
-              </Button>
             </div>
           </div>
         </CardContent>

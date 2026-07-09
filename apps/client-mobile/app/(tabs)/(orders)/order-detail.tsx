@@ -135,9 +135,7 @@ export default function Page() {
                     style={{ height: 96, width: 96, borderRadius: 8 }}
                     contentFit="cover"
                   />
-                ) : (
-                  <View className="h-24 w-24 rounded-lg bg-slate-300" />
-                )}
+                ) : null}
                 <View className="flex flex-1 gap-y-2">
                   <Text className="">
                     {item.title}
