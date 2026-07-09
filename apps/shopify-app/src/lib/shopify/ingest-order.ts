@@ -69,6 +69,19 @@ export async function ingestEboxOrder(
       shopifyShop: order.shopifyShop,
       sourceChannel: "SHOPIFY",
       processedAt: null,
+      ...(order.lineItems.length > 0 && {
+        lineItems: {
+          create: order.lineItems.map((li, index) => ({
+            title: li.title,
+            quantity: li.quantity,
+            price: li.price,
+            imageUrl: li.imageUrl,
+            shopifyProductId: li.shopifyProductId,
+            shopifyVariantId: li.shopifyVariantId,
+            position: index,
+          })),
+        },
+      }),
     },
     select: { id: true },
   });

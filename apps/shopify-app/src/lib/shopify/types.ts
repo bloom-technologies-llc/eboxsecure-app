@@ -12,6 +12,22 @@ export interface EboxMetafield {
 }
 
 /**
+ * A single product line on an `orders/create` webhook. `title`/`quantity` and
+ * the Shopify ids come straight from the payload; `imageUrl` is null until the
+ * best-effort Admin API backfill fills it in (see `enrichLineItemImages`), since
+ * the webhook payload does not carry product images.
+ */
+export interface NormalizedLineItem {
+  title: string;
+  quantity: number;
+  /** Per-unit price in the shop currency, or null if the payload omits it. */
+  price: number | null;
+  shopifyProductId: string | null;
+  shopifyVariantId: string | null;
+  imageUrl: string | null;
+}
+
+/**
  * Normalized shape of an `orders/create` webhook, decoupled from Shopify's raw
  * payload. `ebox` is null when the order is not a locker order (metafield absent
  * or malformed), which the ingestion gate uses to skip non-Ebox orders.
@@ -23,6 +39,7 @@ export interface NormalizedOrder {
   email: string | null;
   total: number;
   ebox: EboxMetafield | null;
+  lineItems: NormalizedLineItem[];
 }
 
 /** Normalized shape of a `fulfillments/create|update` webhook. */

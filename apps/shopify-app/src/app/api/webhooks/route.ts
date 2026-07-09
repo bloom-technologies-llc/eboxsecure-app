@@ -11,6 +11,7 @@ import {
   redactCustomer,
   redactShop,
 } from "~/lib/shopify/compliance";
+import { enrichLineItemImages } from "~/lib/shopify/fetch-product-images";
 import { ingestEboxOrder } from "~/lib/shopify/ingest-order";
 import { mapFulfillmentWebhook } from "~/lib/shopify/map-fulfillment";
 import { mapOrderCancellation, mapOrderWebhook } from "~/lib/shopify/map-order";
@@ -67,7 +68,13 @@ export async function POST(request: Request) {
 async function dispatch(topic: string, shop: string, payload: unknown) {
   switch (topic) {
     case "orders/create": {
-      const result = await ingestEboxOrder(mapOrderWebhook(payload, shop), { db });
+      const normalized = mapOrderWebhook(payload, shop);
+      // Only locker orders are persisted, so only spend an Admin API call
+      // backfilling product images for those. Best-effort — never throws.
+      if (normalized.ebox) {
+        await enrichLineItemImages(normalized, { db });
+      }
+      const result = await ingestEboxOrder(normalized, { db });
       if (result.result === "rejected") {
         console.warn(`orders/create rejected for ${shop}: ${result.reason}`);
       }

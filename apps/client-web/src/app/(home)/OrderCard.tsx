@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import image1 from "public/image1.jpg";
 
 import type { RouterOutput } from "@ebox/client-api";
 import { Button } from "@ebox/ui/button";
@@ -22,6 +21,7 @@ export default function OrderCard({
   createdAt,
   pickedUpAt,
   directlyOwned,
+  lineItems,
 }: RouterOutput["order"]["getAllOrders"][number]) {
   const [fetchQrCode, setFetchQrCode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -97,23 +97,69 @@ export default function OrderCard({
             <div className="w-4/5">
               <div className="flex flex-col">
                 <div className="flex flex-col pb-6">
-                  <p className="">Arriving tomorrow 10pm</p>
-                  <p className="text-[#575959]">
-                    Your package is available for pickup at{" "}
-                    {shippedLocation.name}
-                  </p>
+                  {deliveredDate ? (
+                    <>
+                      <p className="">Ready for pickup</p>
+                      <p className="text-[#575959]">
+                        Your package is available for pickup at{" "}
+                        {shippedLocation.name}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="">In transit</p>
+                      <p className="text-[#575959]">
+                        Your package is on its way to {shippedLocation.name}
+                      </p>
+                    </>
+                  )}
                 </div>
 
-                <div className="flex gap-x-6">
-                  <Image
-                    src={image1}
-                    alt="image 1"
-                    height={100}
-                    width={100}
-                    className="rounded-md"
-                  />
-                  <p className="">Apple Airpods Max</p>
-                </div>
+                {/*
+                  Product image/name come from the order's line items (Shopify).
+                  Scan orders have no line items, and Shopify items may lack an
+                  image, so both fall back to a neutral placeholder rather than a
+                  misleading stock photo.
+                */}
+                {lineItems.length > 0 ? (
+                  <div className="flex flex-col gap-y-4">
+                    {lineItems.slice(0, 3).map((item) => (
+                      <div key={item.id} className="flex items-center gap-x-6">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            height={100}
+                            width={100}
+                            className="h-[100px] w-[100px] rounded-md object-cover"
+                          />
+                        ) : (
+                          <div
+                            className="h-[100px] w-[100px] rounded-md bg-[#ebebeb]"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <p className="">
+                          {item.title}
+                          {item.quantity > 1 ? ` × ${item.quantity}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                    {lineItems.length > 3 && (
+                      <p className="text-sm text-[#575959]">
+                        + {lineItems.length - 3} more{" "}
+                        {lineItems.length - 3 === 1 ? "item" : "items"}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex gap-x-6">
+                    <div
+                      className="h-[100px] w-[100px] rounded-md bg-[#ebebeb]"
+                      aria-hidden="true"
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <div className="my-auto flex w-1/5 flex-col gap-y-3">

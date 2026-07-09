@@ -1,6 +1,7 @@
 import type {
   EboxMetafield,
   NormalizedCancellation,
+  NormalizedLineItem,
   NormalizedOrder,
 } from "./types";
 
@@ -106,6 +107,52 @@ function extractTotal(order: Record<string, unknown>): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+interface RawLineItem {
+  title?: unknown;
+  name?: unknown;
+  quantity?: unknown;
+  price?: unknown;
+  product_id?: unknown;
+  variant_id?: unknown;
+}
+
+/**
+ * Pull the product lines out of an `orders/create` webhook. Titles and
+ * quantities are present in the payload; product images are not, so `imageUrl`
+ * starts null and is backfilled later. Lines without any usable title are
+ * dropped so we never persist an empty product row.
+ */
+function extractLineItems(order: Record<string, unknown>): NormalizedLineItem[] {
+  const raw = order.line_items;
+  if (!Array.isArray(raw)) return [];
+
+  return (raw as RawLineItem[])
+    .map((item): NormalizedLineItem | null => {
+      const title = asString(item?.title) ?? asString(item?.name);
+      if (!title) return null;
+      const quantityRaw =
+        typeof item?.quantity === "number"
+          ? item.quantity
+          : Number(item?.quantity);
+      const quantity =
+        Number.isFinite(quantityRaw) && quantityRaw > 0
+          ? Math.trunc(quantityRaw)
+          : 1;
+      const priceRaw =
+        typeof item?.price === "number" ? item.price : Number(item?.price);
+      const price = Number.isFinite(priceRaw) ? priceRaw : null;
+      return {
+        title,
+        quantity,
+        price,
+        shopifyProductId: asString(item?.product_id),
+        shopifyVariantId: asString(item?.variant_id),
+        imageUrl: null,
+      };
+    })
+    .filter((item): item is NormalizedLineItem => item !== null);
+}
+
 /**
  * Map a raw `orders/create` webhook body to a `NormalizedOrder`. `shop` comes
  * from the `X-Shopify-Shop-Domain` header (not reliably in the body).
@@ -126,6 +173,7 @@ export function mapOrderWebhook(raw: unknown, shop: string): NormalizedOrder {
     email,
     total: extractTotal(order),
     ebox: extractEboxMetafield(order),
+    lineItems: extractLineItems(order),
   };
 }
 
