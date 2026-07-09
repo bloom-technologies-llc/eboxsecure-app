@@ -6,6 +6,7 @@ import { z } from "zod";
 import { NotificationService } from "@ebox/notifications";
 import { kv } from "@ebox/redis-client";
 import {
+  SUBSCRIPTION_LIMITS,
   getStripeCustomerId,
   priceIdsToPlan,
   subscriptionDataSchema,
@@ -307,16 +308,8 @@ export const ordersRouter = createTRPCRouter({
           message: "Unable to determine subscription tier from price IDs",
         });
       }
-      const allowedHoldingPeriod =
-        await ctx.db.subscriptionLimit.findUniqueOrThrow({
-          where: {
-            type: plan.subscriptionType,
-          },
-          select: {
-            maxPackageHolding: true,
-          },
-        });
-      const maxHoldingDays = allowedHoldingPeriod.maxPackageHolding;
+      const maxHoldingDays =
+        SUBSCRIPTION_LIMITS[plan.subscriptionType].maxPackageHolding;
 
       const numDaysHeld = Math.ceil(
         (new Date().getTime() - order.deliveredDate.getTime()) /

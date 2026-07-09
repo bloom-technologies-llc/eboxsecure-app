@@ -394,13 +394,6 @@ model OrderSharedAccess {
     @@index([grantedById])
 }
 
-model SubscriptionLimit {
-    type              SubscriptionType @unique
-    packageAllowance  Int
-    maxPackageHolding Int
-    locationLimit     Int
-}
-
 enum UserType {
     CUSTOMER
     EMPLOYEE

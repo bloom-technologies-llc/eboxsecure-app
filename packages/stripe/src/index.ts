@@ -63,13 +63,61 @@ export const subscriptionDataSchema = z.object({
   ),
 });
 
-// Location limits per subscription tier
-const LOCATION_LIMITS: Record<SubscriptionType, number> = {
-  BASIC: 3,
-  BASIC_PLUS: 25,
-  PREMIUM: 75,
-  BUSINESS_PRO: Infinity,
+/**
+ * Per-tier limits that do NOT vary by billing interval (monthly vs. yearly) —
+ * the single source of truth for these values. If one ever changes, update it here.
+ *
+ * `maxPackageHolding` is a per-package duration and `locationLimit` is a cap on
+ * saved favorites; neither accrues over the billing period, so they're identical
+ * whether the plan is billed monthly or yearly.
+ *
+ * Package allowance is intentionally NOT here — it DOES scale with the billing
+ * interval; see MONTHLY_PACKAGE_ALLOWANCE / getPackageAllowance below.
+ */
+export const SUBSCRIPTION_LIMITS: Record<
+  SubscriptionType,
+  {
+    /** Max days a package can be held before overdue holding fees are metered. */
+    maxPackageHolding: number;
+    /** Max saved favorite locations (Infinity = unlimited). */
+    locationLimit: number;
+  }
+> = {
+  BASIC: { maxPackageHolding: 2, locationLimit: 3 },
+  BASIC_PLUS: { maxPackageHolding: 5, locationLimit: 25 },
+  PREMIUM: { maxPackageHolding: 7, locationLimit: 75 },
+  BUSINESS_PRO: { maxPackageHolding: 10, locationLimit: Infinity },
 };
+
+/**
+ * Base MONTHLY package allowance per tier — packages included per billing period.
+ *
+ * This is a per-period quota, so it scales with the interval: usage is measured
+ * over the whole billing period, and a yearly plan's period is a full year, so the
+ * yearly allowance pools 12x the monthly figure. Use getPackageAllowance() to get
+ * the effective value for a given interval.
+ *
+ * Display only: it feeds the usage card. Overage on the `package_allowance` meter
+ * is billed by Stripe from the price config, never calculated in-app — so this
+ * mirrors Stripe and must be kept in sync with each price's included quantity.
+ */
+const MONTHLY_PACKAGE_ALLOWANCE: Record<SubscriptionType, number> = {
+  BASIC: 5,
+  BASIC_PLUS: 20,
+  PREMIUM: 50,
+  BUSINESS_PRO: 200,
+};
+
+/**
+ * Effective package allowance for the current billing period.
+ * Yearly plans pool the monthly allowance across the whole year (monthly x 12).
+ */
+export function getPackageAllowance(
+  subscriptionTier: SubscriptionType,
+  isYearly: boolean,
+): number {
+  return MONTHLY_PACKAGE_ALLOWANCE[subscriptionTier] * (isYearly ? 12 : 1);
+}
 
 /**
  *
@@ -245,9 +293,8 @@ export async function canUserAddMoreFavorites(
   };
 }
 
-// TODO: replace with DB query
 export function getLocationLimit(subscriptionTier: SubscriptionType): number {
-  return LOCATION_LIMITS[subscriptionTier as keyof typeof LOCATION_LIMITS] || 0;
+  return SUBSCRIPTION_LIMITS[subscriptionTier]?.locationLimit ?? 0;
 }
 
 /**

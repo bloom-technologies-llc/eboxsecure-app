@@ -136,6 +136,24 @@ Business Pro:
 
 In general, the way we do this is quite confusing, because our SubscriptionTypes are one of the four subscription plans, and then we append `_yearly` if it's a yearly subscription. Perhaps in the future we refactor everything within the `subscription.ts` client api routes.
 
+## Subscription limits
+
+Subscription limits live in **`packages/stripe/src/index.ts`** — the single source of truth. **If a limit ever changes, update it there.** There are two kinds:
+
+**Per-tier, interval-independent** — `SUBSCRIPTION_LIMITS`. Same value whether the plan is billed monthly or yearly:
+
+| field               | consumed by                                                       | meaning                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `maxPackageHolding` | `packages/admin-api/src/router/orders.ts` (`markOrderAsPickedUp`) | Days a package may be held. Overdue days = days held − `maxPackageHolding`; the difference meters `overdue_package_holding`. |
+| `locationLimit`     | `getLocationLimit` / `canUserAddMoreFavorites` in `@ebox/stripe`  | Max saved favorite locations (`Infinity` = unlimited).                                                                       |
+
+**Per-billing-period quota, interval-dependent** — `MONTHLY_PACKAGE_ALLOWANCE` + `getPackageAllowance(tier, isYearly)`:
+
+- `packageAllowance` is the packages included per billing period. Usage is measured over the whole billing period, so a **yearly** plan pools the monthly allowance across the year — `getPackageAllowance` returns `monthly × 12` for yearly plans (**pooled annual**).
+- **Display only.** It feeds the usage card via `packages/client-api/src/router/meter.ts`. Overage on the `package_allowance` meter is billed by Stripe from the price config, never computed in-app — so this number mirrors Stripe and must be kept in sync with each price's included quantity.
+
+These limits were previously stored in a `SubscriptionLimit` DB table, but it was reference data that was never seeded — so the `maxPackageHolding` lookup threw on QA/prod. The table has been dropped (see the `drop_subscription_limit_table` migration); there is no data to seed.
+
 ## Bypass Payments
 
 Key: `stripe:customer:cus_<id>`
