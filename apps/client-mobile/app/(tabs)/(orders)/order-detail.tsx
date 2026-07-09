@@ -37,6 +37,11 @@ export default function Page() {
     },
   );
 
+  // Defensive: `lineItems` is only present when the backend serving this query
+  // includes it. A mobile client can hit an older API (deploy skew), so guard
+  // against it being absent rather than crashing.
+  const lineItems = order?.lineItems ?? [];
+
   const {
     data: qrCode,
     isLoading: loadingQrCode,
@@ -117,9 +122,9 @@ export default function Page() {
         {/* Order Summary — real line items (Shopify). Scan orders have none, and
             items may lack an image, so both fall back to a neutral placeholder
             rather than a misleading stock photo/name/price. */}
-        {order && order.lineItems.length > 0 && (
+        {lineItems.length > 0 && (
           <View className="mx-6 my-4 gap-y-4 border border-[#e4e4e7] p-4">
-            {order.lineItems.map((item) => (
+            {lineItems.map((item) => (
               <View
                 key={item.id}
                 className="flex flex-row items-center gap-x-3"
