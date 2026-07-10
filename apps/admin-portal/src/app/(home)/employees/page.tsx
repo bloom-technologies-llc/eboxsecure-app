@@ -4,7 +4,6 @@ import { Button } from "@ebox/ui/button";
 
 import EmployeeTable from "../../_components/employee-table";
 import InviteAdminDialog from "../../_components/invitations/invite-admin-dialog";
-import PendingInvitationsTable from "../../_components/invitations/pending-invitations-table";
 
 export default function Page() {
   return (
@@ -21,11 +20,6 @@ export default function Page() {
             </InviteAdminDialog>
           </div>
           <EmployeeTable />
-
-          <div className="mt-8">
-            <p className="mb-4 font-medium">Pending Invitations</p>
-            <PendingInvitationsTable />
-          </div>
         </div>
       </div>
     </main>
