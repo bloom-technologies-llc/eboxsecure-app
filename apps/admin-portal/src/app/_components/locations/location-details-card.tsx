@@ -103,11 +103,17 @@ export default function LocationDetailsCard({
                     locationId={location.id}
                     initialData={{
                       name: location.name,
-                      address: location.address,
+                      address1: location.address1 ?? "",
+                      address2: location.address2 ?? "",
+                      city: location.city ?? "",
+                      state: location.state ?? "",
+                      zip: location.zip ?? "",
+                      countryCode: location.countryCode ?? "US",
                       email: location.email,
                       storageCapacity: location.storageCapacity,
                       locationType: location.locationType,
                     }}
+                    legacyAddress={location.address}
                     onSuccess={() => setEditDialogOpen(false)}
                     onCancel={() => setEditDialogOpen(false)}
                   />
