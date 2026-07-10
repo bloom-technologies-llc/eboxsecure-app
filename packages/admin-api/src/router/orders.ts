@@ -119,6 +119,28 @@ export const ordersRouter = createTRPCRouter({
       }
     }),
 
+  getAllOrdersForEmployee: protectedAdminProcedure.query(async ({ ctx }) => {
+    // Return ALL orders scoped to the current employee's location. The
+    // dashboard computes its metrics client-side (counts, "processed today",
+    // recent activity), so this intentionally is NOT paginated.
+    const whereClause = {
+      shippedLocation: {
+        employeeAccounts: {
+          some: {
+            id: ctx.session.userId,
+          },
+        },
+      },
+    };
+
+    return await ctx.db.order.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }),
+
   getOrderDetails: protectedAdminProcedure
     .input(
       z.object({
