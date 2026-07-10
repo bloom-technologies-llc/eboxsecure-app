@@ -72,8 +72,13 @@ export async function verifyOtp(
   otp: string,
   deps: VerifyOtpDeps,
 ): Promise<VerifyOtpResult> {
-  const stored = await deps.redis.get<string>(otpKey(email));
-  if (!stored || stored !== otp) {
+  // Upstash's client JSON-parses GET results (automaticDeserialization is on by
+  // default), so a purely-numeric code stored as a string comes back as a
+  // *number* (e.g. 523198). Only codes with a leading zero survive as strings
+  // (JSON.parse rejects leading zeros). Coerce to a string before comparing, or
+  // ~90% of codes fail verification with a bogus "invalid code" 401.
+  const stored = await deps.redis.get<string | number>(otpKey(email));
+  if (stored == null || String(stored) !== otp) {
     throw new OtpError("Invalid or expired verification code");
   }
 

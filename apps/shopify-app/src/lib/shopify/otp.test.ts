@@ -88,6 +88,25 @@ describe("verifyOtp", () => {
     expect(payload.exp).toBeDefined();
   });
 
+  it("matches a code that Upstash deserialized back to a number", async () => {
+    // Upstash JSON-parses GET results, so a stored numeric string like "523198"
+    // returns as the number 523198. verifyOtp must still match it.
+    redis.get.mockResolvedValue(523198 as never);
+    db.customerAccount.findFirst.mockResolvedValue({
+      id: "cust_1",
+      email: "a@b.com",
+    } as never);
+
+    const { customerId } = await verifyOtp("a@b.com", "523198", {
+      db,
+      redis,
+      jwtSecret: JWT_SECRET,
+    });
+
+    expect(customerId).toBe("cust_1");
+    expect(redis.del).toHaveBeenCalledWith("shopify-otp:a@b.com");
+  });
+
   it("rejects a wrong code and does not burn it", async () => {
     redis.get.mockResolvedValue("123456");
     await expect(
