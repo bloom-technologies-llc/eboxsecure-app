@@ -53,17 +53,6 @@ const allOperations = [
   },
 ];
 
-const finances = [
-  {
-    title: "Payments",
-    url: "#",
-  },
-  {
-    title: "Subscriptions",
-    url: "#",
-  },
-];
-
 const AppSidebar = () => {
   const { data: userType, isLoading } = api.user.getUserType.useQuery();
   const { data: userDetails, isLoading: isLoadingDetails } =
@@ -123,22 +112,6 @@ const AppSidebar = () => {
           <SidebarGroupLabel>Operations</SidebarGroupLabel>
           <SidebarMenu>
             {visibleOperations.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url}>
-                    <span>{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Finances</SidebarGroupLabel>
-          <SidebarMenu>
-            {finances.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <a href={item.url}>
