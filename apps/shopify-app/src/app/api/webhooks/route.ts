@@ -93,15 +93,15 @@ async function dispatch(topic: string, shop: string, payload: unknown) {
       const result = await ingestEboxOrder(normalized, { db });
 
       // Log every outcome. Previously only `rejected` logged, so a `skipped`
-      // order (no/malformed ebox metafield) left no trace at all — which is why
-      // a 200 with no created order looked like nothing had happened.
+      // order (no/malformed ebox link) left no trace at all — which is why a
+      // 200 with no created order looked like nothing had happened.
       if (result.result === "rejected") {
         console.warn(
           `orders/create rejected for ${shop} order ${normalized.shopifyOrderId}: ${result.reason}`,
         );
       } else if (result.result === "skipped") {
         console.info(
-          `orders/create skipped for ${shop} order ${normalized.shopifyOrderId}: no valid ebox metafield`,
+          `orders/create skipped for ${shop} order ${normalized.shopifyOrderId}: no valid ebox link`,
         );
       } else {
         console.info(

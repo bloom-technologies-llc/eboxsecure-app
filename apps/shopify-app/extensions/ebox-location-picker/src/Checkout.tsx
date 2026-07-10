@@ -4,7 +4,7 @@ import {
   Banner,
   BlockStack,
   Switch,
-  useApplyMetafieldsChange,
+  useApplyAttributeChange,
   TextBlock,
   useApplyShippingAddressChange,
   Modal,
@@ -25,7 +25,11 @@ export default reactExtension(
 )
 
 function Extension() {
-  const applyMetaFields = useApplyMetafieldsChange()
+  // The ebox link is carried as a cart attribute. It reliably lands in the
+  // order's note_attributes, which the webhook ingestor reads to link the order.
+  // (Checkout-UI metafields were removed in API 2026-04 and never propagated to
+  // the orders/create webhook anyway — see spike #53.)
+  const applyAttributeChange = useApplyAttributeChange()
   const shippingAddress = useShippingAddress()
   const updateShippingAddress = useApplyShippingAddressChange()
 
@@ -51,10 +55,12 @@ function Extension() {
       type: 'updateShippingAddress',
       address: RESET_LOCATION,
     }).catch(e => setError(`Unable to remove shipping address: ${e.message}`))
-    applyMetaFields({
-      type: 'removeMetafield',
+    // Cart attributes can't be removed, only cleared — empty JSON parses to null
+    // in the ingestor, so a toggled-off order carries no stale ebox link.
+    applyAttributeChange({
+      type: 'updateAttribute',
       key: 'eboxOrder',
-      namespace: 'ebox',
+      value: '',
     }).catch(() => setError('Unable to remove ebox order.'))
   }, [])
 
@@ -87,17 +93,16 @@ function Extension() {
     setLocation(location)
 
     // The webhook ingestor links a Shopify order to an EboxSecure order purely
-    // from this metafield (ADR 0001): it must carry the authenticated shopper's
+    // from this attribute (ADR 0001): it must carry the authenticated shopper's
     // customerId and the chosen locationId as JSON, not a bare email string.
-    applyMetaFields({
-      type: 'updateMetafield',
+    // Cart attributes always reach the orders/create webhook as note_attributes.
+    applyAttributeChange({
+      type: 'updateAttribute',
       key: 'eboxOrder',
-      namespace: 'ebox',
       value: JSON.stringify({
         customerId: eboxUser.customerId,
         locationId: location.id,
       }),
-      valueType: 'string',
     }).catch(() => setError('Unable to apply ebox order.'))
 
     // Auto-fill the shipper's name from their EboxSecure account so they don't

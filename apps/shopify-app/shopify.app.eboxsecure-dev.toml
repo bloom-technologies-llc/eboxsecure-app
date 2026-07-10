@@ -14,11 +14,11 @@ automatically_update_urls_on_dev = true
 api_version = "2025-01"
 
   # Lifecycle webhooks that drive Order creation/updates. orders/create carries
-  # the ebox.eboxOrder metafield used for deterministic linking.
+  # the eboxOrder note attribute (set by the checkout extension) used for
+  # deterministic linking.
   [[webhooks.subscriptions]]
   topics = [ "orders/create" ]
   uri = "/api/webhooks"
-  metafield_namespaces = [ "ebox" ]
 
   [[webhooks.subscriptions]]
   topics = [ "orders/cancelled", "fulfillments/create", "fulfillments/update" ]

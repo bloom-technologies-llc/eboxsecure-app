@@ -20,13 +20,15 @@ interface RawNoteAttribute {
 }
 
 /**
- * Pull the `ebox.eboxOrder` payload out of a raw `orders/create` webhook.
+ * Pull the `eboxOrder` payload out of a raw `orders/create` webhook.
  *
- * Looks in the order `metafields` array first (registered under the `ebox`
- * namespace), then falls back to `note_attributes` keyed `eboxOrder` — the
- * fallback path the metafield-propagation spike (#53) selects if metafields
- * don't reach the webhook. Returns null when absent or malformed, so a
- * non-locker order maps to `ebox: null` and is later skipped.
+ * The canonical source is the `note_attributes` entry keyed `eboxOrder`, set by
+ * the checkout extension as a cart attribute — the only channel that reliably
+ * reaches the webhook (spike #53). Checkout-UI metafields never propagated here
+ * and were removed entirely in API 2026-04, so the `metafields` array is checked
+ * first only as forward-compat (e.g. a future cart→order metafield copy) and is
+ * normally absent. Returns null when absent or malformed, so a non-locker order
+ * maps to `ebox: null` and is later skipped.
  */
 export function extractEboxMetafield(raw: unknown): EboxMetafield | null {
   if (raw === null || typeof raw !== "object") return null;
