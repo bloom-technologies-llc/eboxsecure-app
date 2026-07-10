@@ -151,17 +151,13 @@ export default function OrderCard({
               </div>
             </div>
             <div className="my-auto flex w-1/5 flex-col gap-y-3">
-              {deliveredDate ? (
+              {deliveredDate && (
                 <Button
                   className="bg-[#00698F] text-white"
                   onClick={() => setFetchQrCode(true)}
                   disabled={alreadyPickedUp}
                 >
                   {alreadyPickedUp ? `Picked Up` : `View QR Code`}
-                </Button>
-              ) : (
-                <Button className="bg-[#00698F] text-white">
-                  Track package
                 </Button>
               )}
               {directlyOwned && (
