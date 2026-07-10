@@ -122,12 +122,35 @@ export const scannerRouter = createTRPCRouter({
           });
         }
 
+        const address = parseResult.data.data.recipient.address;
+
+        // A virtual address is a token of the form "CUST-XXXXXX" that the
+        // customer includes on the label. It can land anywhere in the parsed
+        // address (line1/line2/formatted_address). When present, extract it into
+        // the virtual address field and strip it out of the formatted address so
+        // downstream geocoding isn't thrown off by the token. When absent, leave
+        // both fields exactly as before.
+        const virtualAddressRegex = /CUST-[A-Z0-9]+/i;
+        const virtualAddressMatch =
+          address.formatted_address.match(virtualAddressRegex) ??
+          address.line2?.match(virtualAddressRegex) ??
+          address.line1.match(virtualAddressRegex);
+
+        const formattedAddress = virtualAddressMatch
+          ? address.formatted_address
+              .split(",")
+              .map((segment) => segment.replace(virtualAddressRegex, "").trim())
+              .filter((segment) => segment.length > 0)
+              .join(", ")
+          : address.formatted_address;
+
         return {
           recipientName: parseResult.data.data.recipient.name,
-          formattedAddress:
-            parseResult.data.data.recipient.address.formatted_address,
+          formattedAddress,
           rawDeliveryJson: JSON.stringify(data),
-          virtualAddress: parseResult.data.data.recipient.address.line2,
+          virtualAddress: virtualAddressMatch
+            ? virtualAddressMatch[0].toUpperCase()
+            : address.line2,
           trackingNumber: parseResult.data.data.tracking_number,
           vendorOrderId: parseResult.data.data.order_number,
         };

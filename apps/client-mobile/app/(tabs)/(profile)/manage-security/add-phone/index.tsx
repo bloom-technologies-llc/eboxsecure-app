@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Toast from "react-native-root-toast";
 import { useRouter } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
+import { showToast } from "@/utils/toast";
 import { useUser } from "@clerk/clerk-expo";
 
 const AddPhone = () => {
@@ -36,12 +36,7 @@ const AddPhone = () => {
       setIsVerifying(true);
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      Toast.show("An error occurred while adding a phone number", {
-        duration: 3000,
-        position: Toast.positions.TOP,
-        backgroundColor: "#fc6060",
-        textColor: "#000",
-      });
+      showToast("An error occurred while adding a phone number", "error");
     }
   };
 
@@ -51,30 +46,15 @@ const AddPhone = () => {
       const phoneVerifyAttempt = await phoneObj?.attemptVerification({ code });
 
       if (phoneVerifyAttempt?.verification.status === "verified") {
-        Toast.show("Successfully added phone number!", {
-          duration: 3000,
-          position: Toast.positions.TOP,
-          backgroundColor: "#e9f9ee",
-          textColor: "#000",
-        });
+        showToast("Successfully added phone number!", "success");
         router.replace("/(tabs)/(profile)/manage-security");
       } else {
         console.error(JSON.stringify(phoneVerifyAttempt, null, 2));
-        Toast.show("An error occurred while verifying phone number", {
-          duration: 3000,
-          position: Toast.positions.TOP,
-          backgroundColor: "#fc6060",
-          textColor: "#000",
-        });
+        showToast("An error occurred while verifying phone number", "error");
       }
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      Toast.show("An error occurred while verifying phone number", {
-        duration: 3000,
-        position: Toast.positions.TOP,
-        backgroundColor: "#fc6060",
-        textColor: "#000",
-      });
+      showToast("An error occurred while verifying phone number", "error");
     }
   };
 

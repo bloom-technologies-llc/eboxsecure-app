@@ -1,20 +1,50 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "93f19ebe1ec0cb32788dc8a11ef5035a"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://shopify-qa.eboxsecure.com"
 embedded = true
 name = "eboxsecure-dev"
-
-[webhooks]
-api_version = "2026-07"
-
-[access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_customers,read_fulfillments,read_orders"
-
-[auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+handle = "eboxsecure-dev"
 
 [build]
-include_config_on_deploy = true
+dev_store_url = "eboxsecure-dev-store.myshopify.com"
 automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-01"
+
+  # Lifecycle webhooks that drive Order creation/updates. orders/create carries
+  # the eboxOrder note attribute (set by the checkout extension) used for
+  # deterministic linking.
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/api/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/cancelled", "fulfillments/create", "fulfillments/update" ]
+  uri = "/api/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/api/webhooks"
+
+  # Mandatory GDPR compliance webhooks (ADR 0003).
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "/api/webhooks"
+  customer_deletion_url = "/api/webhooks"
+  shop_deletion_url = "/api/webhooks"
+
+
+[access_scopes]
+scopes = "read_orders,read_customers,read_fulfillments,read_products"
+# Managed installation: Shopify grants scopes at install; the app obtains an
+# offline token via App Bridge token exchange (no OAuth redirect/callback).
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [
+  "https://shopify-qa.eboxsecure.com/api/auth/callback"
+]
+
+[pos]
+embedded = false

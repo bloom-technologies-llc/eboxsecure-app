@@ -10,7 +10,11 @@ import type { Db } from "./types";
 
 export interface ShopifyOfflineSession {
   shop: string;
-  state: string;
+  /**
+   * Legacy OAuth CSRF nonce. Meaningless under managed-installation token
+   * exchange, so optional now; persisted as "" to satisfy the column.
+   */
+  state?: string;
   scope: string;
   accessToken: string;
   /** Offline tokens don't expire; present for parity with the column. */
@@ -35,7 +39,7 @@ export async function storeSession(
   const id = offlineSessionId(session.shop);
   const data = {
     shop: session.shop,
-    state: session.state,
+    state: session.state ?? "",
     isOnline: false,
     scope: session.scope,
     expires: session.expires ?? null,

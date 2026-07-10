@@ -14,8 +14,9 @@
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
     "shopify": "shopify",
-    "shopify:deploy": "shopify app deploy",
-    "shopify:dev": "shopify app dev"
+    "shopify:dev": "node scripts/set-backend.mjs dev && shopify app dev --config eboxsecure-dev",
+    "shopify:deploy:dev": "node scripts/set-backend.mjs dev && shopify app deploy --config eboxsecure-dev",
+    "shopify:deploy:prod": "node scripts/set-backend.mjs prod && shopify app deploy"
   },
   "dependencies": {
     "@ebox/db": "workspace:*",

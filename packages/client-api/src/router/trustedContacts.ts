@@ -6,6 +6,7 @@ import { NotificationService } from "@ebox/notifications";
 
 import { emailService } from "../services/emailService";
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
+import { getClientAppUrl } from "../utils/getClientAppUrl";
 
 export const trustedContactsRouter = createTRPCRouter({
   // Get all trusted contacts for current user (both granted and received)
@@ -176,7 +177,7 @@ export const trustedContactsRouter = createTRPCRouter({
           recipientName: trustedContact.trustedContact.firstName || null,
           inviterName,
           inviterEmail: currentUser?.email || "",
-          acceptInvitationUrl: `${process.env.VERCEL_URL}/settings/trusted-contacts`,
+          acceptInvitationUrl: `${getClientAppUrl()}/settings/trusted-contacts`,
         });
 
         return trustedContact;
@@ -196,7 +197,7 @@ export const trustedContactsRouter = createTRPCRouter({
           recipientEmail: input.email,
           inviterName,
           inviterEmail: currentUser?.email || "",
-          signUpUrl: `${process.env.VERCEL_URL}/sign-up`,
+          signUpUrl: `${getClientAppUrl()}/sign-up`,
         });
 
         return {

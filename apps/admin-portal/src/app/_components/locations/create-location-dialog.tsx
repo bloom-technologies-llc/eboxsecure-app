@@ -36,10 +36,11 @@ import {
 } from "@ebox/ui/select";
 
 import { api } from "~/trpc/react";
+import { AddressFields, addressSchemaFields } from "./address-fields";
 
 const createLocationSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  address: z.string().min(1, "Address is required"),
+  ...addressSchemaFields,
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   storageCapacity: z.number().min(1, "Storage capacity must be at least 1"),
   locationType: z.nativeEnum(LocationType),
@@ -61,7 +62,12 @@ export default function CreateLocationDialog({
     resolver: zodResolver(createLocationSchema),
     defaultValues: {
       name: "",
-      address: "",
+      address1: "",
+      address2: "",
+      city: "",
+      state: "",
+      zip: "",
+      countryCode: "US",
       email: "",
       storageCapacity: 500,
       locationType: LocationType.AGENT,
@@ -93,6 +99,7 @@ export default function CreateLocationDialog({
     createLocation({
       ...values,
       email: values.email || undefined,
+      address2: values.address2 || undefined,
     });
   };
 
@@ -122,22 +129,7 @@ export default function CreateLocationDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="123 Main St, City, State 12345"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <AddressFields control={form.control} />
             <FormField
               control={form.control}
               name="email"

@@ -11,9 +11,9 @@ import {
   View,
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
-import Toast from "react-native-root-toast";
 import { Redirect, useRouter } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
+import { showToast } from "@/utils/toast";
 import { isClerkAPIResponseError, useAuth, useSignIn } from "@clerk/clerk-expo";
 import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 
@@ -77,12 +77,7 @@ const ForgotPasswordPage = () => {
         if (userOwnsCredentials) {
           await setCredentials({ password });
         }
-        Toast.show("Successfully reset password!", {
-          duration: 3000,
-          position: Toast.positions.TOP,
-          backgroundColor: "#e9f9ee",
-          textColor: "#000",
-        });
+        showToast("Successfully reset password!", "success");
         await setActive({ session: attemptedReset.createdSessionId });
         router.replace("/");
       } else {
@@ -110,12 +105,7 @@ const ForgotPasswordPage = () => {
         if (userOwnsCredentials) {
           await setCredentials({ password });
         }
-        Toast.show("Successfully reset password!", {
-          duration: 3000,
-          position: Toast.positions.TOP,
-          backgroundColor: "#e9f9ee",
-          textColor: "#000",
-        });
+        showToast("Successfully reset password!", "success");
         setActive({ session: signInAttempt.createdSessionId });
       } else {
         setError("Unable to verify the code. Please try again.");
@@ -155,12 +145,7 @@ const ForgotPasswordPage = () => {
     setError("");
     try {
       await signIn.prepareSecondFactor({ strategy: "phone_code" });
-      Toast.show("New code sent to your mobile device!", {
-        duration: 3000,
-        position: Toast.positions.TOP,
-        backgroundColor: "#e9f9ee",
-        textColor: "#000",
-      });
+      showToast("New code sent to your mobile device!", "success");
     } catch (err) {
       if (isClerkAPIResponseError(err)) {
         const clerkError = err.errors?.[0];

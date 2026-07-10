@@ -1,121 +1,75 @@
 "use client";
 
-/**
- * TODO: Re-enable this component when Twilio integration is fixed
- * This component is temporarily disabled but all backend logic is preserved
- * NOTE: this is a nearly exact copy of the WebcamCapture component
- */
-import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
-import Webcam from "react-webcam";
 
-import { Button } from "@ebox/ui/button";
+import CameraInterface from "../../components/onboarding/CameraInterface";
+import ImagePreview from "../../components/onboarding/ImagePreview";
+import UploadProgress from "../../components/onboarding/UploadProgress";
+import { usePhonePortraitUpload } from "../../hooks/usePhonePortraitUpload";
+
+type UploadStep = "camera" | "preview" | "uploading" | "success";
 
 export default function PhoneCapture() {
-  // TODO: Remove this early return when Twilio integration is fixed
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="mx-auto max-w-md text-center">
-        <h1 className="mb-4 text-2xl font-bold text-gray-900">
-          Mobile Upload Temporarily Unavailable
-        </h1>
-        <p className="mb-6 text-gray-600">
-          This feature is currently under maintenance. Please use a computer
-          with a webcam to complete your onboarding.
-        </p>
-        <Button
-          onClick={() => window.close()}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Close This Window
-        </Button>
-      </div>
-    </div>
-  );
-
-  // TODO: Uncomment all the code below when Twilio integration is fixed
-  /*
   const router = useRouter();
   const searchparams = useSearchParams();
-  const uploadKey = searchparams.get("uploadKey");
+  const uploadKey = searchparams.get("uploadKey") ?? "";
+
+  const [currentStep, setCurrentStep] = useState<UploadStep>("camera");
+  const [capturedImage, setCapturedImage] = useState<File | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const { data: isValid, isLoading: isUploadKeyValidLoading } =
-    api.onboarding.isUploadKeyValid.useQuery({
-      uploadKey: uploadKey ?? "",
-    });
+    api.onboarding.isUploadKeyValid.useQuery({ uploadKey });
 
   const { data: isOnboarded, isLoading: isOnboardedLoading } =
     api.onboarding.isOnboardedUnauthed.useQuery(
-      {
-        uploadKey: uploadKey ?? "",
-      },
+      { uploadKey },
       { enabled: isValid !== undefined },
     );
   if (isOnboarded) {
     router.push("/");
   }
 
-  const [isCameraReady, setIsCameraReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [uploadComplete, setUploadComplete] = useState(false);
-  const webcamRef = useRef<Webcam>(null);
+  // UploadThing hook for the unauthenticated phone-upload flow
+  const {
+    isUploading,
+    uploadProgress,
+    error: uploadError,
+    uploadPortrait,
+    resetUpload,
+  } = usePhonePortraitUpload(uploadKey);
 
-  const { mutate: uploadPortrait } =
+  // Persist the uploaded URL to the customer account; this also flips the
+  // OnboardingPhoneUploadLink to completed so the desktop wait page redirects.
+  const { mutate: savePhoto, isPending: isSaving } =
     api.onboarding.uploadPortraitFromUnauthedClient.useMutation({
-      onSuccess: () => {
-        setUploadComplete(true);
-      },
+      onSuccess: () => setCurrentStep("success"),
+      onError: (error) => setSaveError(error.message),
     });
 
-  const handleUserMedia = useCallback(() => {
-    setIsCameraReady(true);
-    setError(null);
-  }, []);
+  const handlePhotoCapture = (file: File) => {
+    setCapturedImage(file);
+    setCurrentStep("preview");
+  };
 
-  const handleUserMediaError = useCallback((error: string | DOMException) => {
-    setError(
-      "Failed to access the camera. Please ensure you have given the necessary permissions.",
-    );
-    console.error("Webcam error:", error);
-  }, []);
-
-  const capturePhoto = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      setCapturedImage(imageSrc);
-    }
-  }, []);
-
-  const retakePhoto = useCallback(() => {
+  const handleRetakePhoto = () => {
     setCapturedImage(null);
-  }, []);
+    setCurrentStep("camera");
+    setSaveError(null);
+    resetUpload();
+  };
 
-  const uploadPhoto = useCallback(() => {
-    if (capturedImage) {
-      uploadPortrait({ file: capturedImage, uploadKey: uploadKey ?? "" });
+  const handleConfirmPhoto = async () => {
+    if (!capturedImage) return;
+    setSaveError(null);
+    setCurrentStep("uploading");
+    const url = await uploadPortrait(capturedImage);
+    if (url) {
+      savePhoto({ photoLink: url, uploadKey });
     }
-  }, [capturedImage]);
-
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <p className="text-red-500">{error}</p>
-        <p>Please refresh this page and try again.</p>
-      </div>
-    );
-  }
-
-  if (uploadComplete) {
-    return (
-      <h1>
-        Upload complete! You may exit this page and resume onboarding on your
-        original device.
-      </h1>
-    );
-  }
+  };
 
   if (isUploadKeyValidLoading || isOnboardedLoading) {
     return <div>Loading...</div>;
@@ -133,46 +87,44 @@ export default function PhoneCapture() {
     );
   }
 
+  const error = saveError ?? uploadError;
+
   return (
-    <div className="space-y-4">
-      {capturedImage ? (
-        <div className="space-y-4">
-          <div className="relative h-[200px] w-full">
-            <Image
-              src={capturedImage || "/placeholder.svg"}
-              alt="Captured photo"
-              fill
-              style={{ objectFit: "cover" }}
-              className="rounded-lg"
-            />
-          </div>
-          <div className="flex space-x-2">
-            <Button className="flex-1" onClick={retakePhoto}>
-              Retake Photo
-            </Button>
-            <Button className="flex-1" onClick={uploadPhoto}>
-              Upload Photo
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            onUserMedia={handleUserMedia}
-            onUserMediaError={handleUserMediaError}
-            className="w-full rounded-lg"
-          />
-          {isCameraReady && (
-            <Button className="w-full" onClick={capturePhoto}>
-              Take Photo
-            </Button>
-          )}
-        </>
+    <div className="w-full max-w-md px-4">
+      {currentStep === "camera" && (
+        <CameraInterface
+          onCapture={handlePhotoCapture}
+          onBack={handleRetakePhoto}
+          isUploading={isUploading}
+        />
+      )}
+
+      {currentStep === "preview" && capturedImage && (
+        <ImagePreview
+          imageFile={capturedImage}
+          onRetake={handleRetakePhoto}
+          onConfirm={handleConfirmPhoto}
+          isUploading={isUploading || isSaving}
+        />
+      )}
+
+      {currentStep === "uploading" && (
+        <UploadProgress
+          progress={uploadProgress}
+          isUploading={isUploading || isSaving}
+          isComplete={false}
+          error={error}
+          onCancel={handleRetakePhoto}
+          onRetry={handleConfirmPhoto}
+        />
+      )}
+
+      {currentStep === "success" && (
+        <h1>
+          Upload complete! You may exit this page and resume onboarding on your
+          original device.
+        </h1>
       )}
     </div>
   );
-  */
 }

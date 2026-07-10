@@ -10,10 +10,6 @@ type = "ui_extension"
     module = "./src/Checkout.tsx"
     target = "purchase.checkout.delivery-address.render-before"
 
-        [[extensions.targeting.metafields]]
-        namespace = "ebox"
-        key = "eboxOrder"
-
     [extensions.capabilities]
     api_access = true
     network_access = true

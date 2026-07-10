@@ -220,7 +220,7 @@ export default function ScannerScreen() {
                 style={styles.input}
                 value={virtualAddress}
                 onChangeText={setVirtualAddress}
-                placeholder="e.g., Suite 123, Box A"
+                placeholder="CUST-ABCDEF"
                 placeholderTextColor="#94a3b8"
               />
             </View>

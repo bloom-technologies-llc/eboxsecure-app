@@ -1,22 +1,25 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { jwtVerify } from "jose";
+import type { JWTPayload } from "jose";
 
 /**
- * Merchant-side OAuth (authorization code grant for an *offline* access token).
- * Pure, network-free helpers — the only side-effecting one
- * (`exchangeCodeForToken`) takes an injected `fetchImpl` so it's unit-testable.
+ * Merchant-side auth for a *managed-installation* app. Shopify grants the app's
+ * scopes at install time (no OAuth redirect dance); the app then obtains an
+ * *offline* access token by exchanging the App Bridge session token — Shopify's
+ * "token exchange" grant. These helpers are pure except
+ * `exchangeSessionTokenForToken`, which takes an injected `fetchImpl` so it's
+ * unit-testable.
  *
- * This is the "main net-new work" flagged in ADR 0002: token-exchange OAuth is
- * hand-rolled rather than pulling in `@shopify/shopify-api`. The HMAC style
- * mirrors `webhook.ts` (constant-time compare, fail-closed on bad input).
+ * Hand-rolled rather than pulling in `@shopify/shopify-api` (ADR 0002). The
+ * fail-closed style (throw on anything unexpected) mirrors `webhook.ts`.
  */
 
 /** A Shopify shop domain: `^[a-z0-9][a-z0-9-]*\.myshopify\.com$` (lowercased). */
 const SHOP_DOMAIN_RE = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 
 /**
- * Is `shop` a well-formed `*.myshopify.com` host? The `shop` param is
- * attacker-controlled on the install entry point, so every flow validates it
- * before it's interpolated into an outbound URL or persisted.
+ * Is `shop` a well-formed `*.myshopify.com` host? The shop is attacker-derivable
+ * from token claims, so every flow validates it before it's interpolated into an
+ * outbound URL or persisted.
  */
 export function isValidShopDomain(
   shop: string | null | undefined,
@@ -25,104 +28,75 @@ export function isValidShopDomain(
   return SHOP_DOMAIN_RE.test(shop);
 }
 
-export interface BuildAuthorizeUrlInput {
-  shop: string;
-  apiKey: string;
-  scopes: string;
-  redirectUri: string;
-  state: string;
-}
-
-/**
- * Build the `https://{shop}/admin/oauth/authorize?...` URL that begins the
- * authorization code grant. No `grant_options[]` ⇒ Shopify issues an *offline*
- * (long-lived) token, which is what the webhook/session storage needs.
- */
-export function buildAuthorizeUrl(input: BuildAuthorizeUrlInput): string {
-  const params = new URLSearchParams({
-    client_id: input.apiKey,
-    scope: input.scopes,
-    redirect_uri: input.redirectUri,
-    state: input.state,
-  });
-  return `https://${input.shop}/admin/oauth/authorize?${params.toString()}`;
-}
-
-/**
- * Verify Shopify's `hmac` query param on the OAuth callback.
- *
- * Per Shopify's spec: drop `hmac`/`signature`, sort the remaining params by key,
- * re-encode them as `key=value&...`, HMAC-SHA256 with the app secret, and
- * compare (constant-time) against the provided hex digest. Returns false on any
- * missing/malformed input rather than throwing — same fail-closed contract as
- * `verifyHmac` in `webhook.ts`.
- */
-export function verifyOAuthCallbackHmac(
-  queryParams: URLSearchParams | Record<string, string>,
-  apiSecret: string,
-): boolean {
-  if (!apiSecret) return false;
-
-  const entries =
-    queryParams instanceof URLSearchParams
-      ? [...queryParams.entries()]
-      : Object.entries(queryParams);
-
-  let provided: string | undefined;
-  const rest: [string, string][] = [];
-  for (const [key, value] of entries) {
-    if (key === "hmac" || key === "signature") {
-      if (key === "hmac") provided = value;
-      continue;
-    }
-    rest.push([key, value]);
-  }
-  if (!provided) return false;
-
-  rest.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  const message = rest.map(([k, v]) => `${k}=${v}`).join("&");
-
-  const digest = createHmac("sha256", apiSecret)
-    .update(message, "utf8")
-    .digest();
-
-  let providedBuf: Buffer;
-  try {
-    providedBuf = Buffer.from(provided, "hex");
-  } catch {
-    return false;
-  }
-  // timingSafeEqual throws on differing lengths, so guard first.
-  if (providedBuf.length !== digest.length) return false;
-  return timingSafeEqual(providedBuf, digest);
-}
-
-export interface ExchangeCodeInput {
-  shop: string;
-  apiKey: string;
-  apiSecret: string;
-  code: string;
-}
-
-export interface ExchangeCodeDeps {
-  /** Injected for testability; defaults to the platform `fetch`. */
-  fetchImpl?: typeof globalThis.fetch;
-}
-
 export interface AccessTokenResult {
   accessToken: string;
   scope: string;
 }
 
+export interface VerifySessionTokenInput {
+  /** The app's client_id — must equal the session token's `aud` claim. */
+  apiKey: string;
+  /** The app's client secret — the HS256 signing key for session tokens. */
+  apiSecret: string;
+}
+
 /**
- * Exchange the one-time authorization `code` for an offline access token by
- * POSTing to `https://{shop}/admin/oauth/access_token`. Throws on a non-2xx
- * response or a malformed body so the callback route can fail the install
- * loudly instead of persisting a junk session.
+ * Verify an App Bridge **session token** (an `id_token` JWT, HS256-signed with
+ * the app secret) and return the shop it was minted for.
+ *
+ * `jose` enforces the signature and `exp`/`nbf`; we additionally enforce that
+ * `aud` is *our* app (defeats tokens minted for another app) and that `dest` is
+ * a real `*.myshopify.com` host (before we ever POST to it). Throws on any
+ * failure rather than returning a bad shop.
  */
-export async function exchangeCodeForToken(
-  input: ExchangeCodeInput,
-  deps: ExchangeCodeDeps = {},
+export async function verifySessionToken(
+  token: string,
+  input: VerifySessionTokenInput,
+): Promise<{ shop: string; payload: JWTPayload }> {
+  const secret = new TextEncoder().encode(input.apiSecret);
+  const { payload } = await jwtVerify(token, secret, {
+    algorithms: ["HS256"],
+    audience: input.apiKey,
+  });
+
+  // `dest` is the shop's storefront origin, e.g. `https://acme.myshopify.com`.
+  const dest = typeof payload.dest === "string" ? payload.dest : "";
+  let shop: string | null = null;
+  try {
+    shop = new URL(dest).host;
+  } catch {
+    shop = null;
+  }
+  if (!isValidShopDomain(shop)) {
+    throw new Error("Session token 'dest' is not a valid shop domain");
+  }
+
+  return { shop, payload };
+}
+
+export interface ExchangeSessionTokenInput {
+  shop: string;
+  apiKey: string;
+  apiSecret: string;
+  /** The verified App Bridge session token to exchange. */
+  sessionToken: string;
+}
+
+export interface ExchangeDeps {
+  /** Injected for testability; defaults to the platform `fetch`. */
+  fetchImpl?: typeof globalThis.fetch;
+}
+
+/**
+ * Exchange an App Bridge session token for an **offline** access token via
+ * Shopify's token-exchange grant (POST `https://{shop}/admin/oauth/access_token`).
+ * Offline (long-lived, no user attached) so the same token keeps working for
+ * webhook/background work. Throws on a non-2xx response or a malformed body so
+ * the caller fails loudly instead of persisting a junk session.
+ */
+export async function exchangeSessionTokenForToken(
+  input: ExchangeSessionTokenInput,
+  deps: ExchangeDeps = {},
 ): Promise<AccessTokenResult> {
   const fetchImpl = deps.fetchImpl ?? globalThis.fetch;
 
@@ -137,7 +111,11 @@ export async function exchangeCodeForToken(
       body: JSON.stringify({
         client_id: input.apiKey,
         client_secret: input.apiSecret,
-        code: input.code,
+        grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+        subject_token: input.sessionToken,
+        subject_token_type: "urn:ietf:params:oauth:token-type:id_token",
+        requested_token_type:
+          "urn:shopify:params:oauth:token-type:offline-access-token",
       }),
     },
   );

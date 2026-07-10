@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { api } from "@/trpc/react";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,6 +36,11 @@ export default function Page() {
       enabled: Boolean(orderId),
     },
   );
+
+  // Defensive: `lineItems` is only present when the backend serving this query
+  // includes it. A mobile client can hit an older API (deploy skew), so guard
+  // against it being absent rather than crashing.
+  const lineItems = order?.lineItems ?? [];
 
   const {
     data: qrCode,
@@ -113,16 +119,36 @@ export default function Page() {
           })}
         </View>
 
-        {/* Order Summary */}
-        <View className="mx-6 my-4 border border-[#e4e4e7] p-4">
-          <View className="flex flex-row items-center gap-x-3">
-            <View className="h-24 w-24 rounded-lg bg-slate-300" />
-            <View className="flex gap-y-3">
-              <Text className="">Apple Watch Ultra 2</Text>
-              <Text className="text-sm">$248.00</Text>
-            </View>
+        {/* Order Summary — real line items (Shopify). Scan orders have none, and
+            items may lack an image, so both fall back to a neutral placeholder
+            rather than a misleading stock photo/name/price. */}
+        {lineItems.length > 0 && (
+          <View className="mx-6 my-4 gap-y-4 border border-[#e4e4e7] p-4">
+            {lineItems.map((item) => (
+              <View
+                key={item.id}
+                className="flex flex-row items-center gap-x-3"
+              >
+                {item.imageUrl ? (
+                  <Image
+                    source={{ uri: item.imageUrl }}
+                    style={{ height: 96, width: 96, borderRadius: 8 }}
+                    contentFit="cover"
+                  />
+                ) : null}
+                <View className="flex flex-1 gap-y-2">
+                  <Text className="">
+                    {item.title}
+                    {item.quantity > 1 ? ` × ${item.quantity}` : ""}
+                  </Text>
+                  {item.price !== null && (
+                    <Text className="text-sm">${item.price.toFixed(2)}</Text>
+                  )}
+                </View>
+              </View>
+            ))}
           </View>
-        </View>
+        )}
 
         {/* Order Information */}
         <View className="flex border border-x-0 border-y-8 border-[#e4e4e7]">

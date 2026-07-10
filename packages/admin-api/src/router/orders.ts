@@ -6,6 +6,7 @@ import { z } from "zod";
 import { NotificationService } from "@ebox/notifications";
 import { kv } from "@ebox/redis-client";
 import {
+  SUBSCRIPTION_LIMITS,
   getStripeCustomerId,
   priceIdsToPlan,
   subscriptionDataSchema,
@@ -117,6 +118,28 @@ export const ordersRouter = createTRPCRouter({
         });
       }
     }),
+
+  getAllOrdersForEmployee: protectedAdminProcedure.query(async ({ ctx }) => {
+    // Return ALL orders scoped to the current employee's location. The
+    // dashboard computes its metrics client-side (counts, "processed today",
+    // recent activity), so this intentionally is NOT paginated.
+    const whereClause = {
+      shippedLocation: {
+        employeeAccounts: {
+          some: {
+            id: ctx.session.userId,
+          },
+        },
+      },
+    };
+
+    return await ctx.db.order.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }),
 
   getOrderDetails: protectedAdminProcedure
     .input(
@@ -307,16 +330,8 @@ export const ordersRouter = createTRPCRouter({
           message: "Unable to determine subscription tier from price IDs",
         });
       }
-      const allowedHoldingPeriod =
-        await ctx.db.subscriptionLimit.findUniqueOrThrow({
-          where: {
-            type: plan.subscriptionType,
-          },
-          select: {
-            maxPackageHolding: true,
-          },
-        });
-      const maxHoldingDays = allowedHoldingPeriod.maxPackageHolding;
+      const maxHoldingDays =
+        SUBSCRIPTION_LIMITS[plan.subscriptionType].maxPackageHolding;
 
       const numDaysHeld = Math.ceil(
         (new Date().getTime() - order.deliveredDate.getTime()) /

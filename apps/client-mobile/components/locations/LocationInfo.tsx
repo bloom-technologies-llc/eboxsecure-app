@@ -1,7 +1,8 @@
 import React from "react";
 import { Linking, Text, TouchableOpacity, View } from "react-native";
-import Toast from "react-native-root-toast";
 import { MapPin } from "phosphor-react-native";
+
+import { showToast } from "@/utils/toast";
 
 interface LocationInfoProps {
   address: string;
@@ -22,20 +23,10 @@ export function LocationInfo({
       if (canOpen) {
         await Linking.openURL(url);
       } else {
-        Toast.show("Unable to open maps", {
-          duration: 3000,
-          position: Toast.positions.TOP,
-          backgroundColor: "#ef4444",
-          textColor: "#ffffff",
-        });
+        showToast("Unable to open maps", "error");
       }
     } catch (error) {
-      Toast.show("Error opening maps", {
-        duration: 3000,
-        position: Toast.positions.TOP,
-        backgroundColor: "#ef4444",
-        textColor: "#ffffff",
-      });
+      showToast("Error opening maps", "error");
     }
   };
 

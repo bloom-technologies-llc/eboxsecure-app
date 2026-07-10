@@ -103,7 +103,52 @@ describe("mapOrderWebhook", () => {
       email: "Shopper@Example.com",
       total: 42.5,
       ebox: { customerId: "c1", locationId: 4 },
+      lineItems: [],
     });
+  });
+
+  it("extracts line items (title, quantity, product/variant ids; image null)", () => {
+    const normalized = mapOrderWebhook(
+      orderWith({
+        line_items: [
+          {
+            title: "Apple AirPods Max",
+            quantity: 2,
+            price: "249.99",
+            product_id: 111,
+            variant_id: 222,
+          },
+          { name: "Fallback Name Item", product_id: 333 },
+        ],
+      }),
+      SHOP,
+    );
+    expect(normalized.lineItems).toEqual([
+      {
+        title: "Apple AirPods Max",
+        quantity: 2,
+        price: 249.99,
+        shopifyProductId: "111",
+        shopifyVariantId: "222",
+        imageUrl: null,
+      },
+      {
+        title: "Fallback Name Item",
+        quantity: 1,
+        price: null,
+        shopifyProductId: "333",
+        shopifyVariantId: null,
+        imageUrl: null,
+      },
+    ]);
+  });
+
+  it("drops line items with no usable title and defaults to an empty list", () => {
+    expect(
+      mapOrderWebhook(orderWith({ line_items: [{ quantity: 1 }] }), SHOP)
+        .lineItems,
+    ).toEqual([]);
+    expect(mapOrderWebhook(orderWith({}), SHOP).lineItems).toEqual([]);
   });
 
   it("falls back to total_price and order-level email", () => {

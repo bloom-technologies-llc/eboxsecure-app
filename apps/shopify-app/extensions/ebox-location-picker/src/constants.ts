@@ -7,17 +7,8 @@ export const RESET_LOCATION: ShippingAddress = {
   provinceCode: undefined,
 }
 
-// The app's backend URL. `process` does not exist in the checkout sandbox
-// (it's a Web Worker), so a bare `process.env` reference throws at module load
-// and blanks the whole extension. The Shopify CLI inlines this member access at
-// build time when SHOPIFY_APP_URL is set in the extension's env; when it's unset
-// the reference survives and throws, so we guard with try/catch and fall back to
-// "" — the panel still renders, it just can't reach the backend until the URL is
-// provided at build time (see ENVIRONMENTS / the extension .env).
-let appUrl: string | undefined;
-try {
-  appUrl = process.env.SHOPIFY_APP_URL;
-} catch {
-  appUrl = undefined;
-}
-export const BASE_URL = appUrl ?? ''
+// The app's backend URL. `process` does not exist in the checkout sandbox (it's
+// a Web Worker) and Shopify does not inline env vars into the extension bundle,
+// so the URL is baked into env.ts at deploy time by scripts/set-backend.mjs
+// (dev -> qa backend, prod -> prod backend). See package.json shopify:deploy:*.
+export { BASE_URL } from './env'

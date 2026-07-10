@@ -1,6 +1,7 @@
 import type {
   EboxMetafield,
   NormalizedCancellation,
+  NormalizedLineItem,
   NormalizedOrder,
 } from "./types";
 
@@ -19,13 +20,15 @@ interface RawNoteAttribute {
 }
 
 /**
- * Pull the `ebox.eboxOrder` payload out of a raw `orders/create` webhook.
+ * Pull the `eboxOrder` payload out of a raw `orders/create` webhook.
  *
- * Looks in the order `metafields` array first (registered under the `ebox`
- * namespace), then falls back to `note_attributes` keyed `eboxOrder` — the
- * fallback path the metafield-propagation spike (#53) selects if metafields
- * don't reach the webhook. Returns null when absent or malformed, so a
- * non-locker order maps to `ebox: null` and is later skipped.
+ * The canonical source is the `note_attributes` entry keyed `eboxOrder`, set by
+ * the checkout extension as a cart attribute — the only channel that reliably
+ * reaches the webhook (spike #53). Checkout-UI metafields never propagated here
+ * and were removed entirely in API 2026-04, so the `metafields` array is checked
+ * first only as forward-compat (e.g. a future cart→order metafield copy) and is
+ * normally absent. Returns null when absent or malformed, so a non-locker order
+ * maps to `ebox: null` and is later skipped.
  */
 export function extractEboxMetafield(raw: unknown): EboxMetafield | null {
   if (raw === null || typeof raw !== "object") return null;
@@ -106,6 +109,52 @@ function extractTotal(order: Record<string, unknown>): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+interface RawLineItem {
+  title?: unknown;
+  name?: unknown;
+  quantity?: unknown;
+  price?: unknown;
+  product_id?: unknown;
+  variant_id?: unknown;
+}
+
+/**
+ * Pull the product lines out of an `orders/create` webhook. Titles and
+ * quantities are present in the payload; product images are not, so `imageUrl`
+ * starts null and is backfilled later. Lines without any usable title are
+ * dropped so we never persist an empty product row.
+ */
+function extractLineItems(order: Record<string, unknown>): NormalizedLineItem[] {
+  const raw = order.line_items;
+  if (!Array.isArray(raw)) return [];
+
+  return (raw as RawLineItem[])
+    .map((item): NormalizedLineItem | null => {
+      const title = asString(item?.title) ?? asString(item?.name);
+      if (!title) return null;
+      const quantityRaw =
+        typeof item?.quantity === "number"
+          ? item.quantity
+          : Number(item?.quantity);
+      const quantity =
+        Number.isFinite(quantityRaw) && quantityRaw > 0
+          ? Math.trunc(quantityRaw)
+          : 1;
+      const priceRaw =
+        typeof item?.price === "number" ? item.price : Number(item?.price);
+      const price = Number.isFinite(priceRaw) ? priceRaw : null;
+      return {
+        title,
+        quantity,
+        price,
+        shopifyProductId: asString(item?.product_id),
+        shopifyVariantId: asString(item?.variant_id),
+        imageUrl: null,
+      };
+    })
+    .filter((item): item is NormalizedLineItem => item !== null);
+}
+
 /**
  * Map a raw `orders/create` webhook body to a `NormalizedOrder`. `shop` comes
  * from the `X-Shopify-Shop-Domain` header (not reliably in the body).
@@ -126,6 +175,7 @@ export function mapOrderWebhook(raw: unknown, shop: string): NormalizedOrder {
     email,
     total: extractTotal(order),
     ebox: extractEboxMetafield(order),
+    lineItems: extractLineItems(order),
   };
 }
 

@@ -1,10 +1,8 @@
-import Script from "next/script";
-
 import { db } from "@ebox/db";
 
-import { env } from "~/env";
 import { isValidShopDomain } from "~/lib/shopify/oauth";
 import { loadSessionByShop } from "~/lib/shopify/session";
+import { InstallBootstrap } from "./InstallBootstrap";
 
 export const runtime = "nodejs";
 
@@ -28,13 +26,11 @@ const GDPR_WEBHOOKS = [
 
 /**
  * Embedded status page (server component). Reports whether the shop in `?shop=`
- * has completed OAuth (a stored offline token + granted scopes) and lists the
- * webhook/GDPR registrations. Resilient by design: no shop, an invalid shop, or
- * a missing session all render a clear state instead of throwing.
- *
- * App Bridge is loaded from Shopify's CDN (no npm dependency) only when both a
- * public API key and a `host` param are present — outside the embedded iframe it
- * simply renders as a plain page.
+ * has a stored offline access token. When it doesn't yet, it mounts
+ * `InstallBootstrap`, which completes the managed install via App Bridge token
+ * exchange (App Bridge itself is loaded in `layout.tsx`). Resilient by design:
+ * no shop, an invalid shop, or a missing session all render a clear state
+ * instead of throwing.
  */
 export default async function StatusPage({
   searchParams,
@@ -49,7 +45,6 @@ export default async function StatusPage({
     ? await loadSessionByShop(shop, { db }).catch(() => null)
     : null;
   const connected = Boolean(session?.accessToken);
-  const apiKey = env.NEXT_PUBLIC_SHOPIFY_API_KEY;
 
   return (
     <main
@@ -61,17 +56,7 @@ export default async function StatusPage({
         lineHeight: 1.5,
       }}
     >
-      {apiKey && host ? (
-        <Script
-          src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-          data-api-key={apiKey}
-          strategy="beforeInteractive"
-        />
-      ) : null}
-
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-        EboxSecure
-      </h1>
+      <h1 style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>EboxSecure</h1>
       <p style={{ color: "#555", marginTop: 0 }}>
         Locker fulfillment for your Shopify store.
       </p>
@@ -79,10 +64,7 @@ export default async function StatusPage({
       <section style={{ marginTop: "1.5rem" }}>
         <h2 style={{ fontSize: "1.1rem" }}>Connection</h2>
         {!shop ? (
-          <p>
-            No store specified. Open this page from your Shopify admin, or begin
-            installation at <code>/auth?shop=your-store.myshopify.com</code>.
-          </p>
+          <p>No store specified. Open this app from your Shopify admin.</p>
         ) : connected ? (
           <p>
             <strong style={{ color: "#0a7d28" }}>Connected</strong> — {shop} has
@@ -91,14 +73,13 @@ export default async function StatusPage({
             Granted scopes: <code>{session?.scope ?? "(none recorded)"}</code>
           </p>
         ) : (
-          <p>
-            <strong style={{ color: "#b25000" }}>Not connected</strong> — {shop}{" "}
-            has not completed installation.{" "}
-            <a href={`/auth?shop=${encodeURIComponent(shop)}`}>
-              Install EboxSecure
-            </a>
-            .
-          </p>
+          <>
+            <p>
+              <strong style={{ color: "#b25000" }}>Not connected</strong> —
+              finishing installation for {shop}…
+            </p>
+            <InstallBootstrap connected={connected} embedded={Boolean(host)} />
+          </>
         )}
       </section>
 

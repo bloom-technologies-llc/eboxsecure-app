@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Toast from "react-native-root-toast";
 import { api } from "@/trpc/react";
+import { showToast } from "@/utils/toast";
 
 export default function NotificationPreferencesPage() {
   const router = useRouter();
@@ -23,12 +23,10 @@ export default function NotificationPreferencesPage() {
     api.notification.updatePreferences.useMutation({
       onSuccess: () => {
         utils.notification.getPreferences.invalidate();
-        Toast.show("Settings saved", { duration: Toast.durations.SHORT });
+        showToast("Settings saved", "success");
       },
       onError: () => {
-        Toast.show("Failed to save settings", {
-          duration: Toast.durations.SHORT,
-        });
+        showToast("Failed to save settings", "error");
       },
     });
 

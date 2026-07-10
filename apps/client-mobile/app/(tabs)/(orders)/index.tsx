@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import { Link } from "expo-router";
 import VirtualAddressBanner from "@/components/VirtualAddressBanner";
 import { api } from "@/trpc/react";
@@ -25,12 +26,22 @@ const getShippingStatus = (order: OrderView) => {
 
 const OrderCard = ({ order }: { order: OrderView }) => {
   const { pickedUpAt, deliveredDate, shippedLocation, directlyOwned } = order;
+  // Only show a real product image (first line item that has one); never a
+  // placeholder stand-in. `lineItems` may be absent on an older API (deploy skew).
+  const thumbnailUrl =
+    order.lineItems?.find((item) => item.imageUrl)?.imageUrl ?? null;
 
   return (
     <Link href={`/(tabs)/(orders)/order-detail?id=${order.id}`} asChild>
       <Pressable className="w-full border border-b-0 border-[#e4e4e7] bg-white p-4">
         <View className="flex flex-row items-center gap-x-4">
-          <View className="h-24 w-24 rounded-lg bg-slate-300" />
+          {thumbnailUrl ? (
+            <Image
+              source={{ uri: thumbnailUrl }}
+              style={{ height: 96, width: 96, borderRadius: 8 }}
+              contentFit="cover"
+            />
+          ) : null}
           <View className="flex flex-1 gap-y-2">
             <View className="flex flex-row items-center gap-x-2">
               <Text className="text-base font-semibold text-gray-800">
