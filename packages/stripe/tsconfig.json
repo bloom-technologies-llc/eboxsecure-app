@@ -1,5 +1,5 @@
 {
   "extends": "@ebox/tsconfig/internal-package.json",
-  "include": ["src", "backfill-subscriptions.ts"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

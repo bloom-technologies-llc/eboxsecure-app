@@ -1004,15 +1004,9 @@ importers:
       '@ebox/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
-      dotenv-cli:
-        specifier: ^7.4.1
-        version: 7.4.4
       eslint:
         specifier: latest
         version: 9.35.0
-      tsx:
-        specifier: ^4.7.1
-        version: 4.19.4
       typescript:
         specifier: latest
         version: 5.9.2
@@ -15664,6 +15658,7 @@ packages:
       get-tsconfig: 4.10.1
     optionalDependencies:
       fsevents: 2.3.3
+    dev: false
 
   /turbo-darwin-64@1.13.4:
     resolution: {integrity: sha512-A0eKd73R7CGnRinTiS7txkMElg+R5rKFp9HV7baDiEL4xTG1FIg/56Vm7A5RVgg8UNgG2qNnrfatJtb+dRmNdw==}
