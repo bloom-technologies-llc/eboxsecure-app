@@ -2,33 +2,19 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { EmployeeRole } from "@prisma/client";
 import {
   ArrowDown,
   ArrowUp,
   Filter,
-  Info,
   Loader2,
-  Plus,
   Search,
   SortDesc,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
 import { Checkbox } from "@ebox/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@ebox/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -39,16 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@ebox/ui/form";
-import { useToast } from "@ebox/ui/hooks/use-toast";
-import { Input } from "@ebox/ui/input";
 import {
   Table,
   TableBody,
@@ -64,16 +40,6 @@ type Type = "AGENT" | "FRANCHISE";
 type SortField = "name" | "type" | "role" | "location" | "email" | "createdAt";
 type SortDirection = "asc" | "desc";
 
-const formSchema = z.object({
-  emailAddress: z.string().email(),
-  password: z
-    .string({
-      message: "Please enter a password", //TODO: set reqs for valid password
-    })
-    .min(8),
-  employeeRole: z.nativeEnum(EmployeeRole),
-});
-
 export default function EmployeeTable(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
@@ -87,8 +53,6 @@ export default function EmployeeTable(): React.JSX.Element {
     new Set(),
   );
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { toast } = useToast();
 
   const {
     data: employeesData,
@@ -103,42 +67,6 @@ export default function EmployeeTable(): React.JSX.Element {
     sortBy,
     sortDirection,
   });
-
-  const createEmployee = api.user.createEmployee.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Employee successfully created",
-        description: "This user can now sign in immediately",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong!",
-        description: "Please try again later",
-      });
-    },
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      emailAddress: "",
-      password: "",
-      employeeRole: EmployeeRole.ASSOCIATE,
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    createEmployee.mutate({
-      emailAddress: values.emailAddress,
-      password: values.password,
-      employeeRole: values.employeeRole,
-    });
-
-    setIsModalOpen(false);
-    form.reset();
-  }
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -245,8 +173,6 @@ export default function EmployeeTable(): React.JSX.Element {
               className="h-8 rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm"
             />
           </div>
-
-          {/* Remove Add Employee button since creation is out of scope */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
