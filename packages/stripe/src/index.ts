@@ -372,6 +372,37 @@ export async function hasValidSubscription(stripeCustomerId: string) {
   return subscriptionData.status === "active";
 }
 
+/**
+ * Persist the resolved subscription tier onto the local CustomerAccount row(s)
+ * keyed by Stripe customer id.
+ *
+ * This is a best-effort side effect of `syncCustomerData` that keeps the
+ * authoritative `CustomerAccount.subscription` column in sync with Stripe so
+ * read paths (e.g. the admin Customers table) don't have to hit Stripe/KV.
+ *
+ * - Uses `updateMany` because `stripeCustomerId` is not a guaranteed-unique
+ *   key; a Stripe customer with no local CustomerAccount is a harmless no-op
+ *   (zero rows matched) rather than an error.
+ * - Never throws: a DB failure must not break the Stripe webhook. Errors are
+ *   logged and swallowed, matching the write-only KV posture of the caller.
+ */
+async function persistSubscriptionTier(
+  customerId: string,
+  subscription: SubscriptionType,
+) {
+  try {
+    await db.customerAccount.updateMany({
+      where: { stripeCustomerId: customerId },
+      data: { subscription },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to persist subscription tier "${subscription}" for Stripe customer ${customerId}:`,
+      error,
+    );
+  }
+}
+
 // Used in webhook
 export async function syncCustomerData(customerId: string) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -386,6 +417,8 @@ export async function syncCustomerData(customerId: string) {
   if (subscriptions.data.length === 0) {
     const subData = { status: "none" };
     await kv.set(`stripe:customer:${customerId}`, subData);
+    // No Stripe subscription => customer is on the free/BASIC tier.
+    await persistSubscriptionTier(customerId, SubscriptionType.BASIC);
     return subData;
   }
 
@@ -439,6 +472,18 @@ export async function syncCustomerData(customerId: string) {
   }
 
   await kv.set(`stripe:customer:${customerId}`, subData);
+
+  // Persist the authoritative tier to the DB, mirroring how client-web's
+  // `getCurrentPlan` resolves it: derive purely from the subscription's price
+  // IDs via `priceIdsToPlan` (status is not consulted). If the tier can't be
+  // determined (e.g. not exactly 3 price IDs => `priceIdsToPlan` returns null),
+  // fall back to BASIC so the webhook never crashes.
+  const plan = await priceIdsToPlan(subData.priceIds);
+  await persistSubscriptionTier(
+    customerId,
+    plan?.subscriptionType ?? SubscriptionType.BASIC,
+  );
+
   return subData;
 }
 
