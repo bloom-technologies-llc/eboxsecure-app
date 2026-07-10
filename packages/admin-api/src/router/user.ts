@@ -52,6 +52,13 @@ export const userRouter = createTRPCRouter({
             select: {
               employeeRole: true,
               locationId: true,
+              location: {
+                select: {
+                  name: true,
+                  city: true,
+                  address: true,
+                },
+              },
             },
           },
         },
@@ -69,6 +76,9 @@ export const userRouter = createTRPCRouter({
           userType: user.userType,
           employeeRole: user.employeeAccount.employeeRole,
           locationId: user.employeeAccount.locationId,
+          locationName: user.employeeAccount.location.name,
+          locationCity: user.employeeAccount.location.city,
+          locationAddress: user.employeeAccount.location.address,
         };
       }
 
@@ -76,6 +86,9 @@ export const userRouter = createTRPCRouter({
         userType: user.userType,
         employeeRole: null,
         locationId: null,
+        locationName: null,
+        locationCity: null,
+        locationAddress: null,
       };
     } catch (error) {
       if (error instanceof TRPCError) {
