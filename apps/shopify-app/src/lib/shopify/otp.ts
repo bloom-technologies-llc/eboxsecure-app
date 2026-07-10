@@ -60,6 +60,8 @@ export interface VerifyOtpDeps extends Pick<OtpDeps, "db" | "redis"> {
 export interface VerifyOtpResult {
   token: string;
   customerId: string;
+  firstName: string;
+  lastName: string;
 }
 
 /**
@@ -87,7 +89,7 @@ export async function verifyOtp(
 
   const customer = await deps.db.customerAccount.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
-    select: { id: true, email: true },
+    select: { id: true, email: true, firstName: true, lastName: true },
   });
   if (!customer) throw new OtpError("No account found for this email");
 
@@ -101,7 +103,12 @@ export async function verifyOtp(
     .setExpirationTime(JWT_TTL)
     .sign(secret);
 
-  return { token, customerId: customer.id };
+  return {
+    token,
+    customerId: customer.id,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+  };
 }
 
 export interface ShopperClaims {

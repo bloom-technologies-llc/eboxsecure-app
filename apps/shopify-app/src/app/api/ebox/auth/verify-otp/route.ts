@@ -39,12 +39,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { token, customerId } = await verifyOtp(email, otp, {
-      db,
-      redis: kv,
-      jwtSecret: env.SHOPIFY_INTEGRATION_JWT_SECRET,
-    });
-    return NextResponse.json({ token, customerId });
+    const { token, customerId, firstName, lastName } = await verifyOtp(
+      email,
+      otp,
+      {
+        db,
+        redis: kv,
+        jwtSecret: env.SHOPIFY_INTEGRATION_JWT_SECRET,
+      },
+    );
+    return NextResponse.json({ token, customerId, firstName, lastName });
   } catch (error) {
     if (error instanceof OtpError) {
       return NextResponse.json({ error: error.message }, { status: 401 });

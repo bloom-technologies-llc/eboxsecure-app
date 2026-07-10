@@ -64,20 +64,28 @@ describe("sendOtp", () => {
 });
 
 describe("verifyOtp", () => {
-  it("issues a 1h JWT carrying the customerId and burns the code (single-use)", async () => {
+  it("issues a 1h JWT carrying the customerId, returns the account name, and burns the code (single-use)", async () => {
     redis.get.mockResolvedValue("123456");
     db.customerAccount.findFirst.mockResolvedValue({
       id: "cust_1",
       email: "a@b.com",
+      firstName: "Ada",
+      lastName: "Lovelace",
     } as never);
 
-    const { token, customerId } = await verifyOtp("a@b.com", "123456", {
-      db,
-      redis,
-      jwtSecret: JWT_SECRET,
-    });
+    const { token, customerId, firstName, lastName } = await verifyOtp(
+      "a@b.com",
+      "123456",
+      {
+        db,
+        redis,
+        jwtSecret: JWT_SECRET,
+      },
+    );
 
     expect(customerId).toBe("cust_1");
+    expect(firstName).toBe("Ada");
+    expect(lastName).toBe("Lovelace");
     expect(redis.del).toHaveBeenCalledWith("shopify-otp:a@b.com");
 
     const { payload } = await jwtVerify(

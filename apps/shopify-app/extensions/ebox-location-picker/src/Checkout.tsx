@@ -100,9 +100,15 @@ function Extension() {
       valueType: 'string',
     }).catch(() => setError('Unable to apply ebox order.'))
 
+    // Auto-fill the shipper's name from their EboxSecure account so they don't
+    // have to retype it. Merged with the location address in one apply.
     updateShippingAddress({
       type: 'updateShippingAddress',
-      address: location.value,
+      address: {
+        ...location.value,
+        firstName: eboxUser.firstName,
+        lastName: eboxUser.lastName,
+      },
     }).catch(e => setError(`Unable to update shipping address: ${e.message}`))
   }
 

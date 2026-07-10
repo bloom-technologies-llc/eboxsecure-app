@@ -7,6 +7,10 @@ export type EboxUser = {
   // The authenticated shopper's EboxSecure customerId, returned by verify-otp
   // and written into the order metafield alongside the chosen locationId.
   customerId?: string
+  // The shopper's EboxSecure account name, returned by verify-otp and used to
+  // auto-fill the checkout shipping address first/last name.
+  firstName?: string
+  lastName?: string
   emailSent: boolean
   authorized: boolean
 }

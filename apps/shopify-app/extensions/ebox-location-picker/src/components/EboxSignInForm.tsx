@@ -83,11 +83,21 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const { token, customerId } = (await response.json()) as {
-        token: string
-        customerId: string
-      }
-      setEboxUser(prev => ({ ...prev, token, customerId, authorized: true }))
+      const { token, customerId, firstName, lastName } =
+        (await response.json()) as {
+          token: string
+          customerId: string
+          firstName: string
+          lastName: string
+        }
+      setEboxUser(prev => ({
+        ...prev,
+        token,
+        customerId,
+        firstName,
+        lastName,
+        authorized: true,
+      }))
     } catch (e) {
       setError(e.message)
     }
