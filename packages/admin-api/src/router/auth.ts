@@ -124,6 +124,22 @@ export const authRouter = createTRPCRouter({
           message: "Order not found.",
         });
       }
+      // Location employees may only hand over packages held at their own
+      // location; corporate users may act on any location.
+      const employee = await ctx.db.employeeAccount.findUnique({
+        where: { id: ctx.session.userId },
+        select: { locationId: true },
+      });
+      if (employee && employee.locationId !== order.shippedLocationId) {
+        console.error(
+          `Employee ${ctx.session.userId} (location ${employee.locationId}) scanned a pickup code for Order ID ${order.id} held at location ${order.shippedLocationId}.`,
+        );
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This order is held at a different location.",
+        });
+      }
+
       // ensure order belongs to given session's user ID OR that the session's userId represents a trusted contact that was shared this order with
       const isOwner = order.customerId === payloadSession.userId;
 

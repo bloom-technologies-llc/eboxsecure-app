@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import SettingsLayout from "@/components/settings-layout";
-import { Lock, Mail, Phone, Save, User } from "lucide-react";
+import { api } from "@/trpc/react";
+import { useUser } from "@clerk/nextjs";
+import { Lock, Mail, Save, User } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 import {
@@ -12,27 +15,122 @@ import {
   CardHeader,
   CardTitle,
 } from "@ebox/ui/card";
+import { useToast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
 import { Label } from "@ebox/ui/label";
 
+const NAME_PATTERN = /^\p{L}[\p{L}\p{M} .'’-]*$/u;
+const MIN_PASSWORD_LENGTH = 8;
+
+function validateName(label: string, value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return `${label} is required.`;
+  if (trimmed.length > 50) return `${label} must be 50 characters or fewer.`;
+  if (!NAME_PATTERN.test(trimmed)) {
+    return `${label} can only contain letters, spaces, hyphens, apostrophes and periods.`;
+  }
+  return null;
+}
+
+function clerkErrorMessage(error: unknown, fallback: string): string {
+  const first = (
+    error as { errors?: { longMessage?: string; message?: string }[] }
+  )?.errors?.[0];
+  return first?.longMessage ?? first?.message ?? fallback;
+}
+
 export default function SettingsPage() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+  const { toast } = useToast();
+  const { user } = useUser();
+  const utils = api.useUtils();
+  const { data: profile, isLoading } = api.user.getProfile.useQuery();
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.firstName);
+      setLastName(profile.lastName);
+    }
+  }, [profile]);
+
+  const updateName = api.user.updateName.useMutation({
+    onSuccess: async () => {
+      await Promise.all([utils.user.getProfile.invalidate(), user?.reload()]);
+      toast({ title: "Saved", description: "Your name has been updated." });
+    },
+    onError: (error) => {
+      toast({
+        title: "Could not save your name",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const nameUnchanged =
+    firstName.trim() === profile?.firstName &&
+    lastName.trim() === profile?.lastName;
+
+  const handleSaveName = (event: React.FormEvent) => {
+    event.preventDefault();
+    const error =
+      validateName("First name", firstName) ??
+      validateName("Last name", lastName);
+    setNameError(error);
+    if (error) return;
+    updateName.mutate({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+    });
   };
 
-  const handleSave = () => {
-    // Implementation for saving changes
-    console.log("Saving changes...", formData);
+  const handleSavePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!user) return;
+
+    let error: string | null = null;
+    if (!currentPassword) {
+      error = "Enter your current password.";
+    } else if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      error = `New password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+    } else if (newPassword === currentPassword) {
+      error = "New password must be different from your current password.";
+    } else if (newPassword !== confirmPassword) {
+      error = "New password and confirmation do not match.";
+    }
+    setPasswordError(error);
+    if (error) return;
+
+    setSavingPassword(true);
+    try {
+      await user.updatePassword({
+        currentPassword,
+        newPassword,
+        signOutOfOtherSessions: true,
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({
+        title: "Password updated",
+        description: "Your other devices have been signed out.",
+      });
+    } catch (err) {
+      setPasswordError(
+        clerkErrorMessage(err, "Could not update your password."),
+      );
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   return (
@@ -46,48 +144,83 @@ export default function SettingsPage() {
               Personal Information
             </CardTitle>
             <CardDescription>
-              Update your personal details and contact information
+              Your name must match the name on packages shipped to you
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  placeholder="John"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
-                />
+          <CardContent>
+            <form onSubmit={handleSaveName} className="space-y-4" noValidate>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    autoComplete="given-name"
+                    maxLength={50}
+                    disabled={isLoading}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    autoComplete="family-name"
+                    maxLength={50}
+                    disabled={isLoading}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
-                />
+              {nameError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {nameError}
+                </p>
+              )}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isLoading || nameUnchanged || updateName.isPending}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {updateName.isPending ? "Saving..." : "Save Name"}
+                </Button>
               </div>
-            </div>
+            </form>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Phone Number
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-              />
-            </div>
+        {/* Email */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Address
+            </CardTitle>
+            <CardDescription>
+              The email address you sign in with
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              readOnly
+              disabled
+              value={profile?.email ?? ""}
+            />
+            <p className="text-sm text-muted-foreground">
+              To choose where notifications are sent, go to{" "}
+              <Link
+                href="/settings/notifications"
+                className="font-medium underline"
+              >
+                notification settings
+              </Link>
+              .
+            </p>
           </CardContent>
         </Card>
 
@@ -102,89 +235,65 @@ export default function SettingsPage() {
               Update your password to keep your account secure
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                placeholder="Enter current password"
-                value={formData.currentPassword}
-                onChange={(e) =>
-                  handleInputChange("currentPassword", e.target.value)
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <CardContent>
+            <form
+              onSubmit={handleSavePassword}
+              className="space-y-4"
+              noValidate
+            >
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="currentPassword">Current Password</Label>
                 <Input
-                  id="newPassword"
+                  id="currentPassword"
                   type="password"
-                  placeholder="Enter new password"
-                  value={formData.newPassword}
-                  onChange={(e) =>
-                    handleInputChange("newPassword", e.target.value)
-                  }
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    handleInputChange("confirmPassword", e.target.value)
-                  }
-                />
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Email Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Address
-            </CardTitle>
-            <CardDescription>
-              Update your email address for account notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john.doe@example.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Save Changes */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Save Changes</p>
-                <p className="text-sm text-muted-foreground">
-                  Make sure to save your changes before leaving this page
+              {passwordError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {passwordError}
                 </p>
+              )}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={
+                    savingPassword ||
+                    !currentPassword ||
+                    !newPassword ||
+                    !confirmPassword
+                  }
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {savingPassword ? "Updating..." : "Update Password"}
+                </Button>
               </div>
-              <Button onClick={handleSave} className="ml-4">
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-            </div>
+            </form>
           </CardContent>
         </Card>
       </div>

@@ -33,6 +33,10 @@ export default function TrustedContactsPage() {
   const grantedContacts = trustedContactsData?.grantedContacts || [];
   const receivedContacts = trustedContactsData?.receivedContacts || [];
 
+  // Sent invitations that are not yet accepted count toward the limit of 3.
+  const outstandingInvitations = sentPendingInvitations?.length ?? 0;
+  const atContactLimit = grantedContacts.length + outstandingInvitations >= 3;
+
   return (
     <SettingsLayout>
       <div className="space-y-6">
@@ -51,7 +55,12 @@ export default function TrustedContactsPage() {
               </div>
               <Button
                 onClick={() => setShowAddModal(true)}
-                disabled={grantedContacts.length >= 3}
+                disabled={atContactLimit}
+                title={
+                  atContactLimit
+                    ? "You can have up to 3 trusted contacts, including pending invitations"
+                    : undefined
+                }
                 className="ml-4"
               >
                 <Plus className="mr-2 h-4 w-4" />

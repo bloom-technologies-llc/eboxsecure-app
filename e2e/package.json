@@ -1,0 +1,12 @@
+{
+  "name": "ebox-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser-driven end-to-end suite. Standalone (not a pnpm workspace member): run `npm install` here.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

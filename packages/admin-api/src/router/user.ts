@@ -1,9 +1,41 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedAdminProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export const userRouter = createTRPCRouter({
+  // Resolves admin-portal user IDs (comment authors) to display names. Staff
+  // names live in Clerk, not in the database.
+  getDisplayNames: protectedAdminProcedure
+    .input(z.object({ ids: z.array(z.string().min(1)).min(1).max(100) }))
+    .query(async ({ input }) => {
+      const ids = [...new Set(input.ids)];
+      const clerk = await clerkClient();
+      const { data: users } = await clerk.users.getUserList({
+        userId: ids,
+        limit: ids.length,
+      });
+
+      const names: Record<string, string> = {};
+      for (const user of users) {
+        const fullName = [user.firstName, user.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        const email = user.emailAddresses.find(
+          (address) => address.id === user.primaryEmailAddressId,
+        )?.emailAddress;
+        names[user.id] = fullName || email || "Unknown user";
+      }
+      return names;
+    }),
+
   getUserType: protectedProcedure.query(async ({ ctx }) => {
     try {
       const user = await ctx.db.user.findUnique({

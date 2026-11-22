@@ -55,7 +55,7 @@ const NotificationDropdown = () => {
     }
 
     if (notification.orderId) {
-      router.push(`/orders/${notification.orderId}`);
+      router.push(`/?order=${notification.orderId}`);
     }
   };
 

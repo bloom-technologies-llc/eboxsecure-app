@@ -1,6 +1,7 @@
 import type { RouterOutputs } from "@ebox/admin-api";
 
 import { groupCommentsByDate } from "../../utils/commentGrouping";
+import AuthorName from "../author-name";
 import EmployeeCommentCard from "./employee-comment-card";
 
 interface EmployeeCommentsSectionProps {
@@ -33,7 +34,7 @@ export default function EmployeeCommentsSection({
                 highlighted={highlightedCommentId ?? null}
                 key={comment.comment.id}
                 commentId={comment.comment.id}
-                name={comment.comment.authorId || "Unknown"}
+                name={<AuthorName userId={comment.comment.authorId} />}
                 time={comment.comment.createdAt}
                 comment={comment.comment.text}
                 filePaths={comment.comment.filePaths ?? []}
