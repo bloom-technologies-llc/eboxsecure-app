@@ -27,6 +27,9 @@ export default function PricingCards() {
           </span>
           <button
             type="button"
+            role="switch"
+            aria-checked={billingPeriod === "year"}
+            aria-label="Bill yearly"
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               billingPeriod === "year" ? "bg-blue-600" : "bg-gray-200"
             }`}

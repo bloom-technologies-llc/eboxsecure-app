@@ -30,6 +30,8 @@ export default function AddTrustedContactModal({
       utils.trustedContacts.getSentPendingInvitations.invalidate();
       setEmail("");
       setShowConfirmation(false);
+      // Reset so the next invitation isn't stuck on a disabled "Sending..." button.
+      setIsSubmitting(false);
       onClose();
       toast({
         title: "Invitation Sent",
