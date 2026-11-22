@@ -5,6 +5,7 @@ import { MessageCircleWarning } from "lucide-react";
 import type { RouterOutputs } from "@ebox/admin-api";
 import { cn } from "@ebox/ui";
 
+import AuthorName from "~/app/_components/author-name";
 import CommentCard from "~/app/_components/comment-card";
 import { groupCommentsByDate } from "~/app/utils/commentGrouping";
 import LocationCommentCard from "./location-comment-card";
@@ -67,7 +68,7 @@ export default function LocationCommentsSection({
                 <LocationCommentCard
                   key={comment.id}
                   commentId={comment.id}
-                  name={comment.authorId || "Unknown User"} // TODO: Get actual user name from Clerk
+                  name={<AuthorName userId={comment.authorId} />}
                   time={comment.createdAt}
                   comment={comment.text}
                   highlighted={highlightedCommentId || null}

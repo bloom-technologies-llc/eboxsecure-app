@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
@@ -14,14 +15,75 @@ import {
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
-const paginationSchema = z.object({
+export const ORDER_STATUSES = [
+  "ORDERED",
+  "READY_FOR_PICKUP",
+  "PICKED_UP",
+  "CANCELLED",
+] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+const listOrdersSchema = z.object({
   page: z.number().min(1).optional().default(1),
   limit: z.number().min(1).max(100).optional().default(20),
+  search: z.string().trim().max(100).optional(),
+  status: z.enum(ORDER_STATUSES).optional(),
+  sortBy: z
+    .enum(["order_number", "date", "total_price", "customer_name"])
+    .optional()
+    .default("date"),
+  sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
 });
+
+// Order status is derived from the lifecycle timestamps rather than stored.
+// A cancelled order is "Cancelled" unless it was already handed over.
+const statusWhere = (status: OrderStatus): Prisma.OrderWhereInput => {
+  switch (status) {
+    case "PICKED_UP":
+      return { pickedUpAt: { not: null } };
+    case "CANCELLED":
+      return { pickedUpAt: null, cancelledAt: { not: null } };
+    case "READY_FOR_PICKUP":
+      return {
+        pickedUpAt: null,
+        cancelledAt: null,
+        deliveredDate: { not: null },
+      };
+    case "ORDERED":
+      return { pickedUpAt: null, cancelledAt: null, deliveredDate: null };
+  }
+};
+
+const searchWhere = (search: string): Prisma.OrderWhereInput => {
+  const contains = { contains: search, mode: "insensitive" as const };
+  const or: Prisma.OrderWhereInput[] = [
+    { vendorOrderId: contains },
+    { trackingNumber: contains },
+    { customer: { firstName: contains } },
+    { customer: { lastName: contains } },
+    { customer: { email: contains } },
+    { shippedLocation: { name: contains } },
+  ];
+  // "First Last" typed as one term
+  const [first, ...rest] = search.split(/\s+/);
+  if (first && rest.length > 0) {
+    or.push({
+      customer: {
+        firstName: { contains: first, mode: "insensitive" },
+        lastName: { contains: rest.join(" "), mode: "insensitive" },
+      },
+    });
+  }
+  const orderId = /^#?(\d{1,9})$/.exec(search)?.[1];
+  if (orderId) {
+    or.push({ id: Number(orderId) });
+  }
+  return { OR: or };
+};
 
 export const ordersRouter = createTRPCRouter({
   getAllOrders: protectedAdminProcedure
-    .input(paginationSchema)
+    .input(listOrdersSchema)
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.userId;
       const userType = await ctx.db.user.findUnique({
@@ -40,39 +102,11 @@ export const ordersRouter = createTRPCRouter({
         });
       }
 
-      const skip = (input.page - 1) * input.limit;
+      const filters: Prisma.OrderWhereInput[] = [];
 
-      if (userType.userType === UserType.CORPORATE) {
-        const [orders, totalCount] = await Promise.all([
-          ctx.db.order.findMany({
-            include: {
-              customer: true,
-              shippedLocation: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            skip,
-            take: input.limit,
-          }),
-          ctx.db.order.count(),
-        ]);
-
-        const totalPages = Math.ceil(totalCount / input.limit);
-        const hasNextPage = input.page < totalPages;
-
-        return {
-          orders,
-          pagination: {
-            page: input.page,
-            limit: input.limit,
-            totalCount,
-            totalPages,
-            hasNextPage,
-          },
-        };
-      } else if (userType.userType === UserType.EMPLOYEE) {
-        const whereClause = {
+      // Corporate sees every location; employees only their own.
+      if (userType.userType === UserType.EMPLOYEE) {
+        filters.push({
           shippedLocation: {
             employeeAccounts: {
               some: {
@@ -80,43 +114,60 @@ export const ordersRouter = createTRPCRouter({
               },
             },
           },
-        };
-
-        const [orders, totalCount] = await Promise.all([
-          ctx.db.order.findMany({
-            where: whereClause,
-            include: {
-              customer: true,
-              shippedLocation: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            skip,
-            take: input.limit,
-          }),
-          ctx.db.order.count({ where: whereClause }),
-        ]);
-
-        const totalPages = Math.ceil(totalCount / input.limit);
-        const hasNextPage = input.page < totalPages;
-
-        return {
-          orders,
-          pagination: {
-            page: input.page,
-            limit: input.limit,
-            totalCount,
-            totalPages,
-            hasNextPage,
-          },
-        };
-      } else {
+        });
+      } else if (userType.userType !== UserType.CORPORATE) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid user type",
         });
       }
+
+      if (input.status) filters.push(statusWhere(input.status));
+      if (input.search) filters.push(searchWhere(input.search));
+
+      const where: Prisma.OrderWhereInput = { AND: filters };
+
+      const orderBy: Prisma.OrderOrderByWithRelationInput[] =
+        input.sortBy === "order_number"
+          ? [{ id: input.sortDirection }]
+          : input.sortBy === "total_price"
+            ? [{ total: input.sortDirection }, { id: "desc" }]
+            : input.sortBy === "customer_name"
+              ? [
+                  { customer: { lastName: input.sortDirection } },
+                  { customer: { firstName: input.sortDirection } },
+                  { id: "desc" },
+                ]
+              : [{ createdAt: input.sortDirection }, { id: "desc" }];
+
+      const skip = (input.page - 1) * input.limit;
+
+      const [orders, totalCount] = await Promise.all([
+        ctx.db.order.findMany({
+          where,
+          include: {
+            customer: true,
+            shippedLocation: true,
+          },
+          orderBy,
+          skip,
+          take: input.limit,
+        }),
+        ctx.db.order.count({ where }),
+      ]);
+
+      const totalPages = Math.ceil(totalCount / input.limit);
+
+      return {
+        orders,
+        pagination: {
+          page: input.page,
+          limit: input.limit,
+          totalCount,
+          totalPages,
+          hasNextPage: input.page < totalPages,
+        },
+      };
     }),
 
   getAllOrdersForEmployee: protectedAdminProcedure.query(async ({ ctx }) => {
@@ -239,14 +290,10 @@ export const ordersRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { orderId, customerId } = input;
-      const stripeCustomerId = await getStripeCustomerId(customerId);
-      if (!stripeCustomerId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "User does not have a Stripe customer ID",
-        });
-      }
-      const order = await ctx.db.order.findUniqueOrThrow({
+
+      // `customerId` is the person collecting the package: the order owner or
+      // a trusted contact the order was shared with.
+      const order = await ctx.db.order.findFirst({
         where: {
           id: orderId,
           OR: [
@@ -272,6 +319,22 @@ export const ordersRouter = createTRPCRouter({
         });
       }
 
+      // Location employees may only hand over packages held at their own
+      // location; corporate users may act on any location.
+      const employee = await ctx.db.employeeAccount.findUnique({
+        where: { id: ctx.session.userId },
+        select: { locationId: true },
+      });
+      if (employee && employee.locationId !== order.shippedLocationId) {
+        console.error(
+          `Employee ${ctx.session.userId} (location ${employee.locationId}) attempted to pick up Order ID ${order.id} held at location ${order.shippedLocationId}.`,
+        );
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This order is held at a different location.",
+        });
+      }
+
       if (order.pickedUpAt) {
         console.error(`Order ID ${input.orderId} was already picked up.`);
         throw new TRPCError({
@@ -288,19 +351,17 @@ export const ordersRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db.order.update({
-        where: {
-          id: input.orderId,
-        },
-        data: {
-          pickedUpAt: new Date(),
-          pickedUpBy: {
-            connect: {
-              id: customerId,
-            },
-          },
-        },
+      // Conditional update so two simultaneous scans cannot both succeed.
+      const { count } = await ctx.db.order.updateMany({
+        where: { id: order.id, pickedUpAt: null },
+        data: { pickedUpAt: new Date(), pickedUpById: customerId },
       });
+      if (count === 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This order has already been picked up.",
+        });
+      }
 
       // Send pickup notification to the order owner
       const notificationService = new NotificationService(ctx.db);
@@ -310,6 +371,16 @@ export const ordersRouter = createTRPCRouter({
         message: `Your package (Order #${input.orderId}) has been picked up.`,
         orderId: input.orderId,
       });
+
+      // Overdue holding is billed to the order OWNER (on the owner's plan and
+      // holding allowance), even when a trusted contact collects the package.
+      const stripeCustomerId = await getStripeCustomerId(order.customerId);
+      if (!stripeCustomerId) {
+        console.error(
+          `Order ID ${order.id} owner ${order.customerId} has no Stripe customer; skipping overdue holding check.`,
+        );
+        return false;
+      }
 
       const subscriptionDataKv = await kv.get(
         `stripe:customer:${stripeCustomerId}`,
@@ -356,7 +427,7 @@ export const ordersRouter = createTRPCRouter({
           data: {
             eventType: "OVERDUE_PACKAGE_HOLDING",
             value: overdueDays,
-            customerId: customerId,
+            customerId: order.customerId,
             orderId: order.id,
           },
         });

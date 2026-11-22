@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
 
@@ -22,7 +22,15 @@ export default function OrderCard({
   pickedUpAt,
   directlyOwned,
   lineItems,
-}: RouterOutput["order"]["getAllOrders"][number]) {
+  highlighted = false,
+}: RouterOutput["order"]["getAllOrders"][number] & { highlighted?: boolean }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (highlighted) {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
+
   const [fetchQrCode, setFetchQrCode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
 
@@ -52,7 +60,11 @@ export default function OrderCard({
         />
       )}
 
-      <Card className={"my-4"} key={id}>
+      <Card
+        ref={cardRef}
+        className={highlighted ? "my-4 ring-2 ring-primary" : "my-4"}
+        key={id}
+      >
         <CardHeader className="px-6 py-4">
           <div className="flex justify-between text-sm">
             <div className="flex w-1/4 flex-col">

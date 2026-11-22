@@ -105,7 +105,7 @@ export async function POST(req: Request) {
     const pendingInvitations =
       await db.pendingTrustedContactInvitation.findMany({
         where: {
-          email: userEmail,
+          email: { equals: userEmail, mode: "insensitive" },
           processed: false,
         },
       });

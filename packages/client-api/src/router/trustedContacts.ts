@@ -74,9 +74,49 @@ export const trustedContactsRouter = createTRPCRouter({
 
   // Send invitation to add trusted contact
   sendInvitation: protectedCustomerProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(
+      z.object({
+        email: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .email("Please enter a valid email address"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      // Validate 3-contact limit
+      // Prevent self-invitation
+      const currentUser = await ctx.db.customerAccount.findUnique({
+        where: { id: ctx.session.userId },
+        select: { firstName: true, lastName: true, email: true },
+      });
+
+      if (currentUser?.email.toLowerCase() === input.email) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot add yourself as a trusted contact",
+        });
+      }
+
+      // Invitations still waiting on the invitee to sign up
+      const pendingSignupInvitations =
+        await ctx.db.pendingTrustedContactInvitation.findMany({
+          where: { accountHolderId: ctx.session.userId, processed: false },
+          select: { email: true },
+        });
+
+      if (
+        pendingSignupInvitations.some(
+          (invitation) => invitation.email.toLowerCase() === input.email,
+        )
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You have already invited this person",
+        });
+      }
+
+      // Validate 3-contact limit. Invitations awaiting sign-up count too,
+      // otherwise the limit could be bypassed by inviting non-users.
       const existingCount = await ctx.db.trustedContact.count({
         where: {
           accountHolderId: ctx.session.userId,
@@ -84,23 +124,10 @@ export const trustedContactsRouter = createTRPCRouter({
         },
       });
 
-      if (existingCount >= 3) {
+      if (existingCount + pendingSignupInvitations.length >= 3) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Maximum of 3 trusted contacts allowed",
-        });
-      }
-
-      // Prevent self-invitation
-      const currentUser = await ctx.db.customerAccount.findUnique({
-        where: { id: ctx.session.userId },
-        select: { firstName: true, lastName: true, email: true },
-      });
-
-      if (currentUser?.email === input.email) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Cannot add yourself as a trusted contact",
         });
       }
 

@@ -138,7 +138,7 @@ export function PricingTiers() {
                   href={
                     tier.name === "Business Pro"
                       ? "/contact"
-                      : getClientAppUrl() + "signup"
+                      : `${getClientAppUrl()}/sign-up`
                   }
                 >
                   {tier.cta}

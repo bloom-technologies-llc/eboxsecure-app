@@ -26,7 +26,7 @@ import { api } from "~/trpc/react";
 
 interface LocationCommentCardProps {
   commentId: string;
-  name: string;
+  name: React.ReactNode;
   time: Date;
   comment: string;
   highlighted: string | null;

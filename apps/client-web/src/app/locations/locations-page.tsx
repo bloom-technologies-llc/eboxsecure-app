@@ -74,7 +74,7 @@ function LocationsContent() {
   const removeMutation = api.favorites.removeFavorite.useMutation({
     onSuccess: () => {
       refetchFavorites();
-      refetchLimits;
+      refetchLimits();
       toast({
         title: "Success",
         description: "Location removed from favorites",
@@ -308,7 +308,10 @@ function LocationsContent() {
                     You've reached your limit of {favoritesLimits?.limit}{" "}
                     favorite locations.
                     <br />
-                    <Link href="/settings" className="font-medium underline">
+                    <Link
+                      href="/settings/subscription"
+                      className="font-medium underline"
+                    >
                       Upgrade your plan
                     </Link>{" "}
                     to add more favorites.

@@ -354,7 +354,17 @@ export const locationsRouter = createTRPCRouter({
   updateLocation: protectedAdminProcedure
     .input(locationUpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      await getUserLocationAccess(ctx.session.userId, input.locationId);
+      const access = await getUserLocationAccess(
+        ctx.session.userId,
+        input.locationId,
+      );
+      // Location details (name, address, capacity, type) are corporate-managed.
+      if (access.locationIds !== "all") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only corporate users can edit location details",
+        });
+      }
 
       const { locationId, ...updateData } = input;
 

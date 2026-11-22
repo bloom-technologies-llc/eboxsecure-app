@@ -1,6 +1,5 @@
 import NotificationDropdown from "./notification-dropdown";
 import { PickupQRScannerButton } from "./pickup-qr-scanner";
-import { SearchForm } from "./search-form";
 import { UserScopeBadge } from "./user-scope-badge";
 
 const Navbar = () => {
@@ -12,7 +11,6 @@ const Navbar = () => {
         <PickupQRScannerButton />
 
         <NotificationDropdown />
-        <SearchForm className="w-full sm:ml-auto sm:w-auto" />
       </div>
     </header>
   );

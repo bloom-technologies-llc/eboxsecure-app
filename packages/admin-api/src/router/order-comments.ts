@@ -67,7 +67,9 @@ export const orderComments = createTRPCRouter({
             text: input.text,
             commentType: CommentType.ORDER,
             filePaths: input.filePaths || [],
-            authorId: input.authorId,
+            // Never trust a client-supplied author: comments are always
+            // attributed to the signed-in user.
+            authorId: ctx.session.userId,
             orderComment: {
               create: {
                 orderId: input.orderId,
@@ -94,7 +96,9 @@ export const orderComments = createTRPCRouter({
             text: input.text,
             commentType: CommentType.ORDER,
             filePaths: input.filePaths || [],
-            authorId: input.authorId,
+            // Never trust a client-supplied author: comments are always
+            // attributed to the signed-in user.
+            authorId: ctx.session.userId,
             orderComment: {
               create: {
                 orderId: input.orderId,
