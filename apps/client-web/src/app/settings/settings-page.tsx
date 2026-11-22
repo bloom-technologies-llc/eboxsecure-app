@@ -41,7 +41,7 @@ function clerkErrorMessage(error: unknown, fallback: string): string {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, isLoaded: isUserLoaded } = useUser();
   const utils = api.useUtils();
   const { data: profile, isLoading } = api.user.getProfile.useQuery();
 
@@ -283,6 +283,8 @@ export default function SettingsPage() {
                 <Button
                   type="submit"
                   disabled={
+                    !isUserLoaded ||
+                    !user ||
                     savingPassword ||
                     !currentPassword ||
                     !newPassword ||

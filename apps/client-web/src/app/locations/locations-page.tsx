@@ -331,7 +331,9 @@ function LocationsContent() {
                 addFavoriteMutation.mutate({ locationId: locationDetails.id })
               }
               disabled={
-                addFavoriteMutation.isPending || !favoritesLimits?.canAdd
+                !locationDetails ||
+                addFavoriteMutation.isPending ||
+                !favoritesLimits?.canAdd
               }
             >
               {addFavoriteMutation.isPending ? "Adding..." : "Add to Favorites"}
