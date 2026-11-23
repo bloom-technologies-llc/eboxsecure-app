@@ -268,8 +268,14 @@ test.describe("corporate", () => {
     await expect(page.getByText(`${next} units`)).toBeVisible();
     await shot(page, testInfo, "capacity updated");
     const note = `QA note ${Date.now().toString(36)}: loading dock closed Sundays.`;
-    await page.getByRole("button", { name: "Add Note" }).click();
-    await page.getByPlaceholder("Enter your note here...").fill(note);
+    // D-38: straight after a location edit the first click on Add Note can be lost
+    // (focus ends up in the map embed); a second click opens the note box.
+    const noteBox = page.getByPlaceholder("Enter your note here...");
+    await expect(async () => {
+      await page.getByRole("button", { name: "Add Note" }).first().click();
+      await expect(noteBox).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 30_000 });
+    await noteBox.fill(note);
     await page.getByRole("button", { name: "Add Note" }).last().click();
     await expect(page.getByText(note)).toBeVisible();
     await shot(page, testInfo, "note added");
