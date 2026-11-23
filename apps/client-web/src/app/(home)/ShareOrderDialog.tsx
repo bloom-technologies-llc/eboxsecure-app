@@ -176,15 +176,15 @@ function ShareOrderDialogHeader({
       <DialogDescription className="space-y-2">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="font-medium text-gray-700">
-              Internal Order ID:
-            </span>
+            <span className="font-medium text-gray-700">Order ID:</span>
             <p className="font-mono text-xs text-gray-600">{orderId}</p>
           </div>
-          <div>
-            <span className="font-medium text-gray-700">Vendor Order #:</span>
-            <p className="font-mono text-xs text-gray-600">{vendorOrderId}</p>
-          </div>
+          {!vendorOrderId.startsWith("DEFAULT_") && (
+            <div>
+              <span className="font-medium text-gray-700">Vendor Order #:</span>
+              <p className="font-mono text-xs text-gray-600">{vendorOrderId}</p>
+            </div>
+          )}
         </div>
         <p className="pt-2 text-gray-500">
           Select trusted contacts who can pick up this order on your behalf.

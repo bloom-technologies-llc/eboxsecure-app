@@ -40,6 +40,7 @@ export function DowngradeConfirmationDialog({
   children,
 }: DowngradeConfirmationDialogProps) {
   const router = useRouter();
+  const utils = api.useUtils();
 
   const [isOpen, setIsOpen] = useState(false);
   const { mutate: downgradeSubscription, isPending } =
@@ -47,6 +48,7 @@ export function DowngradeConfirmationDialog({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
 

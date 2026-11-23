@@ -6,7 +6,7 @@ import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
 // Input schemas
 const customerCommentSchema = z.object({
-  text: z.string().min(1, "Comment cannot be empty"),
+  text: z.string().trim().min(1, "Comment cannot be empty"),
   customerId: z.string(),
   filePaths: z.array(z.string()).optional(),
   notifications: z
@@ -20,7 +20,7 @@ const customerCommentSchema = z.object({
 });
 
 const customerNoteSchema = z.object({
-  text: z.string().min(1, "Note cannot be empty"),
+  text: z.string().trim().min(1, "Note cannot be empty"),
   customerId: z.string(),
 });
 
@@ -475,7 +475,7 @@ export const customersRouter = createTRPCRouter({
       .input(
         z.object({
           commentId: z.string(),
-          text: z.string().min(1, "Comment cannot be empty"),
+          text: z.string().trim().min(1, "Comment cannot be empty"),
         }),
       )
       .mutation(async ({ ctx, input }) => {

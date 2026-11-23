@@ -19,11 +19,13 @@ import {
 export default function ReactivateButton() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const utils = api.useUtils();
   const { mutate: reactivateSubscription, isPending } =
     api.subscription.reactivateSubscription.useMutation({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
 

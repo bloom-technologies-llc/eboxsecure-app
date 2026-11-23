@@ -88,12 +88,11 @@ export default function OrderCard({
             <div className="flex w-1/4 flex-col">
               <p className="place-self-end truncate text-sm text-[#575959]">
                 ORDER #:{" "}
-                {vendorOrderId.length > 15
-                  ? `${vendorOrderId.slice(0, 15)}...`
-                  : vendorOrderId}
-              </p>
-              <p className="place-self-end text-sm font-medium text-[#575959]">
-                View invoice
+                {vendorOrderId.startsWith("DEFAULT_")
+                  ? id
+                  : vendorOrderId.length > 15
+                    ? `${vendorOrderId.slice(0, 15)}...`
+                    : vendorOrderId}
               </p>
               {!directlyOwned && (
                 <span className="text-smfont-semibold mt-5 place-self-end rounded bg-yellow-200 px-2 py-0.5 text-yellow-700">

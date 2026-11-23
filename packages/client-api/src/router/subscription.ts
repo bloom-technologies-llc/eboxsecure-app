@@ -14,9 +14,18 @@ import {
   hasValidSubscription,
   priceIdsToPlan,
   subscriptionDataSchema,
+  syncCustomerData,
 } from "@ebox/stripe";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
+
+// Customer-facing plan names (the enum values are internal).
+const PLAN_NAMES: Record<SubscriptionType, string> = {
+  BASIC: "Basic",
+  BASIC_PLUS: "Basic+",
+  PREMIUM: "Premium",
+  BUSINESS_PRO: "Business Pro",
+};
 
 export const subscriptionRouter = createTRPCRouter({
   subscribe: protectedCustomerProcedure
@@ -95,8 +104,12 @@ export const subscriptionRouter = createTRPCRouter({
     await notificationService.send({
       userId: ctx.session.userId,
       type: "SUBSCRIPTION_CANCELED",
-      message: "Your subscription has been canceled. It will remain active until the end of the current billing period.",
+      message:
+        "Your subscription has been canceled. It will remain active until the end of the current billing period.",
     });
+
+    // Refresh the cached plan now so the UI is correct without waiting for the Stripe webhook.
+    await syncCustomerData(customerId);
 
     return { success: true };
   }),
@@ -260,12 +273,15 @@ export const subscriptionRouter = createTRPCRouter({
         await notificationService.send({
           userId: ctx.session.userId,
           type: "SUBSCRIPTION_UPGRADED",
-          message: `Your subscription has been upgraded to ${targetTier}.`,
+          message: `Your subscription has been upgraded to ${PLAN_NAMES[targetTier]}.`,
         });
+
+        // Refresh the cached plan now so the UI is correct without waiting for the Stripe webhook.
+        await syncCustomerData(customerId);
 
         return {
           success: true,
-          message: `Successfully upgraded to ${targetTier}`,
+          message: `Successfully upgraded to ${PLAN_NAMES[targetTier]}`,
           subscription: updatedSubscription,
         };
       } catch (error) {
@@ -458,12 +474,15 @@ export const subscriptionRouter = createTRPCRouter({
         await notificationService.send({
           userId: ctx.session.userId,
           type: "SUBSCRIPTION_DOWNGRADED",
-          message: `Your subscription downgrade to ${targetTier} has been scheduled for your next billing cycle.`,
+          message: `Your subscription downgrade to ${PLAN_NAMES[targetTier]} has been scheduled for your next billing cycle.`,
         });
+
+        // Refresh the cached plan now so the UI is correct without waiting for the Stripe webhook.
+        await syncCustomerData(customerId);
 
         return {
           success: true,
-          message: `Downgrade to ${targetTier} scheduled for next billing cycle`,
+          message: `Downgrade to ${PLAN_NAMES[targetTier]} scheduled for next billing cycle`,
           effectiveDate,
         };
       } catch (error) {
@@ -518,6 +537,8 @@ export const subscriptionRouter = createTRPCRouter({
         type: "SUBSCRIPTION_REACTIVATED",
         message: "Your subscription has been reactivated.",
       });
+
+      await syncCustomerData(customerId);
 
       return { success: true };
     },
@@ -613,6 +634,8 @@ export const subscriptionRouter = createTRPCRouter({
         }
       }
     }
+
+    await syncCustomerData(customerId);
   }),
   changeBillingPeriod: protectedCustomerProcedure
     .input(
@@ -753,6 +776,9 @@ export const subscriptionRouter = createTRPCRouter({
             },
           ],
         });
+
+        // Refresh the cached plan now so the UI is correct without waiting for the Stripe webhook.
+        await syncCustomerData(customerId);
 
         return {
           success: true,

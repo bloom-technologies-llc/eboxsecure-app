@@ -313,7 +313,9 @@ export default function PackageTrackingTable({
                   >
                     <TableCell>{order.id}</TableCell>
                     <TableCell className="max-w-[14rem] truncate">
-                      {order.vendorOrderId}
+                      {order.vendorOrderId.startsWith("DEFAULT_")
+                        ? "—"
+                        : order.vendorOrderId}
                     </TableCell>
                     <TableCell>{order.trackingNumber ?? "—"}</TableCell>
                     <TableCell>{formatDate(order.createdAt)}</TableCell>

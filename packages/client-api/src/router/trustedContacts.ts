@@ -353,6 +353,28 @@ export const trustedContactsRouter = createTRPCRouter({
     }),
 
   // Get pending invitations for current user (to accept/decline)
+  // Cancels an invitation sent to someone who has not signed up yet.
+  cancelPendingSignupInvitation: protectedCustomerProcedure
+    .input(z.object({ invitationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { count } = await ctx.db.pendingTrustedContactInvitation.deleteMany(
+        {
+          where: {
+            id: input.invitationId,
+            accountHolderId: ctx.session.userId,
+            processed: false,
+          },
+        },
+      );
+      if (count === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invitation not found",
+        });
+      }
+      return { success: true };
+    }),
+
   getPendingInvitations: protectedCustomerProcedure.query(({ ctx }) => {
     return ctx.db.trustedContact.findMany({
       where: {

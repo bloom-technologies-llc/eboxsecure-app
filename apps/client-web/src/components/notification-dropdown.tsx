@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
 import { Bell, Trash2 } from "lucide-react";
 
 import { cn } from "@ebox/ui";
@@ -14,8 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ebox/ui/dropdown-menu";
-
-import { api } from "@/trpc/react";
 
 const NotificationDropdown = () => {
   const router = useRouter();
@@ -31,13 +30,12 @@ const NotificationDropdown = () => {
     },
   });
 
-  const { mutate: markAllAsRead } =
-    api.notification.markAllAsRead.useMutation({
-      onSuccess: () => {
-        utils.notification.getNotifications.invalidate();
-        utils.notification.getUnreadCount.invalidate();
-      },
-    });
+  const { mutate: markAllAsRead } = api.notification.markAllAsRead.useMutation({
+    onSuccess: () => {
+      utils.notification.getNotifications.invalidate();
+      utils.notification.getUnreadCount.invalidate();
+    },
+  });
 
   const { mutate: clearAll } = api.notification.clearAll.useMutation({
     onSuccess: () => {
@@ -74,7 +72,12 @@ const NotificationDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label="Notifications"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] leading-none text-white">

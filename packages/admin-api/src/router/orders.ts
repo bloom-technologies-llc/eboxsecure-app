@@ -7,9 +7,9 @@ import { z } from "zod";
 import { NotificationService } from "@ebox/notifications";
 import { kv } from "@ebox/redis-client";
 import {
-  SUBSCRIPTION_LIMITS,
   getStripeCustomerId,
   priceIdsToPlan,
+  SUBSCRIPTION_LIMITS,
   subscriptionDataSchema,
 } from "@ebox/stripe";
 
@@ -223,10 +223,20 @@ export const ordersRouter = createTRPCRouter({
           select: {
             id: true,
             shippedLocationId: true,
+            vendorOrderId: true,
+            trackingNumber: true,
+            sourceChannel: true,
+            total: true,
+            createdAt: true,
+            deliveredDate: true,
+            pickedUpAt: true,
+            cancelledAt: true,
             customer: true,
             shippedLocation: {
               select: {
                 id: true,
+                name: true,
+                address: true,
               },
             },
           },
@@ -256,10 +266,20 @@ export const ordersRouter = createTRPCRouter({
           select: {
             id: true,
             shippedLocationId: true,
+            vendorOrderId: true,
+            trackingNumber: true,
+            sourceChannel: true,
+            total: true,
+            createdAt: true,
+            deliveredDate: true,
+            pickedUpAt: true,
+            cancelledAt: true,
             customer: true,
             shippedLocation: {
               select: {
                 id: true,
+                name: true,
+                address: true,
               },
             },
           },

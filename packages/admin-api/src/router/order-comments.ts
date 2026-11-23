@@ -11,7 +11,7 @@ export const orderComments = createTRPCRouter({
   createOrderComment: protectedAdminProcedure
     .input(
       z.object({
-        text: z.string(),
+        text: z.string().trim().min(1, "Comment cannot be empty"),
         filePaths: z.array(z.string()).optional(),
         authorId: z.string(),
         orderId: z.number(),
@@ -126,7 +126,7 @@ export const orderComments = createTRPCRouter({
     .input(
       z.object({
         commentId: z.string(),
-        text: z.string(),
+        text: z.string().trim().min(1, "Comment cannot be empty"),
       }),
     )
     .mutation(async ({ ctx, input }) => {

@@ -38,12 +38,14 @@ export function UpgradeConfirmationDialog({
   children,
 }: UpgradeConfirmationDialogProps) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [isOpen, setIsOpen] = useState(false);
   const { mutate: upgradeSubscription, isPending } =
     api.subscription.upgradeSubscription.useMutation({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
   const handleUpgrade = async () => {

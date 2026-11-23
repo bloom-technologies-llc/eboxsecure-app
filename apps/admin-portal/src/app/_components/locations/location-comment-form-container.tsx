@@ -21,7 +21,7 @@ import { api } from "~/trpc/react";
 import LocationMentionDropdown from "./location-mention-dropdown";
 
 const formSchema = z.object({
-  comment: z.string().min(1, {
+  comment: z.string().trim().min(1, {
     message: "Comment cannot be empty.",
   }),
 });

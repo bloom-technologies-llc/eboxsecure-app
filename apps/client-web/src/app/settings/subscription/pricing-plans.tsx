@@ -22,6 +22,7 @@ import {
   getPlanAction,
   getPlanActionText,
   getPlanActionVariant,
+  getPlanDisplayName,
 } from "./subscription-plan-utils";
 import { UpgradeConfirmationDialog } from "./upgrade-confirmation-dialog";
 
@@ -84,6 +85,9 @@ export default function PricingPlans() {
           </span>
           <button
             type="button"
+            role="switch"
+            aria-checked={billingPeriod === "year"}
+            aria-label="Bill yearly"
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               billingPeriod === "year" ? "bg-blue-600" : "bg-gray-200"
             }`}
@@ -216,7 +220,9 @@ export default function PricingPlans() {
                           billingPeriod: billingPeriod,
                         }}
                         currentPlan={{
-                          name: currentPlan.subscriptionType,
+                          name: getPlanDisplayName(
+                            currentPlan.subscriptionType,
+                          ),
                           price: `$${currentPrice?.toString()}` || "",
                           billingPeriod: currentBillingPeriod,
                         }}
@@ -238,7 +244,9 @@ export default function PricingPlans() {
                           billingPeriod: billingPeriod,
                         }}
                         currentPlan={{
-                          name: currentPlan.subscriptionType,
+                          name: getPlanDisplayName(
+                            currentPlan.subscriptionType,
+                          ),
                           price: `$${currentPrice?.toString()}` || "",
                           billingPeriod: currentBillingPeriod,
                         }}
@@ -254,7 +262,9 @@ export default function PricingPlans() {
                     {showCancelDowngradeDialog && (
                       <CancelDowngradeDialog
                         currentPlan={{
-                          name: currentPlan.subscriptionType,
+                          name: getPlanDisplayName(
+                            currentPlan.subscriptionType,
+                          ),
                           price: `$${currentPrice?.toString()}` || "",
                         }}
                         downgradedPlan={{

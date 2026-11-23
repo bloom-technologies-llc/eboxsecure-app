@@ -119,7 +119,10 @@ export default function CustomerOrderHistory({
                       <div className="mb-2 flex items-center gap-2">
                         <Package className="h-4 w-4 text-gray-400" />
                         <p className="text-sm font-medium">
-                          Order #{order.vendorOrderId}
+                          Order #
+                          {order.vendorOrderId.startsWith("DEFAULT_")
+                            ? order.id
+                            : order.vendorOrderId}
                         </p>
                         <Badge variant={status.variant}>{status.label}</Badge>
                       </div>

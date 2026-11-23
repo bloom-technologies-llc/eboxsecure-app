@@ -26,6 +26,7 @@ export function CancelSubscriptionDialog({
   currentPeriodEnd,
 }: CancelSubscriptionDialogProps) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [isCancelling, setIsCancelling] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { mutate: cancelSubscription } =
@@ -33,6 +34,7 @@ export function CancelSubscriptionDialog({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
 

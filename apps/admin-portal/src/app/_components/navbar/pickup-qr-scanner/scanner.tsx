@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { AlertCircle, CheckCircle, QrCode, ShieldCheck } from "lucide-react";
-import { Label } from "recharts";
 
 import { Alert, AlertDescription } from "@ebox/ui/alert";
 import { Button } from "@ebox/ui/button";
@@ -14,6 +13,7 @@ import {
 } from "@ebox/ui/dialog";
 import { toast } from "@ebox/ui/hooks/use-toast";
 import { Input } from "@ebox/ui/input";
+import { Label } from "@ebox/ui/label";
 
 import { api } from "~/trpc/react";
 
@@ -281,7 +281,7 @@ function QRInput({
   };
   return (
     <div className="space-y-2">
-      <Label>QR Code</Label>
+      <Label htmlFor="qr-input">QR Code</Label>
       <Input
         id="qr-input"
         type="text"

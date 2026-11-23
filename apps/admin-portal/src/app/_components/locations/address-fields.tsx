@@ -85,7 +85,10 @@ export const addressSchemaFields = {
   address2: z.string().optional(),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  zip: z.string().min(1, "ZIP code is required"),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^(?=.*\d)[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP or postal code"),
   countryCode: z.string().min(1),
 };
 

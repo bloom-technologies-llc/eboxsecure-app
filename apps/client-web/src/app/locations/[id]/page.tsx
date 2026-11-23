@@ -276,16 +276,22 @@ export default function LocationDetailPage() {
             {location.orders.map((order) => (
               <Card key={order.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">
-                        Order #{order.vendorOrderId}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-medium">
+                        Order #
+                        {order.vendorOrderId.startsWith("DEFAULT_")
+                          ? order.id
+                          : order.vendorOrderId}
                       </h3>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          <span>${order.total.toFixed(2)}</span>
-                        </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        {/* Scanned packages have no order total (stored as -1). */}
+                        {order.total >= 0 && (
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            <span>{order.total.toFixed(2)}</span>
+                          </div>
+                        )}
                         {order.deliveredDate && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -297,7 +303,10 @@ export default function LocationDetailPage() {
                         )}
                       </div>
                     </div>
-                    <Badge variant={order.pickedUpAt ? "secondary" : "outline"}>
+                    <Badge
+                      variant={order.pickedUpAt ? "secondary" : "outline"}
+                      className="shrink-0 whitespace-nowrap"
+                    >
                       {order.pickedUpAt ? "Picked Up" : "Ready for Pickup"}
                     </Badge>
                   </div>

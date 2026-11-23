@@ -20,7 +20,7 @@ import { Textarea } from "@ebox/ui/textarea";
 import { api } from "~/trpc/react";
 
 const noteSchema = z.object({
-  text: z.string().min(1, "Note cannot be empty"),
+  text: z.string().trim().min(1, "Note cannot be empty"),
 });
 
 interface LocationNoteFormProps {
