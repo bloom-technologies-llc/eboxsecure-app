@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Banner, Select, Spinner } from '@shopify/ui-extensions-react/checkout'
-import { EboxLocation } from '../types'
+import { useEffect, useState } from 'preact/hooks'
+
 import { BASE_URL } from '../constants'
+import { EboxLocation } from '../types'
 
 type LocationSelectProps = {
   token: string
@@ -16,7 +16,7 @@ export const LocationSelect = ({
 }: LocationSelectProps) => {
   const [data, setData] = useState<EboxLocation[]>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,24 +54,31 @@ export const LocationSelect = ({
     }
   }
 
-  const options = (data ?? []).map(loc => ({
-    label: loc.name,
-    value: loc.label,
-  }))
-
   return (
     <>
       {!loading && !error && (
-        <Select
+        <s-select
           label="Select your Ebox Location"
-          value={location?.label ?? ""}
-          onChange={handleLocationSelect}
-          options={options}
-        />
+          value={location?.label ?? ''}
+          onChange={event =>
+            handleLocationSelect(
+              (event.currentTarget as HTMLInputElement).value,
+            )
+          }
+        >
+          {(data ?? []).map(loc => (
+            <s-option key={loc.label} value={loc.label}>
+              {loc.name}
+            </s-option>
+          ))}
+        </s-select>
       )}
-      {loading && <Spinner />}
+      {loading && <s-spinner accessibilityLabel="Loading locations" />}
       {error && (
-        <Banner status="critical" title={`Unable to get locations: ${error}`} />
+        <s-banner
+          tone="critical"
+          heading={`Unable to get locations: ${error}`}
+        />
       )}
     </>
   )

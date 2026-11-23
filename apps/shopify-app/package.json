@@ -15,8 +15,8 @@
     "with-env": "dotenv -e ../../.env --",
     "shopify": "shopify",
     "shopify:dev": "node scripts/set-backend.mjs dev && shopify app dev --config eboxsecure-dev",
-    "shopify:deploy:dev": "node scripts/set-backend.mjs dev && shopify app deploy --config eboxsecure-dev",
-    "shopify:deploy:prod": "node scripts/set-backend.mjs prod && shopify app deploy"
+    "shopify:deploy:dev": "node scripts/set-backend.mjs dev && shopify app deploy --config eboxsecure-dev --allow-updates",
+    "shopify:deploy:prod": "node scripts/set-backend.mjs prod && shopify app deploy --allow-updates"
   },
   "dependencies": {
     "@ebox/db": "workspace:*",

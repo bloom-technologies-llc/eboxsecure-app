@@ -216,7 +216,7 @@ export function PeakCapacityHeatmap({
           {/* Legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold">Utilization Legend</h4>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
               <div className="flex items-center gap-1">
                 <div className="h-4 w-4 rounded bg-green-200"></div>
                 <span>Low (0-30%)</span>

@@ -1,28 +1,24 @@
-import { useCallback, useEffect, useState } from 'react'
+import '@shopify/ui-extensions/preact'
+
 import {
-  reactExtension,
-  Banner,
-  BlockStack,
-  Switch,
   useApplyAttributeChange,
-  TextBlock,
   useApplyShippingAddressChange,
-  Modal,
-  Button,
   useShippingAddress,
-  Heading,
-  HeadingGroup,
-} from '@shopify/ui-extensions-react/checkout'
+} from '@shopify/ui-extensions/checkout/preact'
+import { render } from 'preact'
+import { useCallback, useEffect, useState } from 'preact/hooks'
+
+import type { EboxLocation, EboxUser } from './types'
 import { EboxSignInForm } from './components/EboxSignInForm'
 import { LocationSelect } from './components/LocationSelect'
 import { RESET_LOCATION } from './constants'
 import { isSameAddress } from './utils'
-import type { EboxLocation, EboxUser } from './types'
 
-export default reactExtension(
-  'purchase.checkout.delivery-address.render-before',
-  () => <Extension />
-)
+// Checkout UI extensions on API 2026-01 render Polaris web components (s-*)
+// with Preact; the React component library is no longer accepted on deploy.
+export default async () => {
+  render(<Extension />, document.body)
+}
 
 function Extension() {
   // The ebox link is carried as a cart attribute. It reliably lands in the
@@ -118,48 +114,48 @@ function Extension() {
   }
 
   return (
-    <BlockStack borderRadius={'large'} border={'base'} padding={'tight'}>
-      {retroAddressChange && (
-        <Banner title="Warning" status="warning">
-          Please do NOT change the shipping address after choosing an Ebox
-          Location.
-        </Banner>
-      )}
-      <HeadingGroup>
-        <Heading level={2}>Ebox Order</Heading>
-        <Heading level={3}>
-          Do you want to ship to an Ebox Pickup location?
-        </Heading>
-      </HeadingGroup>
-      <Switch
-        accessibilityLabel="switch"
-        label="Ship to Ebox Pickup location "
-        onChange={toggleEbox}
-        checked={useEbox}
-      />
-      {useEbox &&
-        (!authorized ? (
-          <Button
-            overlay={
-              <Modal id="sign-in" padding title="Ebox Sign In">
+    <s-box border="base" borderRadius="large" padding="base">
+      <s-stack direction="block" gap="base">
+        {retroAddressChange && (
+          <s-banner heading="Warning" tone="warning">
+            Please do NOT change the shipping address after choosing an Ebox
+            Location.
+          </s-banner>
+        )}
+        <s-stack direction="block" gap="small-300">
+          <s-heading>Ebox Order</s-heading>
+          <s-text>Do you want to ship to an Ebox Pickup location?</s-text>
+        </s-stack>
+        <s-switch
+          label="Ship to Ebox Pickup location"
+          checked={useEbox}
+          onChange={event =>
+            toggleEbox((event.currentTarget as HTMLInputElement).checked)
+          }
+        />
+        {useEbox &&
+          (!authorized ? (
+            <>
+              <s-button command="--show" commandFor="ebox-sign-in">
+                Sign In
+              </s-button>
+              <s-modal id="ebox-sign-in" heading="Ebox Sign In">
                 <EboxSignInForm eboxUser={eboxUser} setEboxUser={setEboxUser} />
-              </Modal>
-            }
-          >
-            Sign In
-          </Button>
-        ) : (
-          <LocationSelect
-            token={eboxUser.token!}
-            location={location}
-            handleLocationChange={handleLocationChange}
-          />
-        ))}
-      {error && (
-        <TextBlock>
-          Error: Unable to complete operation. {error} Please try again.
-        </TextBlock>
-      )}
-    </BlockStack>
+              </s-modal>
+            </>
+          ) : (
+            <LocationSelect
+              token={eboxUser.token!}
+              location={location}
+              handleLocationChange={handleLocationChange}
+            />
+          ))}
+        {error && (
+          <s-banner tone="critical">
+            Error: Unable to complete operation. {error} Please try again.
+          </s-banner>
+        )}
+      </s-stack>
+    </s-box>
   )
 }

@@ -1,0 +1,73 @@
+name: Deploy Shopify app
+
+# Releases the Shopify app configuration and checkout extension when they
+# change. The Next.js backend (apps/shopify-app/src) deploys through Vercel and
+# is not handled here.
+#
+#   qa   -> eboxsecure-dev app (shopify.app.eboxsecure-dev.toml), QA backend
+#   main -> EboxSecure app     (shopify.app.toml), production backend
+#
+# Requires two repository secrets, each an App Automation Token created in the
+# Shopify Dev Dashboard under that app's Settings:
+#   SHOPIFY_APP_AUTOMATION_TOKEN_DEV   (eboxsecure-dev)
+#   SHOPIFY_APP_AUTOMATION_TOKEN_PROD  (EboxSecure)
+
+on:
+  push:
+    branches: [qa, main]
+    paths:
+      - "apps/shopify-app/extensions/**"
+      - "apps/shopify-app/shopify.app*.toml"
+      - "apps/shopify-app/scripts/set-backend.mjs"
+      - ".github/workflows/shopify-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: shopify-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Manual runs are only meaningful on the two deploy branches.
+    if: github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/shopify-app
+    env:
+      TARGET: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      SHOPIFY_APP_AUTOMATION_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.SHOPIFY_APP_AUTOMATION_TOKEN_PROD || secrets.SHOPIFY_APP_AUTOMATION_TOKEN_DEV }}
+      COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check deploy token
+        run: |
+          if [ -z "$SHOPIFY_APP_AUTOMATION_TOKEN" ]; then
+            echo "::error::Missing SHOPIFY_APP_AUTOMATION_TOKEN secret for the $TARGET app."
+            exit 1
+          fi
+
+      - name: Install extension dependencies
+        working-directory: apps/shopify-app/extensions/ebox-location-picker
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Shopify CLI
+        run: npm install -g @shopify/cli@4
+
+      # The checkout extension cannot read env vars at runtime, so the backend
+      # URL is written into its source for the app being deployed.
+      - name: Point the extension at the ${{ env.TARGET }} backend
+        run: node scripts/set-backend.mjs "$TARGET"
+
+      - name: Deploy
+        run: |
+          if [ "$TARGET" = "prod" ]; then
+            shopify app deploy --allow-updates --source-control-url "$COMMIT_URL" --message "${GITHUB_SHA::7}"
+          else
+            shopify app deploy --config eboxsecure-dev --allow-updates --source-control-url "$COMMIT_URL" --message "${GITHUB_SHA::7}"
+          fi
