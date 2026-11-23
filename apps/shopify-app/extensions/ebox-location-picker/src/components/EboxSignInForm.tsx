@@ -1,24 +1,18 @@
-import {
-  InlineLayout,
-  TextField,
-  Button,
-  BlockStack,
-  Text,
-  Banner,
-} from '@shopify/ui-extensions-react/checkout'
-import { EboxUser } from '../types'
-import { useState } from 'react'
+import type { Dispatch, StateUpdater } from 'preact/hooks'
+import { useState } from 'preact/hooks'
+
 import { BASE_URL } from '../constants'
+import { EboxUser } from '../types'
 
 type EboxSignInFormProps = {
   eboxUser: EboxUser
-  setEboxUser: React.Dispatch<React.SetStateAction<EboxUser>>
+  setEboxUser: Dispatch<StateUpdater<EboxUser>>
 }
 
-export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
+export const EboxSignInForm = ({
   eboxUser,
   setEboxUser,
-}) => {
+}: EboxSignInFormProps) => {
   const [error, setError] = useState<string>()
   const { email, emailSent, otp } = eboxUser
 
@@ -114,32 +108,37 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
   }
 
   return (
-    <BlockStack padding={'tight'}>
-      <Text size="large">Authenticate with Ebox</Text>
-      <InlineLayout columns={['80%', 'fill']} spacing="tight">
-        <TextField label="Email" onChange={handleEmailChange} value={email} />
-        <Button onPress={handleSendCode}>{getSendMessage()}</Button>
-      </InlineLayout>
+    <s-stack direction="block" gap="base">
+      <s-text>Authenticate with Ebox</s-text>
+      <s-grid gridTemplateColumns="1fr auto" gap="small" alignItems="end">
+        <s-email-field
+          label="Email"
+          value={email ?? ''}
+          onInput={event =>
+            handleEmailChange((event.currentTarget as HTMLInputElement).value)
+          }
+        />
+        <s-button onClick={handleSendCode}>{getSendMessage()}</s-button>
+      </s-grid>
       {emailSent && (
         <>
-          <InlineLayout columns={['80%', 'fill']} spacing="tight">
-            <TextField
-              disabled={!emailSent}
-              autocomplete={false}
+          <s-grid gridTemplateColumns="1fr auto" gap="small" alignItems="end">
+            <s-text-field
               label="One-Time Access Code"
-              onChange={handleOTPChange}
+              autocomplete="one-time-code"
               maxLength={6}
+              onInput={event =>
+                handleOTPChange((event.currentTarget as HTMLInputElement).value)
+              }
             />
-            <Button disabled={!emailSent} onPress={handleAuthorize}>
-              Authorize
-            </Button>
-          </InlineLayout>
-          <Text size="small">
+            <s-button onClick={handleAuthorize}>Authorize</s-button>
+          </s-grid>
+          <s-text color="subdued">
             Check your email for your one-time access code.
-          </Text>
+          </s-text>
         </>
       )}
-      {error && <Banner status="critical" title={error!} />}
-    </BlockStack>
+      {error && <s-banner tone="critical" heading={error} />}
+    </s-stack>
   )
 }

@@ -12,7 +12,7 @@ test("SUB-06 plan page updates without a reload and shows customer-facing plan n
   await expect(page.getByText(/BASIC_PLUS|PREMIUM |BUSINESS_PRO/)).toHaveCount(0);
   await shot(page, testInfo, "plan names");
   await page.getByRole("button", { name: "Cancel Plan" }).click();
-  await expect(page.locator('[role="dialog"]').getByText(/cancel your premium subscription/i)).toBeVisible();
+  await expect(page.locator('[role="dialog"]').getByText(/cancel your Premium subscription/)).toBeVisible();
   await page.locator('[role="dialog"]').getByRole("button", { name: "Cancel Subscription" }).click();
   // No reload: the page must reflect the change on its own.
   await expect(page.getByText(/Cancels on \d+\/\d+\/\d+/)).toBeVisible({ timeout: 20_000 });
