@@ -8,14 +8,14 @@ import {
   CreditCard,
   Crown,
   Settings,
-  Trash2,
   Users,
 } from "lucide-react";
 
 import { Badge } from "@ebox/ui/badge";
-import { Button } from "@ebox/ui/button";
 import { Card, CardContent } from "@ebox/ui/card";
 import { Separator } from "@ebox/ui/separator";
+
+import DeleteAccountRequest from "./delete-account-request";
 
 const settingsNavItems = [
   {
@@ -119,13 +119,7 @@ export default function SettingsLayout({
 
                   <Separator className="my-2" />
 
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
+                  <DeleteAccountRequest />
                 </nav>
               </CardContent>
             </Card>

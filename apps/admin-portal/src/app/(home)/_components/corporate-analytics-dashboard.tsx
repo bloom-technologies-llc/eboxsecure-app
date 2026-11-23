@@ -133,7 +133,7 @@ export function CorporateAnalyticsDashboard() {
       />
 
       {/* Primary Analytics Section (2x2 grid) */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
         <UtilizationTrendsChart
           locationId={selectedLocationId}
           dateRange={effectiveDateRange}
@@ -153,7 +153,7 @@ export function CorporateAnalyticsDashboard() {
       </div>
 
       {/* Operational Insights Section (2x1 grid) */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
         <EnhancedRecentActivity locationId={selectedLocationId} />
       </div>
     </div>

@@ -14,41 +14,79 @@ const settle = async (page: import("@playwright/test").Page) => {
 test.describe("associate at Flagship", () => {
   test.use({ storageState: ".auth/admin-associateA.json" });
 
-  test("ADM-02 associate is limited to their own location's data", async ({ page }, testInfo) => {
+  test("ADM-02 associate is limited to their own location's data", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/locations`);
     await settle(page);
     await expect(page.locator("main tbody tr")).toHaveCount(1);
-    await expect(page.getByText("EboxSecure Flagship Location").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create Location" })).toHaveCount(0);
+    await expect(
+      page.getByText("EboxSecure Flagship Location").first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create Location" }),
+    ).toHaveCount(0);
     await shot(page, testInfo, "only own location listed");
     await page.goto(`${ADMIN_URL}/locations/5`);
-    await expect(page.getByText("Location not found or access denied")).toBeVisible();
+    await expect(
+      page.getByText("Location not found or access denied"),
+    ).toBeVisible();
     await shot(page, testInfo, "other location blocked");
     await page.goto(`${ADMIN_URL}/carriers`);
     await expect(page.getByText(/Access denied/)).toBeVisible();
     await shot(page, testInfo, "carriers blocked");
     await expect(page.getByRole("link", { name: "Employees" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Carriers" })).toHaveCount(0);
+    await page.goto(`${ADMIN_URL}/employees`);
+    await expect(
+      page.getByText("You do not have access to this page."),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Invite Admin" }),
+    ).toHaveCount(0);
+    await shot(page, testInfo, "employees page blocked for associate");
   });
 
-  test("ADM-03 orders list: status tabs, search and empty state", async ({ page }, testInfo) => {
+  test("ADM-03 orders list: status tabs, search and empty state", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/orders`);
     await settle(page);
-    await page.getByRole("button", { name: "Picked up", exact: true }).or(page.getByRole("tab", { name: "Picked up", exact: true })).first().click();
+    await page
+      .getByRole("button", { name: "Picked up", exact: true })
+      .or(page.getByRole("tab", { name: "Picked up", exact: true }))
+      .first()
+      .click();
     await settle(page);
-    const statuses = await page.locator("main tbody tr td:nth-child(7)").allInnerTexts();
+    const statuses = await page
+      .locator("main tbody tr td:nth-child(7)")
+      .allInnerTexts();
     expect(statuses.length).toBeGreaterThan(0);
     expect(new Set(statuses)).toEqual(new Set(["Picked up"]));
     await shot(page, testInfo, "picked up tab only shows picked up orders");
-    await page.getByRole("button", { name: "Ready for pickup", exact: true }).or(page.getByRole("tab", { name: "Ready for pickup", exact: true })).first().click();
+    await page
+      .getByRole("button", { name: "Ready for pickup", exact: true })
+      .or(page.getByRole("tab", { name: "Ready for pickup", exact: true }))
+      .first()
+      .click();
     await settle(page);
-    const ready = await page.locator("main tbody tr td:nth-child(7)").allInnerTexts();
+    const ready = await page
+      .locator("main tbody tr td:nth-child(7)")
+      .allInnerTexts();
     expect(new Set(ready)).toEqual(new Set(["Ready for pickup"]));
     await shot(page, testInfo, "ready for pickup tab");
-    await page.getByRole("button", { name: "Cancelled", exact: true }).or(page.getByRole("tab", { name: "Cancelled", exact: true })).first().click();
+    await page
+      .getByRole("button", { name: "Cancelled", exact: true })
+      .or(page.getByRole("tab", { name: "Cancelled", exact: true }))
+      .first()
+      .click();
     await settle(page);
     await shot(page, testInfo, "cancelled tab");
-    await page.getByRole("button", { name: "All", exact: true }).or(page.getByRole("tab", { name: "All", exact: true })).first().click();
+    await page
+      .getByRole("button", { name: "All", exact: true })
+      .or(page.getByRole("tab", { name: "All", exact: true }))
+      .first()
+      .click();
     const search = page.getByPlaceholder(/search/i).first();
     await search.fill(orders.t1);
     await expect(page.getByText(/Showing 1-1 of 1 order/)).toBeVisible();
@@ -59,24 +97,36 @@ test.describe("associate at Flagship", () => {
     expect(await page.locator("main tbody tr").count()).toBeGreaterThan(1);
     await shot(page, testInfo, "search by customer name");
     await search.fill("<script>alert(1)</script>");
-    await expect(page.getByText("No orders match your search or filter.")).toBeVisible();
+    await expect(
+      page.getByText("No orders match your search or filter."),
+    ).toBeVisible();
     await shot(page, testInfo, "no results message");
   });
 
-  test("ADM-04 order comment is saved with the author's name", async ({ page }, testInfo) => {
+  test("ADM-04 order comment is saved with the author's name", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/orders/order-details/${orders.order1}`);
     await settle(page);
     const text = `QA check ${Date.now().toString(36)}: customer collected, ID photo matched.`;
     const box = page.getByPlaceholder("Leave a comment...");
     const send = page.locator("main form button").last();
     await box.fill("   ");
+    const before = await page
+      .locator("main")
+      .getByText(admins.associateA.name)
+      .count();
     await send.click();
-    await page.waitForTimeout(1500);
-    await shot(page, testInfo, "blank comment attempt");
+    await page.waitForTimeout(2000);
+    await shot(page, testInfo, "blank comment rejected");
     await page.reload();
     await settle(page);
-    const blankSaved = await page.getByText("Your comment has been created").count();
-    expect(blankSaved).toBe(0);
+    expect(
+      await page.locator("main").getByText(admins.associateA.name).count(),
+    ).toBe(before);
+    await expect(page.getByText("Order details")).toBeVisible();
+    await expect(page.getByText("Tracking number")).toBeVisible();
+    await shot(page, testInfo, "order details card");
     await box.fill(text);
     await send.click();
     await expect(page.getByText(text)).toBeVisible();
@@ -86,29 +136,25 @@ test.describe("associate at Flagship", () => {
     await expect(page.getByText(text)).toBeVisible();
   });
 
-  test("ADM-05 associate cannot change location details", async ({ page }, testInfo) => {
+  test("ADM-05 associate cannot change location details", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/locations/2`);
     await settle(page);
     await shot(page, testInfo, "location page as associate");
-    const pencils = page.locator("main button:has(svg.lucide-pencil)");
-    testInfo.annotations.push({ type: "edit buttons visible to associate", description: String(await pencils.count()) });
-    console.log("ASSOC PENCILS:", await pencils.count());
-    if (await pencils.count()) {
-      await pencils.first().click();
-      await page.getByLabel("Storage Capacity").fill("999");
-      await page.getByRole("button", { name: "Update Location" }).click();
-      await page.waitForTimeout(2500);
-      await shot(page, testInfo, "associate edit attempt result");
-      await page.reload();
-      await settle(page);
-      await expect(page.getByText("999 units")).toHaveCount(0);
-    }
+    // Only corporate users get the location edit button; store hours stay editable by location staff.
+    await expect(
+      page.getByRole("button", { name: "Edit location details" }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Store Hours")).toBeVisible();
   });
 });
 
 test.describe("associate at another location", () => {
   test.use({ storageState: ".auth/admin-associateB.json" });
-  test("ADM-06 another location's associate cannot open Flagship orders or customers", async ({ page }, testInfo) => {
+  test("ADM-06 another location's associate cannot open Flagship orders or customers", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/orders`);
     await expect(page.getByText("There are no orders yet.")).toBeVisible();
     await shot(page, testInfo, "no Flagship orders listed");
@@ -123,12 +169,18 @@ test.describe("associate at another location", () => {
 
 test.describe("manager at Flagship", () => {
   test.use({ storageState: ".auth/admin-managerA.json" });
-  test("ADM-07 manager sees only their location's employees", async ({ page }, testInfo) => {
+  test("ADM-07 manager sees only their location's employees", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/employees`);
     await settle(page);
-    const locs = await page.locator("main tbody tr td:nth-child(5)").allInnerTexts();
+    const locs = await page
+      .locator("main tbody tr td:nth-child(5)")
+      .allInnerTexts();
     expect(locs.length).toBeGreaterThan(0);
-    expect(new Set(locs.map((l) => l.trim()))).toEqual(new Set(["EboxSecure Flagship Location"]));
+    expect(new Set(locs.map((l) => l.trim()))).toEqual(
+      new Set(["EboxSecure Flagship Location"]),
+    );
     await shot(page, testInfo, "manager employee list");
     await page.goto(`${ADMIN_URL}/employees/${admins.associateB.id}`);
     await settle(page);
@@ -140,7 +192,9 @@ test.describe("manager at Flagship", () => {
 test.describe("corporate", () => {
   test.use({ storageState: ".auth/admin-corporate.json" });
 
-  test("ADM-08 corporate dashboard loads with date range, location filter and CSV export", async ({ page }, testInfo) => {
+  test("ADM-08 corporate dashboard loads with date range, location filter and CSV export", async ({
+    page,
+  }, testInfo) => {
     await page.goto(ADMIN_URL);
     await expect(page.getByText("Analytics Dashboard")).toBeVisible();
     await settle(page);
@@ -151,11 +205,19 @@ test.describe("corporate", () => {
     ]);
     await page.waitForTimeout(1500);
     await shot(page, testInfo, "after export click");
-    console.log("CSV:", download ? download.suggestedFilename() : "no download event");
-    if (download) await download.saveAs(`artifacts/${process.env.E2E_RUN_ID}/evidence/ADM-08/${download.suggestedFilename()}`);
+    console.log(
+      "CSV:",
+      download ? download.suggestedFilename() : "no download event",
+    );
+    if (download)
+      await download.saveAs(
+        `artifacts/${process.env.E2E_RUN_ID}/evidence/ADM-08/${download.suggestedFilename()}`,
+      );
   });
 
-  test("ADM-09 corporate sees all locations, customers and employees", async ({ page }, testInfo) => {
+  test("ADM-09 corporate sees all locations, customers and employees", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/locations`);
     await settle(page);
     expect(await page.locator("main tbody tr").count()).toBeGreaterThan(1);
@@ -183,12 +245,19 @@ test.describe("corporate", () => {
     await shot(page, testInfo, "carriers");
   });
 
-  test("ADM-10 corporate edits a location and adds a note", async ({ page }, testInfo) => {
+  test("ADM-10 corporate edits a location and adds a note", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/locations/2`);
     await settle(page);
-    const current = (await page.getByText(/\d+ units/).first().innerText()).match(/\d+/)![0];
+    const current = (
+      await page
+        .getByText(/\d+ units/)
+        .first()
+        .innerText()
+    ).match(/\d+/)![0];
     const next = current === "20" ? "25" : "20";
-    await page.locator("main button:has(svg.lucide-pencil)").first().click();
+    await page.getByRole("button", { name: "Edit location details" }).click();
     const cap = page.getByLabel("Storage Capacity");
     await cap.fill("-5");
     await page.getByRole("button", { name: "Update Location" }).click();
@@ -206,7 +275,9 @@ test.describe("corporate", () => {
     await shot(page, testInfo, "note added");
   });
 
-  test("ADM-11 invite admin form validates input", async ({ page }, testInfo) => {
+  test("ADM-11 invite admin form validates input", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/employees`);
     await page.getByRole("button", { name: "Invite Admin" }).click();
     await page.getByRole("button", { name: "Send Invitation" }).click();
@@ -216,15 +287,24 @@ test.describe("corporate", () => {
     await page.getByRole("button", { name: "Send Invitation" }).click();
     await page.waitForTimeout(800);
     await shot(page, testInfo, "invalid email rejected");
-    await page.getByPlaceholder("email@example.com").fill(admins.associateA.email);
-    await page.getByRole("combobox").filter({ hasText: "Select location" }).or(page.getByRole("button", { name: "Select location" })).first().click();
+    await page
+      .getByPlaceholder("email@example.com")
+      .fill(admins.associateA.email);
+    await page
+      .getByRole("combobox")
+      .filter({ hasText: "Select location" })
+      .or(page.getByRole("button", { name: "Select location" }))
+      .first()
+      .click();
     await page.getByRole("option").first().click();
     await page.getByRole("button", { name: "Send Invitation" }).click();
     await page.waitForTimeout(3000);
     await shot(page, testInfo, "inviting an existing admin");
   });
 
-  test("ADM-12 create location form validates required fields", async ({ page }, testInfo) => {
+  test("ADM-12 create location form validates required fields", async ({
+    page,
+  }, testInfo) => {
     await page.goto(`${ADMIN_URL}/locations`);
     await page.getByRole("button", { name: "Create Location" }).click();
     await page.getByRole("button", { name: "Create Location" }).last().click();
@@ -235,6 +315,12 @@ test.describe("corporate", () => {
     await page.getByLabel("Storage Capacity").fill("0");
     await page.getByRole("button", { name: "Create Location" }).last().click();
     await page.waitForTimeout(800);
+    await expect(
+      page.getByText("Enter a valid ZIP or postal code"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Create New Location" }),
+    ).toBeInViewport();
     await shot(page, testInfo, "bad zip and capacity flagged");
     await expect(page.locator('[role="dialog"]')).toBeVisible();
   });

@@ -1,7 +1,9 @@
 import { randomBytes } from "crypto";
 import { clerkClient } from "@clerk/nextjs/server";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { emailService } from "../services/emailService";
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
 
 // Letters (any script), spaces, hyphens, apostrophes and periods; must start
@@ -59,6 +61,41 @@ export const userRouter = createTRPCRouter({
         select: { firstName: true, lastName: true },
       });
     }),
+  // Account deletion is fulfilled by hand: the request is emailed to the
+  // business inbox, which cancels billing and removes the account.
+  requestAccountDeletion: protectedCustomerProcedure.mutation(
+    async ({ ctx }) => {
+      const customer = await ctx.db.customerAccount.findUniqueOrThrow({
+        where: { id: ctx.session.userId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phoneNumber: true,
+          stripeCustomerId: true,
+        },
+      });
+      try {
+        await emailService.sendAccountDeletionRequest({
+          customerId: customer.id,
+          name: `${customer.firstName} ${customer.lastName}`.trim(),
+          email: customer.email,
+          phoneNumber: customer.phoneNumber,
+          stripeCustomerId: customer.stripeCustomerId,
+          requestedAt: new Date(),
+        });
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "We couldn't send your request. Please try again or contact support.",
+        });
+      }
+      return { success: true };
+    },
+  ),
   getVirtualAddress: protectedCustomerProcedure.query(async ({ ctx }) => {
     const customerAccount = await ctx.db.customerAccount.findUniqueOrThrow({
       where: { id: ctx.session.userId },
