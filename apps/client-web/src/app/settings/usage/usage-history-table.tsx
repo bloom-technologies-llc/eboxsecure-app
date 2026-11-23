@@ -262,8 +262,12 @@ export default function UsageHistoryTable() {
                     <span className="font-medium">
                       {event.value}{" "}
                       {event.eventType === "OVERDUE_PACKAGE_HOLDING"
-                        ? "days"
-                        : "packages"}
+                        ? event.value === 1
+                          ? "day"
+                          : "days"
+                        : event.value === 1
+                          ? "package"
+                          : "packages"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -272,11 +276,12 @@ export default function UsageHistoryTable() {
                         <div className="text-sm font-medium">
                           #{event.order.id}
                         </div>
-                        {event.order.vendorOrderId && (
-                          <div className="text-xs text-gray-500">
-                            Vendor: {event.order.vendorOrderId}
-                          </div>
-                        )}
+                        {event.order.vendorOrderId &&
+                          !event.order.vendorOrderId.startsWith("DEFAULT_") && (
+                            <div className="text-xs text-gray-500">
+                              Vendor: {event.order.vendorOrderId}
+                            </div>
+                          )}
                       </div>
                     ) : (
                       <span className="text-gray-500">-</span>
@@ -329,11 +334,11 @@ export default function UsageHistoryTable() {
                 events.filter((e) => e.eventType === "OVERDUE_PACKAGE_HOLDING")
                   .length
               }{" "}
-              overdue holding events
+              overdue holding event(s)
             </span>
             <span>
               {events.filter((e) => e.eventType === "PACKAGE_ALLOWANCE").length}{" "}
-              allowance events
+              allowance event(s)
             </span>
           </div>
         </div>

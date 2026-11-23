@@ -26,7 +26,7 @@ import FileBadge from "./file-badge";
 
 interface CommentCardProps {
   commentId: string;
-  name: string;
+  name: React.ReactNode;
   time: Date;
   comment: string;
   highlighted: string | null;

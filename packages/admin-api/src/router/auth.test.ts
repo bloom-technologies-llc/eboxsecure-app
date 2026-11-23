@@ -12,6 +12,13 @@ import {
 } from "../trpc";
 
 vi.mock("../../../db");
+vi.mock("resend", () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: {
+      send: vi.fn().mockResolvedValue({}),
+    },
+  })),
+}));
 
 const db = mockDeep<PrismaClient>();
 
@@ -392,6 +399,11 @@ describe("auth router", () => {
         carrierId: null,
         trackingNumber: null,
         rawDeliveryJson: null,
+        shopifyOrderId: null,
+        shopifyShop: null,
+        sourceChannel: "SCAN",
+        cancelledAt: null,
+        cancelReason: null,
       });
 
       await expect(
@@ -460,6 +472,11 @@ describe("auth router", () => {
         carrierId: null,
         trackingNumber: null,
         rawDeliveryJson: null,
+        shopifyOrderId: null,
+        shopifyShop: null,
+        sourceChannel: "SCAN",
+        cancelledAt: null,
+        cancelReason: null,
       });
 
       await expect(

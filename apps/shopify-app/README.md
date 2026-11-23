@@ -4,6 +4,39 @@ This is a template for building a [Shopify app](https://shopify.dev/docs/apps/ge
 
 Rather than cloning this repo, you can use your preferred package manager and the Shopify CLI with [these steps](#installing-the-template).
 
+## ⚠️ Shopify Plus requirement (read this first)
+
+**The EboxSecure checkout location picker (`extensions/ebox-location-picker`) only works on Shopify Plus stores.** This is a hard Shopify platform limit, not a bug in this app.
+
+The extension targets `purchase.checkout.delivery-address.render-before` — the **information/delivery step of the checkout page** — and it overwrites the shipping address (`useApplyShippingAddressChange`) plus writes the `ebox.eboxOrder` metafield that `orders/create` uses to link the order to a locker. Per Shopify, checkout customization is gated **by page, not by complexity**:
+
+| Surface | Non-Plus (Basic/Shopify/Advanced) |
+| --- | --- |
+| Apps on the **Thank you / Order status** pages | ✅ Available |
+| Branding (logo, colors, fonts) | ✅ Available |
+| Apps on the **information / shipping / payment** steps (this extension) | ❌ **Shopify Plus only** |
+| Pickup Point Delivery Option Generator (register lockers as pickup points) | ❌ Plus only (public / non‑Plus apps have no API access) |
+| Local pickup & delivery customization Functions | ❌ Plus only |
+| Checkout Branding API | ❌ Plus only |
+
+There is **no "simple extension" exemption** — even a read-only toggle rendered on those steps counts as "an app that customizes the information page" and requires Plus. Every app-based way to modify checkout delivery is Plus-gated, so there is no non-Plus workaround that keeps the selection *inside* checkout.
+
+### Symptoms if you forget this
+- On a **non-Plus** store the extension silently does **not** appear in the checkout editor's **Apps** panel (it looks like nothing installed).
+- `shopify app dev` **preview bypasses the Plus gate**, so the picker renders in the dev tunnel even on a non-Plus store — this is misleading and does **not** prove the deployed/live extension will work.
+
+### Testing
+Deployed testing requires a **development store created with Shopify Plus enabled** (Partner Dashboard → Add store → Development store → *"Are you building a Shopify Plus store for your client?"* → **Enable Shopify Plus**). Existing dev stores generally can't be converted — create a new one.
+
+### Communicating the limitation to merchants
+- **App Store listing / marketing:** state "Requires Shopify Plus" plainly (standard for checkout-extension apps).
+- **In-app (recommended):** on install, query `shop.plan.shopifyPlus` via the GraphQL Admin API with the stored offline token; if `false`, show a "requires Shopify Plus" banner instead of a silently-empty checkout so non-Plus installs fail gracefully.
+
+### Non-Plus reach (future, if ever needed)
+The only all-plans path is **pre-checkout**: a theme app extension on the cart/product page where the shopper signs in and picks a locker, stored as a **cart attribute / line-item property** that `orders/create` reads (same linking idea as today's metafield). Caveat: you **cannot** force the checkout ship-to address on non-Plus, so the physical shipment would have to be routed to the locker off the attribute rather than via Shopify's shipping address — a fulfillment-model change, not a UI port.
+
+Sources: [Customize checkout configurations](https://help.shopify.com/en/manual/checkout-settings/customize-checkout-configurations), [Building for pickup points](https://shopify.dev/docs/apps/build/checkout/delivery-shipping/building-for-pickup-points), [ShopPlan (GraphQL)](https://shopify.dev/docs/api/admin-graphql/latest/objects/ShopPlan).
+
 ## Benefits
 
 Shopify apps are built on a variety of Shopify tools to create a great merchant experience. The [create an app](https://shopify.dev/docs/apps/getting-started/create) tutorial in our developer documentation will guide you through creating a Shopify app using this template.

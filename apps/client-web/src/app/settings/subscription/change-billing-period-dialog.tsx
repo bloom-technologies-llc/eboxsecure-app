@@ -28,11 +28,13 @@ export function ChangeBillingPeriodDialog({
   const otherBillingPeriod =
     currentBillingPeriod === "month" ? "year" : "month";
   const router = useRouter();
+  const utils = api.useUtils();
   const { mutate: changeBillingPeriod, isPending } =
     api.subscription.changeBillingPeriod.useMutation({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
   const [isOpen, setIsOpen] = useState(false);

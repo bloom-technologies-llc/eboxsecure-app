@@ -1,5 +1,5 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { RootSiblingParent } from "react-native-root-siblings";
+import Toast from "react-native-toast-message";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { TRPCReactProvider } from "@/trpc/react";
@@ -43,19 +43,18 @@ export default function RootLayout() {
       <SessionTimeoutWrapper>
         <SignInCredentialsProvider>
           <TRPCReactProvider>
-            <RootSiblingParent>
-              <ClerkLoaded>
-                {/* <ThemeProvider
+            <ClerkLoaded>
+              {/* <ThemeProvider
                   value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
                 > */}
-                <GestureHandlerRootView>
-                  <BottomSheetModalProvider>
-                    <Stack screenOptions={{ headerShown: false }} />
-                  </BottomSheetModalProvider>
-                </GestureHandlerRootView>
-                {/* </ThemeProvider> */}
-              </ClerkLoaded>
-            </RootSiblingParent>
+              <GestureHandlerRootView>
+                <BottomSheetModalProvider>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </BottomSheetModalProvider>
+              </GestureHandlerRootView>
+              <Toast />
+              {/* </ThemeProvider> */}
+            </ClerkLoaded>
           </TRPCReactProvider>
         </SignInCredentialsProvider>
       </SessionTimeoutWrapper>

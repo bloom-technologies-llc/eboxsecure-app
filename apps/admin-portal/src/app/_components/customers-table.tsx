@@ -432,7 +432,7 @@ export default function CustomersTable({ className }: CustomersTableProps) {
         </div>
 
         {/* Results count */}
-        {pagination && (
+        {pagination && pagination.totalCount > 0 && (
           <div className="text-sm text-gray-500">
             {((pagination.page - 1) * pagination.limit + 1).toLocaleString()}-
             {Math.min(

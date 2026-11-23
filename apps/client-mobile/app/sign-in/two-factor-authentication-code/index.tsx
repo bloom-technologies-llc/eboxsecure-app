@@ -8,10 +8,10 @@ import {
   View,
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
-import Toast from "react-native-root-toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import BackBreadcrumb from "@/components/ui/BackBreadcrumb";
 import { useSignInCredentials } from "@/hooks/useSignInCredentials";
+import { showToast } from "@/utils/toast";
 import { isClerkAPIResponseError, useSignIn } from "@clerk/clerk-expo";
 import { useLocalCredentials } from "@clerk/clerk-expo/local-credentials";
 
@@ -79,12 +79,7 @@ const TwoFactorAuthenticationCodePage = () => {
     setError("");
     try {
       await signIn.prepareSecondFactor({ strategy: "phone_code" });
-      Toast.show("New code sent to your mobile device!", {
-        duration: 3000,
-        position: Toast.positions.TOP,
-        backgroundColor: "#e9f9ee",
-        textColor: "#000",
-      });
+      showToast("New code sent to your mobile device!", "success");
     } catch (err) {
       if (isClerkAPIResponseError(err)) {
         const clerkError = err.errors?.[0];

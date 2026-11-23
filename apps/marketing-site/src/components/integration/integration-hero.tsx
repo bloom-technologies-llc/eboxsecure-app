@@ -35,7 +35,7 @@ export function IntegrationHero() {
                 <Link href="#shopify-integration">Shopify Integration</Link>
               </Button>
               <Button variant="outline" asChild size="lg">
-                <Link href="#TODO:">Get Integrated</Link>
+                <Link href="/contact">Get Integrated</Link>
               </Button>
             </div>
           </div>

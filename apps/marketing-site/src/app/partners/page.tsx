@@ -5,6 +5,7 @@ import { PartnerBenefits } from "@/components/partners/partner-benefits";
 import { PartnerCaseStudies } from "@/components/partners/partner-case-studies";
 import { PartnerHero } from "@/components/partners/partner-hero";
 import { PartnerShowcase } from "@/components/partners/partner-showcase";
+import { StoreIntegrationRequest } from "@/components/partners/store-integration-request";
 
 export const metadata: Metadata = {
   title: "Retail Partners | EboxSecure",
@@ -17,6 +18,7 @@ export default function PartnersPage() {
     <>
       <PartnerHero />
       <PartnerShowcase />
+      <StoreIntegrationRequest />
       <PartnerBenefits />
       <PartnerCaseStudies />
       <PartnerApplication />

@@ -6,10 +6,50 @@ import { db } from "@ebox/db";
 
 import { createTRPCRouter, protectedAdminProcedure } from "../trpc";
 
+// The structured address columns are the source of truth. The legacy flat
+// `address` string is derived from them (below) so search + display surfaces
+// that still read `address` keep working without changes.
+const addressComponentFields = [
+  "address1",
+  "address2",
+  "city",
+  "state",
+  "zip",
+  "countryCode",
+] as const;
+
+// `state` becomes Shopify's `provinceCode`, which requires the ISO 3166-2
+// code (e.g. "IN", not "Indiana"). The admin form enforces this via a dropdown.
+function composeAddress(parts: {
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  countryCode?: string | null;
+}): string {
+  const country =
+    !parts.countryCode || parts.countryCode === "US"
+      ? "USA"
+      : parts.countryCode;
+  const street = parts.address2
+    ? `${parts.address1}, ${parts.address2}`
+    : (parts.address1 ?? "");
+  return `${street}, ${parts.city ?? ""}, ${parts.state ?? ""} ${parts.zip ?? ""}, ${country}`;
+}
+
 // Input schemas
 const locationCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  address: z.string().min(1, "Address is required"),
+  address1: z.string().min(1, "Street address is required"),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^(?=.*\d)[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP or postal code"),
+  countryCode: z.string().min(1).default("US"),
   email: z.string().email().optional(),
   storageCapacity: z.number().min(1, "Storage capacity must be at least 1"),
   locationType: z.nativeEnum(LocationType),
@@ -18,7 +58,16 @@ const locationCreateSchema = z.object({
 const locationUpdateSchema = z.object({
   locationId: z.number(),
   name: z.string().min(1, "Name is required").optional(),
-  address: z.string().min(1, "Address is required").optional(),
+  address1: z.string().min(1, "Street address is required").optional(),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required").optional(),
+  state: z.string().min(1, "State is required").optional(),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^(?=.*\d)[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP or postal code")
+    .optional(),
+  countryCode: z.string().min(1).optional(),
   email: z.string().email().optional(),
   storageCapacity: z
     .number()
@@ -40,7 +89,7 @@ const hoursUpdateSchema = z.object({
 });
 
 const locationCommentSchema = z.object({
-  text: z.string().min(1, "Comment cannot be empty"),
+  text: z.string().trim().min(1, "Comment cannot be empty"),
   locationId: z.number(),
   filePaths: z.array(z.string()).optional(),
   notifications: z
@@ -54,7 +103,7 @@ const locationCommentSchema = z.object({
 });
 
 const locationNoteSchema = z.object({
-  text: z.string().min(1, "Note cannot be empty"),
+  text: z.string().trim().min(1, "Note cannot be empty"),
   locationId: z.number(),
 });
 
@@ -252,7 +301,13 @@ export const locationsRouter = createTRPCRouter({
       const location = await ctx.db.location.create({
         data: {
           name: input.name,
-          address: input.address,
+          address: composeAddress(input),
+          address1: input.address1,
+          address2: input.address2 ?? null,
+          city: input.city,
+          state: input.state,
+          zip: input.zip,
+          countryCode: input.countryCode,
           email: input.email,
           storageCapacity: input.storageCapacity,
           locationType: input.locationType,
@@ -308,7 +363,17 @@ export const locationsRouter = createTRPCRouter({
   updateLocation: protectedAdminProcedure
     .input(locationUpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      await getUserLocationAccess(ctx.session.userId, input.locationId);
+      const access = await getUserLocationAccess(
+        ctx.session.userId,
+        input.locationId,
+      );
+      // Location details (name, address, capacity, type) are corporate-managed.
+      if (access.locationIds !== "all") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only corporate users can edit location details",
+        });
+      }
 
       const { locationId, ...updateData } = input;
 
@@ -331,6 +396,12 @@ export const locationsRouter = createTRPCRouter({
           changes[key] = value;
         }
       });
+
+      // Re-derive the legacy flat `address` whenever any structured component
+      // changed, so search + display surfaces that read `address` stay in sync.
+      if (addressComponentFields.some((f) => f in changes)) {
+        changes.address = composeAddress({ ...currentLocation, ...changes });
+      }
 
       if (Object.keys(changes).length === 0) {
         return currentLocation;
@@ -445,7 +516,7 @@ export const locationsRouter = createTRPCRouter({
       .input(
         z.object({
           commentId: z.string(),
-          text: z.string(),
+          text: z.string().trim().min(1, "Comment cannot be empty"),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -614,7 +685,7 @@ export const locationsRouter = createTRPCRouter({
       .input(
         z.object({
           noteId: z.string(),
-          text: z.string().min(1, "Note cannot be empty"),
+          text: z.string().trim().min(1, "Note cannot be empty"),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -742,6 +813,12 @@ export const locationsRouter = createTRPCRouter({
           changes[key] = value;
         }
       });
+
+      // Re-derive the legacy flat `address` whenever any structured component
+      // changed, so search + display surfaces that read `address` stay in sync.
+      if (addressComponentFields.some((f) => f in changes)) {
+        changes.address = composeAddress({ ...currentLocation, ...changes });
+      }
 
       if (Object.keys(changes).length === 0) {
         return currentLocation;

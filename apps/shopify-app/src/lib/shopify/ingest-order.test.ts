@@ -15,6 +15,7 @@ const lockerOrder = (overrides: Partial<NormalizedOrder> = {}): NormalizedOrder 
   email: "shopper@example.com",
   total: 42.5,
   ebox: { customerId: "cust_123", locationId: 7 },
+  lineItems: [],
   ...overrides,
 });
 
@@ -62,6 +63,63 @@ describe("ingestEboxOrder", () => {
         }),
       }),
     );
+  });
+
+  it("nests line items when creating an Order", async () => {
+    db.customerAccount.findUnique.mockResolvedValue({ id: "cust_123" } as never);
+    db.location.findUnique.mockResolvedValue({ id: 7 } as never);
+    db.order.findUnique.mockResolvedValue(null as never);
+    db.order.create.mockResolvedValue({ id: 1001 } as never);
+
+    await ingestEboxOrder(
+      lockerOrder({
+        lineItems: [
+          {
+            title: "Apple AirPods Max",
+            quantity: 2,
+            price: 249.99,
+            shopifyProductId: "111",
+            shopifyVariantId: "222",
+            imageUrl: "https://cdn.shopify.com/x.jpg",
+          },
+        ],
+      }),
+      { db },
+    );
+
+    expect(db.order.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          lineItems: {
+            create: [
+              {
+                title: "Apple AirPods Max",
+                quantity: 2,
+                price: 249.99,
+                shopifyProductId: "111",
+                shopifyVariantId: "222",
+                imageUrl: "https://cdn.shopify.com/x.jpg",
+                position: 0,
+              },
+            ],
+          },
+        }),
+      }),
+    );
+  });
+
+  it("omits the line-items relation entirely when there are none", async () => {
+    db.customerAccount.findUnique.mockResolvedValue({ id: "cust_123" } as never);
+    db.location.findUnique.mockResolvedValue({ id: 7 } as never);
+    db.order.findUnique.mockResolvedValue(null as never);
+    db.order.create.mockResolvedValue({ id: 1001 } as never);
+
+    await ingestEboxOrder(lockerOrder(), { db });
+
+    const createArg = db.order.create.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(createArg.data).not.toHaveProperty("lineItems");
   });
 
   it("updates idempotently when the Order already exists (same shopifyOrderId)", async () => {

@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, UserCheck } from "lucide-react";
-
-// import { api } from "@/trpc/react";
+import { api } from "@/trpc/react";
+import { Camera, Smartphone, UserCheck } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
 
@@ -32,13 +31,12 @@ export default function PortraitPhotoUpload() {
     resetUpload,
   } = usePortraitUpload();
 
-  // TODO: Re-enable when Twilio integration is fixed
-  // const { mutate: createPhoneUploadLinkKey, isPending } =
-  //   api.onboarding.createPhoneUploadLinkKey.useMutation({
-  //     onSuccess: () => {
-  //       router.push("/onboarding/wait-phone-upload");
-  //     },
-  //   });
+  const { mutate: createPhoneUploadLinkKey, isPending } =
+    api.onboarding.createPhoneUploadLinkKey.useMutation({
+      onSuccess: () => {
+        router.push("/onboarding/wait-phone-upload");
+      },
+    });
 
   const handleStartCamera = () => {
     setCurrentStep("camera");
@@ -141,17 +139,16 @@ export default function PortraitPhotoUpload() {
               Take Portrait Photo
             </Button>
 
-            {/* TODO: Re-enable when Twilio integration is fixed */}
-            {/* <Button
+            <Button
               variant="outline"
               onClick={() => createPhoneUploadLinkKey()}
               disabled={isPending}
               size="lg"
-              className="w-full max-w-md mx-auto text-lg py-6"
+              className="mx-auto w-full max-w-md py-6 text-lg"
             >
-              <Smartphone className="w-6 h-6 mr-3" />
+              <Smartphone className="mr-3 h-6 w-6" />
               {isPending ? "Sending..." : "Send Link to Phone"}
-            </Button> */}
+            </Button>
           </div>
 
           {/* Security Notice */}

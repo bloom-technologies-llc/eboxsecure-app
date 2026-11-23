@@ -14,6 +14,7 @@ import {
 } from "@ebox/ui/dialog";
 
 import { env } from "~/env";
+import { api } from "~/trpc/react";
 import LocationEditForm from "./location-edit-form";
 import LocationHoursEditForm from "./location-hours-edit-form";
 import LocationNotesSection from "./location-notes-section";
@@ -39,6 +40,7 @@ export default function LocationDetailsCard({
 }: LocationDetailsCardProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
+  const { data: userType } = api.user.getUserType.useQuery();
 
   // Format hours for display
   const formatHours = (hours: LocationData["hours"]) => {
@@ -90,12 +92,20 @@ export default function LocationDetailsCard({
             <div className="flex items-center">
               <p className="w-full font-medium">Location</p>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
+                {/* Only corporate users may edit location details. */}
+                {userType === "CORPORATE" && (
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      aria-label="Edit location details"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                )}
+                <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Edit Location</DialogTitle>
                   </DialogHeader>
@@ -103,11 +113,17 @@ export default function LocationDetailsCard({
                     locationId={location.id}
                     initialData={{
                       name: location.name,
-                      address: location.address,
+                      address1: location.address1 ?? "",
+                      address2: location.address2 ?? "",
+                      city: location.city ?? "",
+                      state: location.state ?? "",
+                      zip: location.zip ?? "",
+                      countryCode: location.countryCode ?? "US",
                       email: location.email,
                       storageCapacity: location.storageCapacity,
                       locationType: location.locationType,
                     }}
+                    legacyAddress={location.address}
                     onSuccess={() => setEditDialogOpen(false)}
                     onCancel={() => setEditDialogOpen(false)}
                   />

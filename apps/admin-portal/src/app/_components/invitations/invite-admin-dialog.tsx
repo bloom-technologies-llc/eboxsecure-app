@@ -76,12 +76,13 @@ export default function InviteAdminDialog({ children }: InviteAdminDialogProps) 
   const createInvitation = api.invitations.createInvitation.useMutation({
     onSuccess: () => {
       toast({
-        title: "Invitation sent",
-        description: "The invitation email has been sent successfully",
+        title: "Account created",
+        description:
+          "The account is ready. They can sign in and set a password via \"Forgot password?\".",
       });
       setOpen(false);
       form.reset();
-      void utils.invitations.getPendingInvitations.invalidate();
+      void utils.employees.getAllEmployees.invalidate();
     },
     onError: (error) => {
       toast({

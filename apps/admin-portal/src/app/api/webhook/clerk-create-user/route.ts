@@ -79,6 +79,20 @@ export async function POST(req: Request) {
     return new Response("Unexpectedly missing email", { status: 400 });
   }
 
+  // Idempotency: admin accounts are now provisioned eagerly at invite time
+  // (see admin-api createInvitation), so the DB user usually already exists by
+  // the time this webhook fires. Treat that as a no-op success.
+  const existingUser = await db.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (existingUser) {
+    log.info(
+      `User ${userId} already provisioned; skipping clerk-create-user webhook`,
+    );
+    return new Response("", { status: 200 });
+  }
+
   const pendingAccount = await db.pendingAdminAccount.findUnique({
     where: {
       email: email,
@@ -127,5 +141,10 @@ export async function POST(req: Request) {
     return new Response("", { status: 200 });
   }
 
-  return new Response("No pending account found", { status: 500 });
+  // No pending account is normal now that accounts are created eagerly at
+  // invite time. Return a 200 no-op so Clerk does not retry.
+  log.info(
+    `No pending account found for ${email}; nothing to provision (accounts are created at invite time)`,
+  );
+  return new Response("", { status: 200 });
 }

@@ -6,6 +6,7 @@ import { NotificationService } from "@ebox/notifications";
 
 import { emailService } from "../services/emailService";
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
+import { getClientAppUrl } from "../utils/getClientAppUrl";
 
 export const trustedContactsRouter = createTRPCRouter({
   // Get all trusted contacts for current user (both granted and received)
@@ -73,9 +74,49 @@ export const trustedContactsRouter = createTRPCRouter({
 
   // Send invitation to add trusted contact
   sendInvitation: protectedCustomerProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(
+      z.object({
+        email: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .email("Please enter a valid email address"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      // Validate 3-contact limit
+      // Prevent self-invitation
+      const currentUser = await ctx.db.customerAccount.findUnique({
+        where: { id: ctx.session.userId },
+        select: { firstName: true, lastName: true, email: true },
+      });
+
+      if (currentUser?.email.toLowerCase() === input.email) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot add yourself as a trusted contact",
+        });
+      }
+
+      // Invitations still waiting on the invitee to sign up
+      const pendingSignupInvitations =
+        await ctx.db.pendingTrustedContactInvitation.findMany({
+          where: { accountHolderId: ctx.session.userId, processed: false },
+          select: { email: true },
+        });
+
+      if (
+        pendingSignupInvitations.some(
+          (invitation) => invitation.email.toLowerCase() === input.email,
+        )
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You have already invited this person",
+        });
+      }
+
+      // Validate 3-contact limit. Invitations awaiting sign-up count too,
+      // otherwise the limit could be bypassed by inviting non-users.
       const existingCount = await ctx.db.trustedContact.count({
         where: {
           accountHolderId: ctx.session.userId,
@@ -83,23 +124,10 @@ export const trustedContactsRouter = createTRPCRouter({
         },
       });
 
-      if (existingCount >= 3) {
+      if (existingCount + pendingSignupInvitations.length >= 3) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Maximum of 3 trusted contacts allowed",
-        });
-      }
-
-      // Prevent self-invitation
-      const currentUser = await ctx.db.customerAccount.findUnique({
-        where: { id: ctx.session.userId },
-        select: { firstName: true, lastName: true, email: true },
-      });
-
-      if (currentUser?.email === input.email) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Cannot add yourself as a trusted contact",
         });
       }
 
@@ -176,7 +204,7 @@ export const trustedContactsRouter = createTRPCRouter({
           recipientName: trustedContact.trustedContact.firstName || null,
           inviterName,
           inviterEmail: currentUser?.email || "",
-          acceptInvitationUrl: `${process.env.VERCEL_URL}/settings/trusted-contacts`,
+          acceptInvitationUrl: `${getClientAppUrl()}/settings/trusted-contacts`,
         });
 
         return trustedContact;
@@ -196,7 +224,7 @@ export const trustedContactsRouter = createTRPCRouter({
           recipientEmail: input.email,
           inviterName,
           inviterEmail: currentUser?.email || "",
-          signUpUrl: `${process.env.VERCEL_URL}/sign-up`,
+          signUpUrl: `${getClientAppUrl()}/sign-up`,
         });
 
         return {
@@ -325,6 +353,28 @@ export const trustedContactsRouter = createTRPCRouter({
     }),
 
   // Get pending invitations for current user (to accept/decline)
+  // Cancels an invitation sent to someone who has not signed up yet.
+  cancelPendingSignupInvitation: protectedCustomerProcedure
+    .input(z.object({ invitationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { count } = await ctx.db.pendingTrustedContactInvitation.deleteMany(
+        {
+          where: {
+            id: input.invitationId,
+            accountHolderId: ctx.session.userId,
+            processed: false,
+          },
+        },
+      );
+      if (count === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invitation not found",
+        });
+      }
+      return { success: true };
+    }),
+
   getPendingInvitations: protectedCustomerProcedure.query(({ ctx }) => {
     return ctx.db.trustedContact.findMany({
       where: {

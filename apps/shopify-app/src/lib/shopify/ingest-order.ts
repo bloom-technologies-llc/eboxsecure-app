@@ -1,7 +1,7 @@
 import type { Db, NormalizedOrder } from "./types";
 
 export type IngestResult =
-  | { result: "skipped" } // not a locker order (no/!malformed ebox metafield)
+  | { result: "skipped" } // not a locker order (no/!malformed ebox link)
   | { result: "rejected"; reason: "unknown-customer" | "unknown-location" }
   | { result: "created"; orderId: number }
   | { result: "updated"; orderId: number };
@@ -10,13 +10,13 @@ export type IngestResult =
  * Create (or idempotently update) the EboxSecure `Order` for a locker checkout.
  *
  * Thin-adapter rules (ADR 0001):
- *  - Gate: skip unless the `ebox.eboxOrder` metafield is present — non-locker
+ *  - Gate: skip unless the `eboxOrder` attribute is present — non-locker
  *    Shopify orders never enter EboxSecure.
- *  - Trust-but-validate: the metafield is written client-side, so the referenced
+ *  - Trust-but-validate: the attribute is written client-side, so the referenced
  *    `customerId` and `locationId` must exist before we create anything;
  *    tampered/stale values are rejected (not retried).
  *  - Deterministic linking: `shippedLocationId` comes straight from the
- *    metafield — no address fuzzy-matching, no favorite-location fallback.
+ *    attribute — no address fuzzy-matching, no favorite-location fallback.
  *  - Idempotent on `shopifyOrderId` so Shopify retries don't duplicate.
  */
 export async function ingestEboxOrder(
@@ -69,6 +69,19 @@ export async function ingestEboxOrder(
       shopifyShop: order.shopifyShop,
       sourceChannel: "SHOPIFY",
       processedAt: null,
+      ...(order.lineItems.length > 0 && {
+        lineItems: {
+          create: order.lineItems.map((li, index) => ({
+            title: li.title,
+            quantity: li.quantity,
+            price: li.price,
+            imageUrl: li.imageUrl,
+            shopifyProductId: li.shopifyProductId,
+            shopifyVariantId: li.shopifyVariantId,
+            position: index,
+          })),
+        },
+      }),
     },
     select: { id: true },
   });

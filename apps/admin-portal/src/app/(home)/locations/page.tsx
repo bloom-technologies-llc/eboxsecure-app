@@ -1,3 +1,4 @@
+import { UserType } from "@prisma/client";
 import { Plus } from "lucide-react";
 
 import { Button } from "@ebox/ui/button";
@@ -9,6 +10,7 @@ import { api } from "~/trpc/server";
 export default async function LocationsPage() {
   try {
     const locations = await api.locations.getAllLocations();
+    const userType = await api.user.getUserType();
 
     return (
       <main className="container h-screen w-full py-16 md:w-9/12">
@@ -16,12 +18,14 @@ export default async function LocationsPage() {
           <div className="w-full">
             <div className="my-4 flex items-center justify-between">
               <p className="font-medium">Locations</p>
-              <CreateLocationDialog>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Location
-                </Button>
-              </CreateLocationDialog>
+              {userType === UserType.CORPORATE && (
+                <CreateLocationDialog>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Location
+                  </Button>
+                </CreateLocationDialog>
+              )}
             </div>
             <LocationsTable locations={locations} />
           </div>

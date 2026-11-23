@@ -11,6 +11,7 @@ import {
   redactCustomer,
   redactShop,
 } from "~/lib/shopify/compliance";
+import { enrichLineItemImages } from "~/lib/shopify/fetch-product-images";
 import { ingestEboxOrder } from "~/lib/shopify/ingest-order";
 import { mapFulfillmentWebhook } from "~/lib/shopify/map-fulfillment";
 import { mapOrderCancellation, mapOrderWebhook } from "~/lib/shopify/map-order";
@@ -67,9 +68,45 @@ export async function POST(request: Request) {
 async function dispatch(topic: string, shop: string, payload: unknown) {
   switch (topic) {
     case "orders/create": {
-      const result = await ingestEboxOrder(mapOrderWebhook(payload, shop), { db });
+      const normalized = mapOrderWebhook(payload, shop);
+
+      // TEMPORARY DIAGNOSTIC (spike #53): checkout-UI metafields written via
+      // useApplyMetafieldsChange are not reliably surfacing in the webhook
+      // payload, so locker orders get silently skipped. Log exactly what
+      // Shopify delivers — the raw `metafields` / `note_attributes` and whether
+      // we managed to extract the ebox link — then remove once confirmed.
+      const rawOrder = (payload ?? {}) as Record<string, unknown>;
+      console.log(
+        `orders/create raw for ${shop} order ${normalized.shopifyOrderId}: ` +
+          JSON.stringify({
+            metafields: rawOrder.metafields ?? null,
+            note_attributes: rawOrder.note_attributes ?? null,
+            eboxExtracted: normalized.ebox,
+          }),
+      );
+
+      // Only locker orders are persisted, so only spend an Admin API call
+      // backfilling product images for those. Best-effort — never throws.
+      if (normalized.ebox) {
+        await enrichLineItemImages(normalized, { db });
+      }
+      const result = await ingestEboxOrder(normalized, { db });
+
+      // Log every outcome. Previously only `rejected` logged, so a `skipped`
+      // order (no/malformed ebox link) left no trace at all — which is why a
+      // 200 with no created order looked like nothing had happened.
       if (result.result === "rejected") {
-        console.warn(`orders/create rejected for ${shop}: ${result.reason}`);
+        console.warn(
+          `orders/create rejected for ${shop} order ${normalized.shopifyOrderId}: ${result.reason}`,
+        );
+      } else if (result.result === "skipped") {
+        console.info(
+          `orders/create skipped for ${shop} order ${normalized.shopifyOrderId}: no valid ebox link`,
+        );
+      } else {
+        console.info(
+          `orders/create ${result.result} for ${shop} order ${normalized.shopifyOrderId} → ebox order ${result.orderId}`,
+        );
       }
       return;
     }

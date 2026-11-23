@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from "react";
 import { Alert, FlatList, RefreshControl, Text, View } from "react-native";
-import Toast from "react-native-root-toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LocationCard } from "@/components/locations/LocationCard";
 import { LocationSearch } from "@/components/locations/LocationSearch";
 import { api } from "@/trpc/react";
+import { showToast } from "@/utils/toast";
 
 export default function LocationsPage() {
   const router = useRouter();
@@ -12,19 +12,15 @@ export default function LocationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addingFavoriteId, setAddingFavoriteId] = useState<number | null>(null);
 
-  // Helper function to show toast notifications
-  const showToast = (
-    message: string,
-    type: "success" | "error" = "success",
-  ) => {
-    Toast.show(message, {
-      duration: 3000,
-      position: Toast.positions.TOP,
-      backgroundColor: type === "error" ? "#ef4444" : "#22c55e",
-      textColor: "#ffffff",
-      shadow: true,
-      animation: true,
-    });
+  const utils = api.useUtils();
+
+  // Refetch every favorites-related query so the list, the limits, and the
+  // search dropdown's isFavorited flags all reflect the change (local refetch
+  // only updates this screen and leaves searchLocations/other screens stale).
+  const invalidateFavorites = () => {
+    utils.favorites.getFavorites.invalidate();
+    utils.favorites.getFavoritesLimits.invalidate();
+    utils.favorites.searchLocations.invalidate();
   };
 
   // API Queries
@@ -39,7 +35,7 @@ export default function LocationsPage() {
     { enabled: searchQuery.length >= 2 },
   );
 
-  const { data: favoritesLimits, refetch: refetchLimits } =
+  const { data: favoritesLimits } =
     api.favorites.getFavoritesLimits.useQuery();
 
   // API Mutations
@@ -48,8 +44,7 @@ export default function LocationsPage() {
       setAddingFavoriteId(variables.locationId);
     },
     onSuccess: () => {
-      refetchFavorites();
-      refetchLimits();
+      invalidateFavorites();
       showToast("Location added to favorites!");
     },
     onError: (error) => {
@@ -62,8 +57,7 @@ export default function LocationsPage() {
 
   const removeFavoriteMutation = api.favorites.removeFavorite.useMutation({
     onSuccess: () => {
-      refetchFavorites();
-      refetchLimits();
+      invalidateFavorites();
       showToast("Location removed from favorites");
     },
     onError: (error) => {

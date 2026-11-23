@@ -1,5 +1,5 @@
-client_id = "03ef9b21116ead9e510aa63603be865b"
-application_url = "https://locks-shoes-approval-vids.trycloudflare.com"
+client_id = "12e99a77d774a5b126740c9e6ff5066f"
+application_url = "https://shopify.eboxsecure.com"
 embedded = true
 name = "EboxSecure"
 handle = "ebox-secure"
@@ -13,11 +13,11 @@ automatically_update_urls_on_dev = true
 api_version = "2025-01"
 
   # Lifecycle webhooks that drive Order creation/updates. orders/create carries
-  # the ebox.eboxOrder metafield used for deterministic linking.
+  # the eboxOrder note attribute (set by the checkout extension) used for
+  # deterministic linking.
   [[webhooks.subscriptions]]
   topics = [ "orders/create" ]
   uri = "/api/webhooks"
-  metafield_namespaces = [ "ebox" ]
 
   [[webhooks.subscriptions]]
   topics = [ "orders/cancelled", "fulfillments/create", "fulfillments/update" ]
@@ -35,13 +35,14 @@ api_version = "2025-01"
 
 
 [access_scopes]
-scopes = "read_orders,read_customers,read_fulfillments"
+scopes = "read_orders,read_customers,read_fulfillments,read_products"
+# Managed installation: Shopify grants scopes at install; the app obtains an
+# offline token via App Bridge token exchange (no OAuth redirect/callback).
+use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
-  "https://locks-shoes-approval-vids.trycloudflare.com/auth/callback",
-  "https://locks-shoes-approval-vids.trycloudflare.com/auth/shopify/callback",
-  "https://locks-shoes-approval-vids.trycloudflare.com/api/auth/callback"
+  "https://shopify.eboxsecure.com/api/auth/callback"
 ]
 
 [pos]

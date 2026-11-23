@@ -27,7 +27,7 @@ interface EmployeeCommentFormProps {
 }
 
 const formSchema = z.object({
-  comment: z.string().min(1, {
+  comment: z.string().trim().min(1, {
     message: "Comment cannot be empty.",
   }),
 });

@@ -15,63 +15,68 @@ export default function Navbar() {
     return <></>;
   }
 
+  const links = [
+    { href: "/", label: "Orders", active: pathname === "/" },
+    {
+      href: "/locations",
+      label: "Locations",
+      active: pathname.startsWith("/locations"),
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      active: pathname.startsWith("/settings"),
+    },
+  ];
+  const linkClass = (active: boolean) =>
+    `text-sm font-medium transition-colors hover:text-primary ${
+      active ? "text-primary" : "text-muted-foreground"
+    }`;
+
   return (
     <header>
-      <nav>
-        <div className="flex justify-between px-32 py-4">
-          <a href="/" className="flex items-center space-x-3">
-            <Image src={logo} height={50} alt="EBoxSecure logo" />
-            <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-              EboxSecure
-            </span>
-          </a>
+      <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-8 lg:px-32">
+        <a href="/" className="flex min-w-0 items-center space-x-3">
+          <Image src={logo} height={50} alt="EBoxSecure logo" />
+          <span className="self-center truncate whitespace-nowrap text-xl font-semibold dark:text-white sm:text-2xl">
+            EboxSecure
+          </span>
+        </a>
 
-          <div className="flex items-center space-x-8">
-            <nav className="hidden md:flex md:space-x-8">
+        <div className="flex shrink-0 items-center gap-4 md:gap-8">
+          <nav
+            aria-label="Main"
+            className="hidden md:flex md:items-center md:space-x-8"
+          >
+            {links.map((link) => (
               <Link
-                href="/"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/" ? "text-primary" : "text-muted-foreground"
-                }`}
+                key={link.href}
+                href={link.href}
+                className={linkClass(link.active)}
               >
-                Orders
+                {link.label}
               </Link>
-              <Link
-                href="/locations"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname.startsWith("/locations")
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Locations
-              </Link>
-              <Link
-                href="/settings"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname.startsWith("/settings")
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Settings
-              </Link>
-            </nav>
-
-            <div className="">
-              <ul className="mt-4 flex  p-4 font-medium  md:mt-0  md:space-x-8 md:p-0">
-                <li className="flex items-center">
-                  <NotificationDropdown />
-                </li>
-                <li>
-                  <a href="#">
-                    <UserButton />
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
+            ))}
+          </nav>
+          <NotificationDropdown />
+          <UserButton />
         </div>
+      </div>
+
+      {/* Phone-width navigation: the same links in a row under the header. */}
+      <nav
+        aria-label="Main"
+        className="flex justify-center gap-8 border-y bg-background/60 px-4 py-2 md:hidden"
+      >
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={linkClass(link.active)}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
     </header>
   );

@@ -12,6 +12,7 @@ import {
 import { CancelSubscriptionDialog } from "./cancel-subscription-dialog";
 import ManageBilling from "./manage-billing";
 import ReactivateButton from "./reactivate-button";
+import { getPlanDisplayName } from "./subscription-plan-utils";
 
 export default async function BillingSection() {
   const { plan, subscriptionData } = await api.subscription.getCurrentPlan();
@@ -58,7 +59,7 @@ export default async function BillingSection() {
                 </p>
               </div>
               <CancelSubscriptionDialog
-                currentPlanName={plan.subscriptionType}
+                currentPlanName={getPlanDisplayName(plan.subscriptionType)}
                 currentPeriodEnd={subscriptionData.currentPeriodEnd}
               />
             </div>

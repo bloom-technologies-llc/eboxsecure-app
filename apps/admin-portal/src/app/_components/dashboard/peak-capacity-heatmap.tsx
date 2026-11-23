@@ -170,10 +170,10 @@ export function PeakCapacityHeatmap({
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Heatmap */}
-          <div>
+          {/* Heatmap: 24 hourly columns, so it scrolls sideways inside the card on narrow screens */}
+          <div className="overflow-x-auto">
             <div
-              className="grid gap-1 text-xs"
+              className="grid min-w-[640px] gap-1 text-xs"
               style={{ gridTemplateColumns: "auto repeat(24, 1fr)" }}
             >
               {/* Header row with hours */}
@@ -216,7 +216,7 @@ export function PeakCapacityHeatmap({
           {/* Legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold">Utilization Legend</h4>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
               <div className="flex items-center gap-1">
                 <div className="h-4 w-4 rounded bg-green-200"></div>
                 <span>Low (0-30%)</span>

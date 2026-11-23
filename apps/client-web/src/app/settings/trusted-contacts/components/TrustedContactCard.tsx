@@ -76,14 +76,16 @@ export default function TrustedContactCard({
 
   return (
     <>
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 p-4">
+        <div className="flex min-w-0 items-center space-x-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
             <User className="h-5 w-5 text-gray-600" />
           </div>
-          <div>
-            <p className="font-medium">{displayName}</p>
-            <p className="text-sm text-gray-500">{displayInfo.email}</p>
+          <div className="min-w-0">
+            <p className="break-words font-medium">{displayName}</p>
+            <p className="break-all text-sm text-gray-500">
+              {displayInfo.email}
+            </p>
             {type === "received" && (
               <p className="text-xs text-blue-600">
                 You can access their orders

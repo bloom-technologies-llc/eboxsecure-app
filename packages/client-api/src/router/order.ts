@@ -36,6 +36,16 @@ export const orderRouter = createTRPCRouter({
             address: true,
           },
         },
+        lineItems: {
+          orderBy: { position: "asc" },
+          select: {
+            id: true,
+            title: true,
+            quantity: true,
+            price: true,
+            imageUrl: true,
+          },
+        },
       },
       orderBy: [
         {
@@ -88,6 +98,16 @@ export const orderRouter = createTRPCRouter({
             select: {
               name: true,
               address: true,
+            },
+          },
+          lineItems: {
+            orderBy: { position: "asc" },
+            select: {
+              id: true,
+              title: true,
+              quantity: true,
+              price: true,
+              imageUrl: true,
             },
           },
         },

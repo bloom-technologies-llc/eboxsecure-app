@@ -1,4 +1,4 @@
-api_version = "2025-07"
+api_version = "2026-01"
 
 [[extensions]]
 name = "ebox-location-picker"
@@ -9,10 +9,6 @@ type = "ui_extension"
     [[extensions.targeting]]
     module = "./src/Checkout.tsx"
     target = "purchase.checkout.delivery-address.render-before"
-
-        [[extensions.targeting.metafields]]
-        namespace = "ebox"
-        key = "eboxOrder"
 
     [extensions.capabilities]
     api_access = true

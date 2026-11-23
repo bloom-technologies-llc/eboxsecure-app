@@ -15,24 +15,21 @@ export async function POST(req: Request) {
 
     if (!signature) return NextResponse.json({}, { status: 400 });
 
-    async function doEventProcessing() {
-      if (typeof signature !== "string") {
-        throw new Error("[STRIPE HOOK] Header is not a string");
-      }
-
-      const evt = stripe.webhooks.constructEvent(
+    let evt: Stripe.Event;
+    try {
+      evt = stripe.webhooks.constructEvent(
         body,
         signature,
         env.STRIPE_WEBHOOK_SECRET,
       );
-
-      await processEvent(evt);
-    }
-    try {
-      await doEventProcessing();
     } catch (error) {
-      console.error("error processing event", error);
+      // Not signed by Stripe (or signed with a different secret): reject it.
+      console.error("[STRIPE HOOK] Signature verification failed", error);
+      return NextResponse.json({ received: false }, { status: 400 });
     }
+
+    // A failure here returns 500 so Stripe retries the delivery.
+    await processEvent(evt);
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("[STRIPE HOOK] Error processing event", error);
@@ -83,9 +80,12 @@ async function processEvent(event: Stripe.Event) {
   };
 
   if (typeof customerId !== "string") {
-    throw new Error(
-      `[STRIPE HOOK][CANCER] ID isn't string. \nEvent type: ${event.type}`,
+    // Some allowed events (e.g. a detached payment method) carry no customer.
+    // There is nothing to sync, and failing would make Stripe retry forever.
+    console.warn(
+      `[STRIPE HOOK] No customer ID on event ${event.id} (${event.type}); skipping.`,
     );
+    return;
   }
 
   // Sync customer data first

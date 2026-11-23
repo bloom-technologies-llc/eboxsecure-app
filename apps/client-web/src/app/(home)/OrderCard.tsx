@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import image1 from "public/image1.jpg";
 
 import type { RouterOutput } from "@ebox/client-api";
 import { Button } from "@ebox/ui/button";
@@ -22,7 +21,16 @@ export default function OrderCard({
   createdAt,
   pickedUpAt,
   directlyOwned,
-}: RouterOutput["order"]["getAllOrders"][number]) {
+  lineItems,
+  highlighted = false,
+}: RouterOutput["order"]["getAllOrders"][number] & { highlighted?: boolean }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (highlighted) {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
+
   const [fetchQrCode, setFetchQrCode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
 
@@ -52,7 +60,11 @@ export default function OrderCard({
         />
       )}
 
-      <Card className={"my-4"} key={id}>
+      <Card
+        ref={cardRef}
+        className={highlighted ? "my-4 ring-2 ring-primary" : "my-4"}
+        key={id}
+      >
         <CardHeader className="px-6 py-4">
           <div className="flex justify-between text-sm">
             <div className="flex w-1/4 flex-col">
@@ -76,12 +88,11 @@ export default function OrderCard({
             <div className="flex w-1/4 flex-col">
               <p className="place-self-end truncate text-sm text-[#575959]">
                 ORDER #:{" "}
-                {vendorOrderId.length > 15
-                  ? `${vendorOrderId.slice(0, 15)}...`
-                  : vendorOrderId}
-              </p>
-              <p className="place-self-end text-sm font-medium text-[#575959]">
-                View invoice
+                {vendorOrderId.startsWith("DEFAULT_")
+                  ? id
+                  : vendorOrderId.length > 15
+                    ? `${vendorOrderId.slice(0, 15)}...`
+                    : vendorOrderId}
               </p>
               {!directlyOwned && (
                 <span className="text-smfont-semibold mt-5 place-self-end rounded bg-yellow-200 px-2 py-0.5 text-yellow-700">
@@ -97,37 +108,67 @@ export default function OrderCard({
             <div className="w-4/5">
               <div className="flex flex-col">
                 <div className="flex flex-col pb-6">
-                  <p className="">Arriving tomorrow 10pm</p>
-                  <p className="text-[#575959]">
-                    Your package is available for pickup at{" "}
-                    {shippedLocation.name}
-                  </p>
+                  {deliveredDate ? (
+                    <>
+                      <p className="">Ready for pickup</p>
+                      <p className="text-[#575959]">
+                        Your package is available for pickup at{" "}
+                        {shippedLocation.name}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="">In transit</p>
+                      <p className="text-[#575959]">
+                        Your package is on its way to {shippedLocation.name}
+                      </p>
+                    </>
+                  )}
                 </div>
 
-                <div className="flex gap-x-6">
-                  <Image
-                    src={image1}
-                    alt="image 1"
-                    height={100}
-                    width={100}
-                    className="rounded-md"
-                  />
-                  <p className="">Apple Airpods Max</p>
-                </div>
+                {/*
+                  Product image/name come from the order's line items (Shopify).
+                  We only render an image when we actually have one — no
+                  placeholder stand-in. Scan orders have no line items, so this
+                  block is omitted entirely.
+                */}
+                {lineItems.length > 0 && (
+                  <div className="flex flex-col gap-y-4">
+                    {lineItems.slice(0, 3).map((item) => (
+                      <div key={item.id} className="flex items-center gap-x-6">
+                        {item.imageUrl && (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            height={100}
+                            width={100}
+                            className="h-[100px] w-[100px] rounded-md object-cover"
+                          />
+                        )}
+                        <p className="">
+                          {item.title}
+                          {item.quantity > 1 ? ` × ${item.quantity}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                    {lineItems.length > 3 && (
+                      <p className="text-sm text-[#575959]">
+                        + {lineItems.length - 3} more{" "}
+                        {lineItems.length - 3 === 1 ? "item" : "items"}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="my-auto flex w-1/5 flex-col gap-y-3">
-              {deliveredDate ? (
+              {deliveredDate && (
                 <Button
                   className="bg-[#00698F] text-white"
                   onClick={() => setFetchQrCode(true)}
                   disabled={alreadyPickedUp}
                 >
                   {alreadyPickedUp ? `Picked Up` : `View QR Code`}
-                </Button>
-              ) : (
-                <Button className="bg-[#00698F] text-white">
-                  Track package
                 </Button>
               )}
               {directlyOwned && (
@@ -138,12 +179,6 @@ export default function OrderCard({
                   Share Order
                 </Button>
               )}
-              <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">
-                View order
-              </Button>
-              <Button className="border border-[#333333] bg-[#ffffff] text-[#333333]">
-                Pickup info
-              </Button>
             </div>
           </div>
         </CardContent>

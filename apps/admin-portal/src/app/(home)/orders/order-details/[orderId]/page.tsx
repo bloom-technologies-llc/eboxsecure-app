@@ -1,6 +1,7 @@
 // TODO: fix to allow @ebox namespace
 
 import OrderHeader from "~/app/_components/order/OrderHeader";
+import OrderSummaryCard from "~/app/_components/order/OrderSummaryCard";
 import CommentFormContainer from "../../../../_components/order/CommentFormContainer";
 import CommentsSection from "../../../../_components/order/CommentsSection";
 import CustomerDetailsCard from "../../../../_components/order/CustomerDetailsCard";
@@ -51,6 +52,7 @@ export default async function OrderDetail({
         detailPanels={<CustomerDetailsCard customer={orderDetails.customer} />}
       >
         <div className="flex flex-col gap-y-6">
+          <OrderSummaryCard order={orderDetails} />
           <CommentFormContainer
             orderId={orderDetails.id}
             locationId={orderDetails.shippedLocation.id}

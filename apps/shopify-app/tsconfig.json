@@ -12,5 +12,5 @@
     "module": "esnext"
   },
   "include": [".", "src", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "extensions"]
+  "exclude": ["node_modules", "extensions", "scripts"]
 }

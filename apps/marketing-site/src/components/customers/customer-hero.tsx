@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getClientAppUrl } from "@/env";
 
 import { Button } from "@ebox/ui/button";
 import { Container } from "@ebox/ui/container";
@@ -32,7 +33,7 @@ export function CustomerHero() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button asChild size="lg">
-                <Link href="/signup">Get Started</Link>
+                <Link href={`${getClientAppUrl()}/sign-up`}>Get Started</Link>
               </Button>
               <Button variant="outline" asChild size="lg">
                 <Link href="#how-it-works">Learn how it works</Link>

@@ -131,9 +131,31 @@ model Order {
     shippedLocation   Location            @relation(fields: [shippedLocationId], references: [id])
     carrier           Carrier?            @relation(fields: [carrierId], references: [id])
     orderComments     OrderComment[]
-    meterEvent        MeterEvent?
+    meterEvents       MeterEvent[]
     OrderSharedAccess OrderSharedAccess[]
     notifications     Notification[]
+    lineItems         OrderLineItem[]
+}
+
+// Per-product line items for an Order. Populated for SHOPIFY orders from the
+// `orders/create` webhook (title/quantity come straight from the payload;
+// `imageUrl` is best-effort backfilled via the Admin API). SCAN orders have no
+// product data, so they simply have no line items.
+model OrderLineItem {
+    id               Int      @id @default(autoincrement())
+    orderId          Int
+    title            String
+    quantity         Int      @default(1)
+    price            Float?
+    imageUrl         String?
+    shopifyProductId String?
+    shopifyVariantId String?
+    position         Int      @default(0)
+    createdAt        DateTime @default(now())
+
+    order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    @@index([orderId])
 }
 
 model MeterEvent {
@@ -143,9 +165,14 @@ model MeterEvent {
     customerId    String
     createdAt     DateTime        @default(now())
     stripeEventId String?         @unique
-    orderId       Int?            @unique
+    orderId       Int?
     customer      CustomerAccount @relation(fields: [customerId], references: [id])
     order         Order?          @relation(fields: [orderId], references: [id])
+
+    // An order can accrue at most one meter event per type — one PACKAGE_ALLOWANCE
+    // at delivery and one OVERDUE_PACKAGE_HOLDING at late pickup. A plain @unique on
+    // orderId wrongly capped it at one event total, so late pickups collided.
+    @@unique([orderId, eventType])
 }
 
 model Carrier {
@@ -370,13 +397,6 @@ model OrderSharedAccess {
     @@unique([orderId, sharedWithId])
     @@index([sharedWithId])
     @@index([grantedById])
-}
-
-model SubscriptionLimit {
-    type              SubscriptionType @unique
-    packageAllowance  Int
-    maxPackageHolding Int
-    locationLimit     Int
 }
 
 enum UserType {

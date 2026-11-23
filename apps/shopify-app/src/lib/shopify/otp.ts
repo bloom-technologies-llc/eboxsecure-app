@@ -60,6 +60,8 @@ export interface VerifyOtpDeps extends Pick<OtpDeps, "db" | "redis"> {
 export interface VerifyOtpResult {
   token: string;
   customerId: string;
+  firstName: string;
+  lastName: string;
 }
 
 /**
@@ -72,8 +74,13 @@ export async function verifyOtp(
   otp: string,
   deps: VerifyOtpDeps,
 ): Promise<VerifyOtpResult> {
-  const stored = await deps.redis.get<string>(otpKey(email));
-  if (!stored || stored !== otp) {
+  // Upstash's client JSON-parses GET results (automaticDeserialization is on by
+  // default), so a purely-numeric code stored as a string comes back as a
+  // *number* (e.g. 523198). Only codes with a leading zero survive as strings
+  // (JSON.parse rejects leading zeros). Coerce to a string before comparing, or
+  // ~90% of codes fail verification with a bogus "invalid code" 401.
+  const stored = await deps.redis.get<string | number>(otpKey(email));
+  if (stored == null || String(stored) !== otp) {
     throw new OtpError("Invalid or expired verification code");
   }
 
@@ -82,7 +89,7 @@ export async function verifyOtp(
 
   const customer = await deps.db.customerAccount.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
-    select: { id: true, email: true },
+    select: { id: true, email: true, firstName: true, lastName: true },
   });
   if (!customer) throw new OtpError("No account found for this email");
 
@@ -96,7 +103,12 @@ export async function verifyOtp(
     .setExpirationTime(JWT_TTL)
     .sign(secret);
 
-  return { token, customerId: customer.id };
+  return {
+    token,
+    customerId: customer.id,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+  };
 }
 
 export interface ShopperClaims {

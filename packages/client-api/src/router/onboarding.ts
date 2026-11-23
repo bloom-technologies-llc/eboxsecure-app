@@ -9,6 +9,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "../trpc";
+import { getClientAppUrl } from "../utils/getClientAppUrl";
 
 export const onboardingRouter = createTRPCRouter({
   checkUploadStatus: protectedCustomerProcedure.query(async ({ ctx }) => {
@@ -50,16 +51,13 @@ export const onboardingRouter = createTRPCRouter({
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-      let baseUrl = process.env.VERCEL_URL;
-      if (!accountSid || !authToken || !twilioPhoneNumber || !baseUrl) {
+      if (!accountSid || !authToken || !twilioPhoneNumber) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Twilio credentials not found.",
         });
       }
-      if (baseUrl.includes("localhost")) {
-        baseUrl = "https://app-qa.eboxsecure.com";
-      }
+      const baseUrl = getClientAppUrl();
       // get user phone number
       const clerk = await clerkClient();
       const user = await clerk.users.getUser(ctx.session.userId);

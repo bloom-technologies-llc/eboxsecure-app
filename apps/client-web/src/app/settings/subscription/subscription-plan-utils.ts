@@ -78,3 +78,15 @@ export function getPlanActionVariant(
       return "primary";
   }
 }
+
+const PLAN_DISPLAY_NAMES: Record<SubscriptionType, string> = {
+  BASIC: "Basic",
+  BASIC_PLUS: "Basic+",
+  PREMIUM: "Premium",
+  BUSINESS_PRO: "Business Pro",
+};
+
+/** Customer-facing plan name; the enum values (e.g. BASIC_PLUS) are internal. */
+export function getPlanDisplayName(plan: SubscriptionType): string {
+  return PLAN_DISPLAY_NAMES[plan];
+}

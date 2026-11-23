@@ -12,6 +12,11 @@ const config = withAxiom({
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: ["@ebox/client-api", "@ebox/db", "@ebox/ui"],
 
+  /** Shopify product images are served from the Shopify CDN. */
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "cdn.shopify.com" }],
+  },
+
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { kv } from "@ebox/redis-client";
 import {
+  SUBSCRIPTION_LIMITS,
+  getPackageAllowance,
   getStripeCustomerId,
   priceIdsToPlan,
   subscriptionDataSchema,
@@ -75,30 +77,17 @@ export const meterRouter = createTRPCRouter({
       .filter((event) => event.eventType === "PACKAGE_ALLOWANCE")
       .reduce((sum, event) => sum + event.value, 0);
 
-    // Define subscription limits based on tier
-    const subscriptionLimits = {
-      BASIC: {
-        packageHolding: 2, // 2-day holding
-        packageAllowance: 5, // 5 packages max
-      },
-      BASIC_PLUS: {
-        packageHolding: 5, // 5-day holding
-        packageAllowance: 20, // 20 packages max
-      },
-      PREMIUM: {
-        packageHolding: 7, // 7-day holding
-        packageAllowance: 50, // 50 packages max
-      },
-      BUSINESS_PRO: {
-        packageHolding: 10, // 10-day holding
-        packageAllowance: 200, // 200 packages max
-      },
+    // Subscription limits live in @ebox/stripe. Holding is a per-tier constant;
+    // the package allowance is pooled across the billing period, so a yearly plan
+    // gets 12x the monthly allowance (pooled annual).
+    const currentLimits = {
+      packageHolding:
+        SUBSCRIPTION_LIMITS[subscriptionTier.subscriptionType].maxPackageHolding,
+      packageAllowance: getPackageAllowance(
+        subscriptionTier.subscriptionType,
+        subscriptionTier.isYearly,
+      ),
     };
-
-    const currentLimits =
-      subscriptionLimits[
-        subscriptionTier.subscriptionType as keyof typeof subscriptionLimits
-      ];
 
     return {
       subscription: subscriptionTier,

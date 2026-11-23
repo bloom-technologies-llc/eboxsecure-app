@@ -13,7 +13,7 @@ export function EmployeeHome() {
 
   // Fetch recent orders for the employee's location
   const { data: recentOrders, isLoading: isLoadingOrders } =
-    api.order.getAllOrdersForEmployee.useQuery();
+    api.orders.getAllOrdersForEmployee.useQuery();
 
   // Get quick stats for employee dashboard
   const pendingDeliveries =
@@ -110,7 +110,7 @@ export function EmployeeHome() {
               {recentOrders?.length || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              All orders in system
+              All orders at your location
             </p>
           </CardContent>
         </Card>

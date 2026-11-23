@@ -1,9 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import {
-  EmployeeRole,
-  PendingAdminAccountStatus,
-  UserType,
-} from "@prisma/client";
+import { EmployeeRole, UserType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { Resend } from "resend";
 import { z } from "zod";
@@ -89,22 +85,7 @@ export const invitationsRouter = createTRPCRouter({
         }
       }
 
-      // Check for existing pending invitation
-      const existingPending = await ctx.db.pendingAdminAccount.findUnique({
-        where: { email: input.email },
-      });
-
-      if (
-        existingPending &&
-        existingPending.status === PendingAdminAccountStatus.PENDING
-      ) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "An invitation is already pending for this email",
-        });
-      }
-
-      // Check if user already exists in Clerk
+      // Guard against inviting someone who already has an account
       const clerk = await clerkClient();
       const existingUsers = await clerk.users.getUserList({
         emailAddress: [input.email],
@@ -126,31 +107,63 @@ export const invitationsRouter = createTRPCRouter({
         }
       }
 
-      // If there's a revoked invitation for this email, delete it first
-      if (
-        existingPending &&
-        existingPending.status === PendingAdminAccountStatus.REVOKED
-      ) {
-        await ctx.db.pendingAdminAccount.delete({
-          where: { id: existingPending.id },
+      // Eagerly create the Clerk user WITHOUT a password. The account exists
+      // and is loginable immediately; the invitee sets a password on first
+      // sign-in via "Forgot password?" / email code.
+      const clerkUser = await clerk.users.createUser({
+        emailAddress: [input.email],
+        skipPasswordRequirement: true,
+      });
+
+      // Provision the DB account synchronously, using the invite's real role
+      // and location (never hardcoded). Mirrors the clerk-create-user webhook.
+      try {
+        if (input.accountType === "EMPLOYEE") {
+          await ctx.db.user.create({
+            data: {
+              id: clerkUser.id,
+              userType: "EMPLOYEE",
+              employeeAccount: {
+                create: {
+                  employeeRole: input.employeeRole ?? "ASSOCIATE",
+                  locationId: input.locationId!,
+                },
+              },
+            },
+          });
+        } else {
+          await ctx.db.user.create({
+            data: {
+              id: clerkUser.id,
+              userType: "CORPORATE",
+              corporateAccount: {
+                create: {},
+              },
+            },
+          });
+        }
+      } catch (error) {
+        // Roll back the Clerk user so we never leave an orphan.
+        console.error(
+          "Failed to provision DB account for invited admin; rolling back Clerk user:",
+          error,
+        );
+        try {
+          await clerk.users.deleteUser(clerkUser.id);
+        } catch (rollbackError) {
+          console.error(
+            "Failed to roll back Clerk user after DB provisioning error:",
+            rollbackError,
+          );
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create account for invitation",
         });
       }
 
-      // Create the pending admin account
-      const pending = await ctx.db.pendingAdminAccount.create({
-        data: {
-          email: input.email,
-          accountType: input.accountType,
-          employeeRole:
-            input.accountType === "EMPLOYEE" ? input.employeeRole : null,
-          locationId:
-            input.accountType === "EMPLOYEE" ? input.locationId : null,
-          invitedById: ctx.session.userId,
-        },
-      });
-
       // Send invite email
-      const signUpUrl = `${ADMIN_PORTAL_BASE_URL}/sign-in`;
+      const signInUrl = `${ADMIN_PORTAL_BASE_URL}/sign-in`;
       const roleLabel =
         input.accountType === "CORPORATE"
           ? "Corporate Admin"
@@ -167,18 +180,19 @@ export const invitationsRouter = createTRPCRouter({
                 <h2 style="color: #00698F; margin-bottom: 20px;">You've been invited to EboxSecure Admin!</h2>
                 <p>Hi there,</p>
                 <p>You've been invited to join EboxSecure as a <strong>${roleLabel}</strong>.</p>
-                ${input.accountType === "EMPLOYEE" ? "<p>Once you sign up, you'll be assigned to your designated location.</p>" : "<p>As a corporate admin, you'll have full access to all locations and features.</p>"}
+                <p>Your account is ready to use. Sign in with this email address (${input.email}) at the link below.</p>
+                <p>On your first sign-in, choose <strong>"Forgot password?"</strong> to set your password (a verification code will be sent to this email).</p>
 
                 <table role="presentation" style="margin: 30px 0;">
                   <tr>
                     <td>
-                      <a href="${signUpUrl}" style="display: inline-block; background-color: #00698F; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Sign Up Now</a>
+                      <a href="${signInUrl}" style="display: inline-block; background-color: #00698F; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Sign In</a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="color: #666; font-size: 14px;">Please sign up using this email address (${input.email}) to ensure your account is properly configured.</p>
-                <p style="color: #666; font-size: 14px;">If the button doesn't work, you can copy and paste this link: ${signUpUrl}</p>
+                <p style="color: #666; font-size: 14px;">Please sign in using this email address (${input.email}) to ensure your account is properly configured.</p>
+                <p style="color: #666; font-size: 14px;">If the button doesn't work, you can copy and paste this link: ${signInUrl}</p>
               </body>
             </html>
           `,
@@ -187,92 +201,6 @@ export const invitationsRouter = createTRPCRouter({
         console.error("Failed to send admin invite email:", error);
       }
 
-      return { success: true, id: pending.id };
-    }),
-
-  getPendingInvitations: protectedAdminProcedure.query(
-    async ({ ctx, input }) => {
-      const access = await getInvitationAccess(ctx.session.userId, ctx.db);
-
-      const where: any = {
-        status: PendingAdminAccountStatus.PENDING,
-      };
-
-      if (!access.isCorporate) {
-        where.locationId = access.locationId;
-        where.accountType = "EMPLOYEE";
-      }
-
-      const [invitations, totalCount] = await Promise.all([
-        ctx.db.pendingAdminAccount.findMany({
-          where,
-          include: {
-            location: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        }),
-        ctx.db.pendingAdminAccount.count({ where }),
-      ]);
-
-      return {
-        invitations: invitations.map((inv) => ({
-          id: inv.id,
-          email: inv.email,
-          accountType: inv.accountType,
-          employeeRole: inv.employeeRole,
-          locationName: inv.location?.name ?? null,
-          createdAt: inv.createdAt,
-        })),
-      };
-    },
-  ),
-
-  revokeInvitation: protectedAdminProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const access = await getInvitationAccess(ctx.session.userId, ctx.db);
-
-      const invitation = await ctx.db.pendingAdminAccount.findUnique({
-        where: { id: input.id },
-      });
-
-      if (!invitation) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Invitation not found",
-        });
-      }
-
-      if (invitation.status !== PendingAdminAccountStatus.PENDING) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Only pending invitations can be revoked",
-        });
-      }
-
-      // Managers can only revoke employee invitations at their location
-      if (!access.isCorporate) {
-        if (
-          invitation.accountType !== "EMPLOYEE" ||
-          invitation.locationId !== access.locationId
-        ) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "You can only revoke invitations for your location",
-          });
-        }
-      }
-
-      await ctx.db.pendingAdminAccount.update({
-        where: { id: input.id },
-        data: { status: PendingAdminAccountStatus.REVOKED },
-      });
-
-      return { success: true };
+      return { success: true, id: clerkUser.id };
     }),
 });

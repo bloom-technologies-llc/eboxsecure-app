@@ -1,26 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDown,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  Info,
-  Plus,
+  Loader2,
   Search,
   SortDesc,
+  X,
 } from "lucide-react";
 
 import type { RouterOutputs } from "@ebox/admin-api";
 import { Badge } from "@ebox/ui/badge";
 import { Button } from "@ebox/ui/button";
-import { Checkbox } from "@ebox/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -38,16 +34,63 @@ import {
 } from "@ebox/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@ebox/ui/tabs";
 
-type Status = "Open" | "Completed" | "Cancelled";
-type SortField =
+type Order = RouterOutputs["orders"]["getAllOrders"]["orders"][number];
+
+export type OrderStatus =
+  | "ORDERED"
+  | "READY_FOR_PICKUP"
+  | "PICKED_UP"
+  | "CANCELLED";
+export type OrderStatusFilter = "ALL" | OrderStatus;
+export type OrderSortField =
   | "order_number"
   | "date"
-  | "status"
   | "total_price"
   | "customer_name";
-type SortDirection = "asc" | "desc";
+export type OrderSortDirection = "asc" | "desc";
 
-type Order = RouterOutputs["orders"]["getAllOrders"]["orders"][number];
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  ORDERED: "Ordered",
+  READY_FOR_PICKUP: "Ready for pickup",
+  PICKED_UP: "Picked up",
+  CANCELLED: "Cancelled",
+};
+
+const STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
+  ORDERED: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+  READY_FOR_PICKUP: "bg-amber-100 text-amber-800 hover:bg-amber-100",
+  PICKED_UP: "bg-green-100 text-green-800 hover:bg-green-100",
+  CANCELLED: "bg-gray-200 text-gray-700 hover:bg-gray-200",
+};
+
+const STATUS_TABS: { value: OrderStatusFilter; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "ORDERED", label: STATUS_LABELS.ORDERED },
+  { value: "READY_FOR_PICKUP", label: STATUS_LABELS.READY_FOR_PICKUP },
+  { value: "PICKED_UP", label: STATUS_LABELS.PICKED_UP },
+  { value: "CANCELLED", label: STATUS_LABELS.CANCELLED },
+];
+
+const SORT_FIELDS: { value: OrderSortField; label: string }[] = [
+  { value: "date", label: "Date" },
+  { value: "order_number", label: "Package ID" },
+  { value: "total_price", label: "Total" },
+  { value: "customer_name", label: "Customer" },
+];
+
+// Mirrors the server-side status filter in admin-api `orders.getAllOrders`.
+export const getOrderStatus = (order: Order): OrderStatus => {
+  if (order.pickedUpAt) return "PICKED_UP";
+  if (order.cancelledAt) return "CANCELLED";
+  if (order.deliveredDate) return "READY_FOR_PICKUP";
+  return "ORDERED";
+};
+
+// Orders created by scanning a label have no purchase total (stored as -1).
+const formatCurrency = (amount: number): string =>
+  amount < 0 ? "N/A" : `$${amount.toFixed(2)} USD`;
+
+const formatDate = (date: Date): string => date.toLocaleDateString();
 
 interface PackageTrackingTableProps {
   orders: Order[];
@@ -58,230 +101,85 @@ interface PackageTrackingTableProps {
     totalPages: number;
     hasNextPage: boolean;
   };
-  onPageChange?: (page: number) => void;
+  isLoading: boolean;
+  isFetching: boolean;
+  errorMessage?: string;
+  status: OrderStatusFilter;
+  onStatusChange: (status: OrderStatusFilter) => void;
+  search: string;
+  onSearchChange: (search: string) => void;
+  sortBy: OrderSortField;
+  sortDirection: OrderSortDirection;
+  onSortChange: (field: OrderSortField, direction: OrderSortDirection) => void;
+  onPageChange: (page: number) => void;
 }
-
-// TODO: Decide if we want to have the order status in the schema
-const getOrderStatus = (order: Order): Status => {
-  if (order.deliveredDate && order.deliveredDate < new Date()) {
-    return "Completed";
-  }
-  return "Open";
-};
-
-const formatCurrency = (amount: number): string => {
-  return `$${amount.toFixed(2)} USD`;
-};
-
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString();
-};
 
 export default function PackageTrackingTable({
   orders,
   pagination,
+  isLoading,
+  isFetching,
+  errorMessage,
+  status,
+  onStatusChange,
+  search,
+  onSearchChange,
+  sortBy,
+  sortDirection,
+  onSortChange,
   onPageChange,
 }: PackageTrackingTableProps) {
-  const [filter, setFilter] = useState<"All" | Status>("All");
-  const [selectAll, setSelectAll] = useState<boolean>(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
-  const [sortBy, setSortBy] = useState<SortField>("order_number");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const router = useRouter();
-
-  const filteredOrders = (() => {
-    if (!orders) {
-      return [];
-    }
-
-    if (filter === "All" && selectedStatuses.length === 0) {
-      return orders;
-    }
-
-    // If filter is "All" but status filters are selected
-    if (filter === "All" && selectedStatuses.length > 0) {
-      return orders.filter((order) =>
-        selectedStatuses.includes(getOrderStatus(order)),
-      );
-    }
-
-    // If specific filter is selected and no status filters
-    if (filter !== "All" && selectedStatuses.length === 0) {
-      return orders.filter((order) => getOrderStatus(order) === filter);
-    }
-
-    // If both specific filter and status filters are selected
-    if (filter !== "All" && selectedStatuses.length > 0) {
-      return orders.filter(
-        (order) =>
-          getOrderStatus(order) === filter &&
-          selectedStatuses.includes(getOrderStatus(order)),
-      );
-    }
-
-    return orders;
-  })();
-
-  // Apply sorting
-  const sortedOrders = [...filteredOrders].sort((a: Order, b: Order) => {
-    const direction = sortDirection === "asc" ? 1 : -1;
-
-    switch (sortBy) {
-      case "order_number":
-        return direction * (a.id - b.id);
-      case "date":
-        return direction * (a.createdAt.getTime() - b.createdAt.getTime());
-      case "status":
-        return direction * getOrderStatus(a).localeCompare(getOrderStatus(b));
-      case "total_price":
-        return direction * (a.total - b.total);
-      case "customer_name":
-        return direction * a.customer.id.localeCompare(b.customer.id);
-      default:
-        return 0;
-    }
-  });
-
-  const toggleSelectAll = (): void => {
-    setSelectAll((prev) => !prev);
-  };
-
-  const handleStatusFilterChange = (status: Status, checked: boolean): void => {
-    setSelectedStatuses(
-      checked
-        ? [...selectedStatuses, status]
-        : selectedStatuses.filter((s) => s !== status),
-    );
-  };
-
-  const clearFilters = (): void => {
-    setSelectedStatuses([]);
-  };
 
   const preventClose = (e: Event): void => {
     e.preventDefault();
   };
 
-  const handleRowClick = (orderId: string) => {
-    router.push(`orders/order-details/${orderId}`);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    if (onPageChange) {
-      onPageChange(newPage);
-    }
-  };
+  const hasActiveFilters = status !== "ALL" || search.trim().length > 0;
 
   return (
     <div className="w-full overflow-hidden rounded-lg border bg-white">
-      <div className="flex items-center justify-between border-b bg-white p-2">
-        <Tabs
-          defaultValue="All"
-          value={filter}
-          onValueChange={(value: string) => {
-            if (
-              value === "All" ||
-              value === "Open" ||
-              value === "Completed" ||
-              value === "Cancelled"
-            ) {
-              setFilter(value as "All" | Status);
+      <div className="flex flex-col gap-2 border-b bg-white p-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="overflow-x-auto">
+          <Tabs
+            value={status}
+            onValueChange={(value) =>
+              onStatusChange(value as OrderStatusFilter)
             }
-          }}
-        >
-          <TabsList className="bg-transparent">
-            <TabsTrigger
-              value="All"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              value="Open"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Open
-            </TabsTrigger>
-            <TabsTrigger
-              value="Completed"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Completed
-            </TabsTrigger>
-            <TabsTrigger
-              value="Cancelled"
-              className="px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
-            >
-              Cancelled
-            </TabsTrigger>
-            <Button variant="ghost" size="icon" className="ml-1 h-8 w-8">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </TabsList>
-        </Tabs>
+          >
+            <TabsList className="bg-transparent">
+              {STATUS_TABS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-none"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative">
+          {isFetching && !isLoading && (
+            <Loader2
+              className="h-4 w-4 animate-spin text-gray-400"
+              aria-label="Updating results"
+            />
+          )}
+          <div className="relative flex-1 lg:flex-none">
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <input
-              type="text"
+              type="search"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              maxLength={100}
               placeholder="Search orders..."
-              className="h-8 rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm"
+              aria-label="Search orders by package ID, tracking number, customer or store"
+              className="h-8 w-full rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm lg:w-64"
             />
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <Filter className="h-4 w-4" />
-                Filter
-                {selectedStatuses.length > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-1 rounded-full px-1 text-xs"
-                  >
-                    {selectedStatuses.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48"
-              onCloseAutoFocus={preventClose}
-            >
-              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {(["Open", "Completed", "Cancelled"] as Status[]).map(
-                (status) => (
-                  <DropdownMenuCheckboxItem
-                    key={status}
-                    checked={selectedStatuses.includes(status)}
-                    onCheckedChange={(checked) =>
-                      handleStatusFilterChange(status, checked)
-                    }
-                    onSelect={preventClose}
-                  >
-                    {status}
-                  </DropdownMenuCheckboxItem>
-                ),
-              )}
-
-              {selectedStatuses.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-center text-xs"
-                    onClick={clearFilters}
-                  >
-                    Clear Filters
-                  </Button>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -299,65 +197,40 @@ export default function PackageTrackingTable({
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup
                 value={sortBy}
-                onValueChange={(value: string) => {
-                  if (
-                    value === "order_number" ||
-                    value === "date" ||
-                    value === "status" ||
-                    value === "total_price" ||
-                    value === "customer_name"
-                  ) {
-                    setSortBy(value as SortField);
-                  }
-                }}
+                onValueChange={(value) =>
+                  onSortChange(value as OrderSortField, sortDirection)
+                }
               >
-                <DropdownMenuRadioItem
-                  value="order_number"
-                  onSelect={preventClose}
-                >
-                  Order number
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="date" onSelect={preventClose}>
-                  Date
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="status" onSelect={preventClose}>
-                  Status
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="total_price"
-                  onSelect={preventClose}
-                >
-                  Total price
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="customer_name"
-                  onSelect={preventClose}
-                >
-                  Customer
-                </DropdownMenuRadioItem>
+                {SORT_FIELDS.map((field) => (
+                  <DropdownMenuRadioItem
+                    key={field.value}
+                    value={field.value}
+                    onSelect={preventClose}
+                  >
+                    {field.label}
+                  </DropdownMenuRadioItem>
+                ))}
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup
                 value={sortDirection}
-                onValueChange={(value: string) => {
-                  if (value === "asc" || value === "desc") {
-                    setSortDirection(value as SortDirection);
-                  }
-                }}
+                onValueChange={(value) =>
+                  onSortChange(sortBy, value as OrderSortDirection)
+                }
               >
                 <DropdownMenuRadioItem
                   value="asc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowUp className="h-4 w-4" /> Oldest first
+                  <ArrowUp className="h-4 w-4" /> Ascending
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem
                   value="desc"
                   className="gap-2"
                   onSelect={preventClose}
                 >
-                  <ArrowDown className="h-4 w-4" /> Newest first
+                  <ArrowDown className="h-4 w-4" /> Descending
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
@@ -369,14 +242,8 @@ export default function PackageTrackingTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 hover:bg-gray-50">
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectAll}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all packages"
-                />
-              </TableHead>
               <TableHead>Package ID</TableHead>
+              <TableHead>Order number</TableHead>
               <TableHead>Tracking number</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Customer</TableHead>
@@ -386,50 +253,97 @@ export default function PackageTrackingTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedOrders.map((order) => (
-              <TableRow
-                className="cursor-pointer"
-                key={order.id}
-                onClick={() => handleRowClick(order.id.toString())}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={selectAll}
-                    onCheckedChange={toggleSelectAll}
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label={`Select package ${order.id}`}
-                  />
-                </TableCell>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>{order.vendorOrderId}</TableCell>
-                <TableCell>{formatDate(order.createdAt)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {/* would we want to display customer name instead of id? */}
-                    {order.customer.id}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {order.shippedLocation.name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{getOrderStatus(order)}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(order.total)}
+            {isLoading && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="h-48 text-center">
+                  <span className="inline-flex items-center text-gray-500">
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin text-gray-400" />
+                    Loading orders...
+                  </span>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
+
+            {!isLoading && errorMessage && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="h-48 text-center">
+                  <p className="mb-2 text-red-600">Failed to load orders</p>
+                  <p className="text-sm text-gray-500">{errorMessage}</p>
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading && !errorMessage && orders.length === 0 && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="h-48 text-center">
+                  <p className="text-gray-700">
+                    {hasActiveFilters
+                      ? "No orders match your search or filter."
+                      : "There are no orders yet."}
+                  </p>
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 gap-1"
+                      onClick={() => {
+                        onSearchChange("");
+                        onStatusChange("ALL");
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                      Clear search and filter
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading &&
+              !errorMessage &&
+              orders.map((order) => {
+                const orderStatus = getOrderStatus(order);
+                return (
+                  <TableRow
+                    className="cursor-pointer"
+                    key={order.id}
+                    onClick={() =>
+                      router.push(`/orders/order-details/${order.id}`)
+                    }
+                  >
+                    <TableCell>{order.id}</TableCell>
+                    <TableCell className="max-w-[14rem] truncate">
+                      {order.vendorOrderId.startsWith("DEFAULT_")
+                        ? "—"
+                        : order.vendorOrderId}
+                    </TableCell>
+                    <TableCell>{order.trackingNumber ?? "—"}</TableCell>
+                    <TableCell>{formatDate(order.createdAt)}</TableCell>
+                    <TableCell>
+                      {order.customer.firstName} {order.customer.lastName}
+                    </TableCell>
+                    <TableCell>{order.shippedLocation.name}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={`whitespace-nowrap ${STATUS_BADGE_CLASSES[orderStatus]}`}
+                      >
+                        {STATUS_LABELS[orderStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-right">
+                      {formatCurrency(order.total)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t bg-white px-4 py-3">
-          <div className="flex items-center text-sm text-gray-500">
+      {pagination && pagination.totalCount > 0 && (
+        <div className="flex flex-col gap-2 border-t bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-gray-500">
             Showing{" "}
             {((pagination.page - 1) * pagination.limit + 1).toLocaleString()}-
             {Math.min(
@@ -438,31 +352,33 @@ export default function PackageTrackingTable({
             ).toLocaleString()}{" "}
             of {pagination.totalCount.toLocaleString()} orders
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page === 1}
-              className="h-8 gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm text-gray-700">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={!pagination.hasNextPage}
-              className="h-8 gap-1"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="h-8 gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <span className="text-sm text-gray-700">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(pagination.page + 1)}
+                disabled={!pagination.hasNextPage}
+                className="h-8 gap-1"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

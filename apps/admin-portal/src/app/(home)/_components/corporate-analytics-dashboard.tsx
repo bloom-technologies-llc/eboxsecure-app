@@ -69,7 +69,7 @@ export function CorporateAnalyticsDashboard() {
   // Loading state for locations
   if (isLoadingLocations) {
     return (
-      <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
+      <div className="mt-16 min-w-0 flex-1 space-y-8 p-4 pt-6 sm:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">
             Analytics Dashboard
@@ -83,7 +83,7 @@ export function CorporateAnalyticsDashboard() {
   // Error state for locations
   if (locationsError) {
     return (
-      <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
+      <div className="mt-16 min-w-0 flex-1 space-y-8 p-4 pt-6 sm:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">
             Analytics Dashboard
@@ -97,13 +97,13 @@ export function CorporateAnalyticsDashboard() {
   }
 
   return (
-    <div className="mt-16 flex-1 space-y-8 p-8 pt-6">
+    <div className="mt-16 min-w-0 flex-1 space-y-8 p-4 pt-6 sm:p-8">
       {/* Header with enhanced controls */}
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-3xl font-bold tracking-tight">
           Analytics Dashboard
         </h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <CalendarDateRangePicker onDateRangeChange={handleDateRangeChange} />
           <Select value={selectedLocation} onValueChange={setSelectedLocation}>
             <SelectTrigger className="w-[180px]">
@@ -133,7 +133,7 @@ export function CorporateAnalyticsDashboard() {
       />
 
       {/* Primary Analytics Section (2x2 grid) */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
         <UtilizationTrendsChart
           locationId={selectedLocationId}
           dateRange={effectiveDateRange}
@@ -153,7 +153,7 @@ export function CorporateAnalyticsDashboard() {
       </div>
 
       {/* Operational Insights Section (2x1 grid) */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
         <EnhancedRecentActivity locationId={selectedLocationId} />
       </div>
     </div>

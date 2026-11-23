@@ -26,10 +26,11 @@ import {
 } from "@ebox/ui/select";
 
 import { api } from "~/trpc/react";
+import { AddressFields, addressSchemaFields } from "./address-fields";
 
 const editLocationSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  address: z.string().min(1, "Address is required"),
+  ...addressSchemaFields,
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   storageCapacity: z.number().min(1, "Storage capacity must be at least 1"),
   locationType: z.nativeEnum(LocationType),
@@ -39,11 +40,19 @@ interface LocationEditFormProps {
   locationId: number;
   initialData: {
     name: string;
-    address: string;
+    address1: string;
+    address2?: string | null;
+    city: string;
+    state: string;
+    zip: string;
+    countryCode: string;
     email?: string | null;
     storageCapacity: number;
     locationType: LocationType;
   };
+  // Legacy flat address on file. Shown as a reference for rows that predate the
+  // structured fields so they can be re-entered (migrated) accurately.
+  legacyAddress?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -51,9 +60,12 @@ interface LocationEditFormProps {
 export default function LocationEditForm({
   locationId,
   initialData,
+  legacyAddress,
   onSuccess,
   onCancel,
 }: LocationEditFormProps) {
+  // A row that predates the structured fields has no address1 yet.
+  const needsMigration = !initialData.address1;
   const router = useRouter();
   const { toast } = useToast();
   const utils = api.useUtils();
@@ -62,7 +74,12 @@ export default function LocationEditForm({
     resolver: zodResolver(editLocationSchema),
     defaultValues: {
       name: initialData.name,
-      address: initialData.address,
+      address1: initialData.address1,
+      address2: initialData.address2 || "",
+      city: initialData.city,
+      state: initialData.state,
+      zip: initialData.zip,
+      countryCode: initialData.countryCode || "US",
       email: initialData.email || "",
       storageCapacity: initialData.storageCapacity,
       locationType: initialData.locationType,
@@ -95,6 +112,7 @@ export default function LocationEditForm({
       locationId,
       ...values,
       email: values.email || undefined,
+      address2: values.address2 || undefined,
     });
   };
 
@@ -115,19 +133,17 @@ export default function LocationEditForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter address" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {needsMigration && legacyAddress && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <span className="font-medium">Address on file:</span> {legacyAddress}
+            <p className="mt-1 text-xs text-amber-700">
+              Re-enter the fields below to split this into street/city/state/ZIP
+              (required for Shopify checkout autofill).
+            </p>
+          </div>
+        )}
+
+        <AddressFields control={form.control} />
 
         <FormField
           control={form.control}

@@ -2,6 +2,7 @@ import type { FileRouter } from "uploadthing/next";
 import { getAuth } from "@clerk/nextjs/server";
 import { createUploadthing } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { z } from "zod";
 
 import { db } from "@ebox/db";
 
@@ -47,6 +48,42 @@ export const ourFileRouter = {
       }
 
       return { uploadedBy: metadata.userId, fileUrl: file.ufsUrl };
+    }),
+
+  // Unauthenticated variant used by the mobile phone-upload flow. There is no
+  // Clerk session here, so the caller is authorized by the one-time uploadKey
+  // (an OnboardingPhoneUploadLink) delivered over SMS. Unlike portraitUpload we
+  // do NOT save here: the client sends the resulting URL to the
+  // onboarding.uploadPortraitFromUnauthedClient mutation, which resolves the
+  // customer from the uploadKey, saves photoLink, and marks the link completed.
+  phonePortraitUpload: f({
+    "image/jpeg": { maxFileSize: "4MB" },
+    "image/png": { maxFileSize: "4MB" },
+    "image/webp": { maxFileSize: "4MB" },
+  })
+    .input(z.object({ uploadKey: z.string() }))
+    .middleware(async ({ input }) => {
+      const link = await db.onboardingPhoneUploadLink.findUnique({
+        where: { id: input.uploadKey },
+      });
+
+      if (!link) {
+        throw new UploadThingError("Invalid upload link.");
+      }
+      if (new Date() > link.expiresAt) {
+        throw new UploadThingError("Upload link expired. Please try again.");
+      }
+
+      return { uploadKey: input.uploadKey };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Intentionally no DB write here — see comment above.
+      console.log(
+        "Phone portrait upload complete for uploadKey:",
+        metadata.uploadKey,
+        file.ufsUrl,
+      );
+      return { fileUrl: file.ufsUrl };
     }),
 } satisfies FileRouter;
 

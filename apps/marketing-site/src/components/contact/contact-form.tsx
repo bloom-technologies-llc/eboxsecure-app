@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { submitInquiry } from "@/app/actions/submit-inquiry";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,11 +54,22 @@ export function ContactForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real implementation, this would send the form data to a server
-    console.log(values);
-    alert("Form submitted! We'll be in touch soon.");
-    form.reset();
+  const [status, setStatus] = useState<
+    { kind: "idle" } | { kind: "success" } | { kind: "error"; message: string }
+  >({ kind: "idle" });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setStatus({ kind: "idle" });
+    const result = await submitInquiry({ type: "contact", ...values });
+    if (result.ok) {
+      setStatus({ kind: "success" });
+      form.reset();
+    } else {
+      setStatus({
+        kind: "error",
+        message: result.error ?? "Something went wrong. Please try again.",
+      });
+    }
   }
 
   return (
@@ -202,9 +215,26 @@ export function ContactForm() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
-                  Submit Inquiry
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting
+                    ? "Sending..."
+                    : "Submit Inquiry"}
                 </Button>
+                {status.kind === "success" && (
+                  <p role="status" className="text-sm text-green-700">
+                    Thanks! Your inquiry was sent. We&apos;ll be in touch within
+                    1 business day.
+                  </p>
+                )}
+                {status.kind === "error" && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {status.message}
+                  </p>
+                )}
               </form>
             </Form>
           </div>

@@ -17,7 +17,7 @@ interface CustomerNotesSectionProps {
 }
 
 const noteSchema = z.object({
-  text: z.string().min(1, "Note cannot be empty"),
+  text: z.string().trim().min(1, "Note cannot be empty"),
 });
 
 export default function CustomerNotesSection({
