@@ -15,7 +15,7 @@ export default function CustomerDetailsCard({
   customer,
 }: CustomerDetailsCardProps) {
   return (
-    <div className="flex w-fit flex-col gap-y-6">
+    <div className="flex min-w-0 flex-col gap-y-6 [overflow-wrap:anywhere]">
       <div className="rounded-lg border border-border bg-white px-6 py-4">
         <div className="flex flex-col gap-y-6">
           <div className="flex flex-col gap-y-3">

@@ -30,9 +30,12 @@ export default function NotificationsPage() {
         utils.notification.getPreferences.invalidate();
         toast({ description: "Notification settings saved" });
       },
-      onError: () => {
+      onError: (error) => {
         toast({
-          description: "Failed to save settings",
+          description:
+            error.data?.code === "BAD_REQUEST" && !error.data.zodError
+              ? error.message
+              : "Failed to save settings",
           variant: "destructive",
         });
       },
@@ -59,6 +62,29 @@ export default function NotificationsPage() {
   }, [preferences]);
 
   const handleSave = () => {
+    const email = settings.notificationEmail.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        description: "Enter a valid notification email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (settings.smsEnabled) {
+      const digits = settings.phoneNumber.replace(/\D/g, "");
+      const national =
+        digits.length === 11 && digits.startsWith("1")
+          ? digits.slice(1)
+          : digits;
+      if (national.length !== 10) {
+        toast({
+          description:
+            "Enter a valid 10-digit U.S. mobile number to turn on SMS notifications.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     updatePreferences({
       pushEnabled: settings.pushEnabled,
       emailEnabled: settings.emailEnabled,

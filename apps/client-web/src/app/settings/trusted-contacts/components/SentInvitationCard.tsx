@@ -42,12 +42,27 @@ export default function SentInvitationCard({
     },
   );
 
+  const cancelSignupInvitation =
+    api.trustedContacts.cancelPendingSignupInvitation.useMutation({
+      onSuccess: () => {
+        void utils.trustedContacts.getSentPendingInvitations.invalidate();
+        setIsCanceling(false);
+      },
+      onError: (error) => {
+        console.error("Failed to cancel invitation:", error);
+        setIsCanceling(false);
+      },
+    });
+
   const handleCancel = () => {
+    setIsCanceling(true);
     if (invitation.trustedContactId) {
-      setIsCanceling(true);
       cancelInvitation.mutate({
         trustedContactId: invitation.trustedContactId,
       });
+    } else {
+      // Invitation to someone who has not signed up yet.
+      cancelSignupInvitation.mutate({ invitationId: invitation.id });
     }
   };
 
@@ -62,10 +77,10 @@ export default function SentInvitationCard({
     <div
       className={`rounded-lg border p-4 ${isPendingSignup ? "border-blue-200 bg-blue-50" : "border-orange-200 bg-orange-50"}`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center space-x-3">
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${isPendingSignup ? "bg-blue-100" : "bg-orange-100"}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isPendingSignup ? "bg-blue-100" : "bg-orange-100"}`}
           >
             {isPendingSignup ? (
               <User
@@ -77,17 +92,19 @@ export default function SentInvitationCard({
               />
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <p
-              className={`font-medium ${isPendingSignup ? "text-blue-900" : "text-orange-900"}`}
+              className={`break-all font-medium ${isPendingSignup ? "text-blue-900" : "text-orange-900"}`}
             >
               {displayName}
             </p>
-            <p
-              className={`text-sm ${isPendingSignup ? "text-blue-700" : "text-orange-700"}`}
-            >
-              {invitation.trustedContact.email}
-            </p>
+            {displayName !== invitation.trustedContact.email && (
+              <p
+                className={`break-all text-sm ${isPendingSignup ? "text-blue-700" : "text-orange-700"}`}
+              >
+                {invitation.trustedContact.email}
+              </p>
+            )}
             <p
               className={`text-xs ${isPendingSignup ? "text-blue-600" : "text-orange-600"}`}
             >
@@ -96,18 +113,16 @@ export default function SentInvitationCard({
           </div>
         </div>
 
-        {invitation.trustedContactId && (
-          <Button
-            size="sm"
-            onClick={handleCancel}
-            disabled={isCanceling}
-            variant="outline"
-            className="border-red-200 text-red-600 hover:bg-red-50"
-          >
-            <X className="h-4 w-4" />
-            {isCanceling ? "..." : "Cancel"}
-          </Button>
-        )}
+        <Button
+          size="sm"
+          onClick={handleCancel}
+          disabled={isCanceling}
+          variant="outline"
+          className="border-red-200 text-red-600 hover:bg-red-50"
+        >
+          <X className="h-4 w-4" />
+          {isCanceling ? "..." : "Cancel"}
+        </Button>
       </div>
 
       <div

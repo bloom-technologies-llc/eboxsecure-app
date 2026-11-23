@@ -106,7 +106,7 @@ export default function CreateLocationDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Location</DialogTitle>
           <DialogDescription>

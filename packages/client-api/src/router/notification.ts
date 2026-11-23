@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedCustomerProcedure } from "../trpc";
@@ -100,7 +101,42 @@ export const notificationRouter = createTRPCRouter({
         phoneNumber: z.string().nullable().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input: rawInput }) => {
+      const input = { ...rawInput };
+
+      // Store SMS numbers in E.164 form (+1XXXXXXXXXX) so they can be dialled.
+      if (input.phoneNumber) {
+        const digits = input.phoneNumber.replace(/\D/g, "");
+        const national =
+          digits.length === 11 && digits.startsWith("1")
+            ? digits.slice(1)
+            : digits;
+        if (national.length !== 10) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Enter a valid 10-digit U.S. mobile number.",
+          });
+        }
+        input.phoneNumber = `+1${national}`;
+      }
+      // A partial update (for example the mobile toggle) may omit the number;
+      // fall back to the one already saved.
+      const savedPhone =
+        input.phoneNumber === undefined
+          ? (
+              await ctx.db.notificationPreference.findUnique({
+                where: { userId: ctx.session.userId },
+                select: { phoneNumber: true },
+              })
+            )?.phoneNumber
+          : input.phoneNumber;
+      if (input.smsEnabled && !savedPhone) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Enter a mobile phone number to turn on SMS notifications.",
+        });
+      }
+
       return await ctx.db.notificationPreference.upsert({
         where: { userId: ctx.session.userId },
         update: input,

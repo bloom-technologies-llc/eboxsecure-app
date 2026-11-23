@@ -14,11 +14,12 @@ export default function PickupQRScannerButton() {
     <>
       <Button
         variant="primary"
+        aria-label="Scan pickup"
         onClick={() => setIsQRScannerOpen(true)}
         className="relative flex items-center gap-2 text-secondary-foreground hover:bg-secondary-foreground/10 hover:text-secondary-foreground"
       >
         <QrCode className="h-4 w-4" />
-        Scan pickup
+        <span className="hidden sm:inline">Scan pickup</span>
       </Button>
 
       <PickupQRScanner

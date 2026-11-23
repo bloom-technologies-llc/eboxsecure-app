@@ -25,7 +25,7 @@ interface CustomerCommentFormContainerProps {
 }
 
 const commentSchema = z.object({
-  text: z.string().min(1, "Comment cannot be empty"),
+  text: z.string().trim().min(1, "Comment cannot be empty"),
 });
 
 export default function CustomerCommentFormContainer({

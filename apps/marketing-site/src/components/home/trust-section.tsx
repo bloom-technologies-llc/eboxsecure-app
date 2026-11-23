@@ -408,7 +408,7 @@ export function TrustSection() {
           </dl>
 
           {/* Testimonials and Activity Feed */}
-          <div className="mt-16 grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="mt-16 grid grid-cols-1 gap-8 overflow-x-clip lg:grid-cols-2">
             {/* Rotating Testimonials */}
             <motion.div
               className="rounded-2xl bg-background p-8 shadow-sm"

@@ -71,7 +71,7 @@ export const employeeCommentsRouter = createTRPCRouter({
     .input(
       z.object({
         employeeId: z.string(),
-        text: z.string().min(1),
+        text: z.string().trim().min(1),
         filePaths: z.array(z.string()).optional().default([]),
         notifications: z
           .array(
@@ -156,7 +156,7 @@ export const employeeCommentsRouter = createTRPCRouter({
     .input(
       z.object({
         commentId: z.string(),
-        text: z.string().min(1),
+        text: z.string().trim().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {

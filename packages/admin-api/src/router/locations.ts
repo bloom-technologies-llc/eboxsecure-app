@@ -29,7 +29,9 @@ function composeAddress(parts: {
   countryCode?: string | null;
 }): string {
   const country =
-    !parts.countryCode || parts.countryCode === "US" ? "USA" : parts.countryCode;
+    !parts.countryCode || parts.countryCode === "US"
+      ? "USA"
+      : parts.countryCode;
   const street = parts.address2
     ? `${parts.address1}, ${parts.address2}`
     : (parts.address1 ?? "");
@@ -43,7 +45,10 @@ const locationCreateSchema = z.object({
   address2: z.string().optional(),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  zip: z.string().min(1, "ZIP code is required"),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^(?=.*\d)[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP or postal code"),
   countryCode: z.string().min(1).default("US"),
   email: z.string().email().optional(),
   storageCapacity: z.number().min(1, "Storage capacity must be at least 1"),
@@ -57,7 +62,11 @@ const locationUpdateSchema = z.object({
   address2: z.string().optional(),
   city: z.string().min(1, "City is required").optional(),
   state: z.string().min(1, "State is required").optional(),
-  zip: z.string().min(1, "ZIP code is required").optional(),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^(?=.*\d)[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP or postal code")
+    .optional(),
   countryCode: z.string().min(1).optional(),
   email: z.string().email().optional(),
   storageCapacity: z
@@ -80,7 +89,7 @@ const hoursUpdateSchema = z.object({
 });
 
 const locationCommentSchema = z.object({
-  text: z.string().min(1, "Comment cannot be empty"),
+  text: z.string().trim().min(1, "Comment cannot be empty"),
   locationId: z.number(),
   filePaths: z.array(z.string()).optional(),
   notifications: z
@@ -94,7 +103,7 @@ const locationCommentSchema = z.object({
 });
 
 const locationNoteSchema = z.object({
-  text: z.string().min(1, "Note cannot be empty"),
+  text: z.string().trim().min(1, "Note cannot be empty"),
   locationId: z.number(),
 });
 
@@ -507,7 +516,7 @@ export const locationsRouter = createTRPCRouter({
       .input(
         z.object({
           commentId: z.string(),
-          text: z.string(),
+          text: z.string().trim().min(1, "Comment cannot be empty"),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -676,7 +685,7 @@ export const locationsRouter = createTRPCRouter({
       .input(
         z.object({
           noteId: z.string(),
-          text: z.string().min(1, "Note cannot be empty"),
+          text: z.string().trim().min(1, "Note cannot be empty"),
         }),
       )
       .mutation(async ({ ctx, input }) => {

@@ -35,6 +35,7 @@ export function CancelDowngradeDialog({
   children,
 }: CancelDowngradeDialogProps) {
   const router = useRouter();
+  const utils = api.useUtils();
 
   const [isOpen, setIsOpen] = useState(false);
   const { mutate: cancelDowngrade, isPending } =
@@ -42,6 +43,7 @@ export function CancelDowngradeDialog({
       onSuccess: () => {
         setIsOpen(false);
         router.refresh();
+        void utils.subscription.getCurrentPlan.invalidate();
       },
     });
 

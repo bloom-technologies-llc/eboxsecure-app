@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from "@ebox/ui/card";
 
+import { getPlanDisplayName } from "./subscription-plan-utils";
+
 export default async function CurrentPlanOverview() {
   const {
     plan: currentPlan,
@@ -37,7 +39,7 @@ export default async function CurrentPlanOverview() {
           <div className="flex items-center gap-3">
             <div>
               <h3 className="text-lg font-semibold">
-                {currentPlan.subscriptionType} Plan
+                {getPlanDisplayName(currentPlan.subscriptionType)} Plan
               </h3>
 
               {hasScheduledChange ? (
@@ -50,8 +52,8 @@ export default async function CurrentPlanOverview() {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {scheduledPlan.changeType === "downgrade"
-                      ? `Downgrades to ${scheduledPlan.plan.subscriptionType} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`
-                      : `Changes to ${scheduledPlan.plan.subscriptionType} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`}
+                      ? `Downgrades to ${getPlanDisplayName(scheduledPlan.plan.subscriptionType)} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`
+                      : `Changes to ${getPlanDisplayName(scheduledPlan.plan.subscriptionType)} ${scheduledPlan.plan.isYearly ? "yearly" : "monthly"} on ${scheduledChangeDate?.toLocaleDateString()}`}
                   </p>
                 </div>
               ) : (

@@ -15,7 +15,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <>
       <AppSidebar />
       <Navbar />
-      {props.children}
+      <div className="min-w-0 flex-1">{props.children}</div>
     </>
   );
 }
