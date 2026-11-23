@@ -97,7 +97,7 @@ export function CalendarDateRangePicker({
   };
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <Select value={selectedRange} onValueChange={handleRangeSelect}>
         <SelectTrigger className="w-[140px]">
           <SelectValue />
@@ -117,7 +117,7 @@ export function CalendarDateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[280px] justify-start text-left font-normal",
+              "w-full max-w-[280px] justify-start text-left font-normal sm:w-[280px]",
               !date && "text-muted-foreground",
             )}
           >

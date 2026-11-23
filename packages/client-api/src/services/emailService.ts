@@ -19,6 +19,15 @@ export interface TrustedContactNewUserEmailData {
   signUpUrl: string;
 }
 
+export interface AccountDeletionRequestEmailData {
+  customerId: string;
+  name: string;
+  email: string;
+  phoneNumber: string | null;
+  stripeCustomerId: string | null;
+  requestedAt: Date;
+}
+
 export class EmailService {
   async sendTrustedContactInvitationToExistingUser(
     data: TrustedContactExistingUserEmailData,
@@ -94,6 +103,54 @@ export class EmailService {
     } catch (error) {
       // Silent failure as requested
       console.error("Failed to send invitation email to new user:", error);
+    }
+  }
+
+  /**
+   * Sends an account deletion request to the business inbox so it can be
+   * fulfilled by hand. Unlike the invitation emails this must not fail
+   * silently: the customer is told the request was sent.
+   */
+  async sendAccountDeletionRequest(data: AccountDeletionRequestEmailData) {
+    // Reuses the inbox already configured for website inquiries.
+    const to = process.env.CONTACT_FORM_TO_EMAIL || FROM_EMAIL;
+    const escape = (value: string) =>
+      value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const rows: [string, string][] = [
+      ["Name", data.name],
+      ["Email", data.email],
+      ["Phone", data.phoneNumber ?? "Not provided"],
+      ["Customer ID", data.customerId],
+      ["Stripe customer", data.stripeCustomerId ?? "None"],
+      ["Requested at", data.requestedAt.toUTCString()],
+    ];
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      replyTo: data.email,
+      subject: `Account deletion request: ${data.name} (${data.email})`,
+      html: `
+        <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #00698F; margin-bottom: 20px;">Account deletion request</h2>
+            <p>A customer has asked for their EboxSecure account to be deleted.</p>
+            <table style="border-collapse: collapse; margin: 20px 0;">
+              ${rows
+                .map(
+                  ([label, value]) =>
+                    `<tr><td style="padding: 4px 16px 4px 0; color: #666;">${label}</td><td style="padding: 4px 0;">${escape(value)}</td></tr>`,
+                )
+                .join("")}
+            </table>
+            <p>To fulfil it: cancel the Stripe subscription, hand over or return any packages still held, delete the user in Clerk, and reply to the customer to confirm.</p>
+          </body>
+        </html>
+      `,
+    });
+    if (error) {
+      throw new Error(
+        `Failed to send account deletion request: ${error.message}`,
+      );
     }
   }
 }

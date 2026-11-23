@@ -81,7 +81,13 @@ export const EboxSignInForm: React.FC<EboxSignInFormProps> = ({
         }),
       })
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(
+          response.status === 401
+            ? 'That code is incorrect or has expired. Check the code or send a new one.'
+            : response.status === 429
+              ? 'Too many attempts. Please wait a few minutes and try again.'
+              : 'We could not verify your code. Please try again.',
+        )
       }
       const { token, customerId, firstName, lastName } =
         (await response.json()) as {

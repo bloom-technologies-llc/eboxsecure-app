@@ -193,8 +193,8 @@ function LocationsContent() {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <div className="flex items-center justify-between">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Favorite Locations</h2>
           {favoritesLimits && (
             <div className="text-sm text-muted-foreground">
